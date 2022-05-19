@@ -1,3 +1,13 @@
 {
-  "recommendations": ["dbaeumer.vscode-eslint", "EditorConfig.EditorConfig"]
+  "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "EditorConfig.EditorConfig",
+      "ecmel.vscode-html-css",
+      "christian-kohler.path-intellisense",
+      "eg2.vscode-npm-script",
+      "ms-vscode.vscode-typescript-tslint-plugin",
+      "christian-kohler.npm-intellisense",
+      "VisualStudioExptTeam.vscodeintellicode",
+      "ms-vscode.vscode-typescript-next"
+  ]
 }
