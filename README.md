@@ -25,11 +25,3 @@ To package apps for the local platform:
 ```bash
 npm run package
 ```
-
-## Docs
-
-See our [docs and guides here](https://electron-react-boilerplate.js.org/docs/installation)
-
-## License
-
-MIT © [Electron React Boilerplate](https://github.com/electron-react-boilerplate)
