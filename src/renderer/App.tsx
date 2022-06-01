@@ -1,6 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
+import CTCOffice from '../modules/CTCOffice.tsx';
 import icon from '../../assets/icon.svg';
-import './App.css';
+import '../../assets/css/pico.min.css';
 
 const Hello = () => {
   return (
