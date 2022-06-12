@@ -1,3 +1,5 @@
+[![Test](https://github.com/ctrlaltf2/trains/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/ctrlaltf2/trains/actions/workflows/test.yml)
+
 ## Install
 
 Clone the repo and install dependencies:
