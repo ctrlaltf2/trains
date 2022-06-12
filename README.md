@@ -1,4 +1,4 @@
-[![Test](https://github.com/ctrlaltf2/trains/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/ctrlaltf2/trains/actions/workflows/test.yml)
+[![Develop](https://github.com/ctrlaltf2/trains/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/ctrlaltf2/trains/actions/workflows/test.yml)
 
 ## Install
 
