@@ -1,7 +1,5 @@
 const TrackModel = () => {
-  return (
-    <p>Track Model</p>
-  )
+  return <p>Track Model</p>;
 };
 
 export default TrackModel;

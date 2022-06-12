@@ -9,10 +9,6 @@ import {
   createTheme,
   ThemeProvider,
   Chip,
-  // Typography,
-  // List,
-  // ListItem,
-  // ListItemText
   Table,
   TableHead,
   TableRow,
@@ -31,7 +27,6 @@ const darkTheme = createTheme({
 
 const TrackController = () => {
   return (
-    // <div className="wrapper">
     <div>
       <ThemeProvider theme={darkTheme}>
         <Box sx={{ flexGrow: 1 }}>
@@ -90,7 +85,6 @@ const TrackController = () => {
 
           <Grid container spacing={12}>
             <Grid item xs="auto">
-            
               <TableContainer className="metrics">
                 <Table
                   sx={{ minWidth: 'auto' }}
