@@ -5,11 +5,25 @@ import {
   BrowserWindow,
   MenuItemConstructorOptions,
 } from 'electron';
+import { createWindow } from './main';
 
 interface DarwinMenuItemConstructorOptions extends MenuItemConstructorOptions {
   selector?: string;
   submenu?: DarwinMenuItemConstructorOptions[] | Menu;
 }
+
+const subMenuFile = {
+  label: 'File',
+  submenu: [
+    {
+      label: 'New Window',
+      accelerator: 'Shift+Command+N',
+      click: () => {
+        createWindow();
+      },
+    },
+  ],
+};
 
 export default class MenuBuilder {
   mainWindow: BrowserWindow;
@@ -189,7 +203,14 @@ export default class MenuBuilder {
         ? subMenuViewDev
         : subMenuViewProd;
 
-    return [subMenuAbout, subMenuEdit, subMenuView, subMenuWindow, subMenuHelp];
+    return [
+      subMenuAbout,
+      subMenuEdit,
+      subMenuView,
+      subMenuWindow,
+      subMenuHelp,
+      subMenuFile,
+    ];
   }
 
   buildDefaultTemplate() {
@@ -208,6 +229,21 @@ export default class MenuBuilder {
               this.mainWindow.close();
             },
           },
+          {
+            label: 'New',
+            accelerator: 'Ctrl+N',
+            click: () => {
+              this.mainWindow.send('file-new');
+            }
+          },
+          {
+            label: 'New Window',
+            accelerator: 'Shift+Ctrl+N',
+            click: () => {
+              createWindow();
+            }
+          },
+          { type: 'separator' },
         ],
       },
       {
