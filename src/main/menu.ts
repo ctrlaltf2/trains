@@ -89,6 +89,13 @@ export default class MenuBuilder {
           selector: 'hideOtherApplications:',
         },
         { label: 'Show All', selector: 'unhideAllApplications:' },
+        {
+          label: 'New Window',
+          accelerator: 'Shift+Ctrl+N',
+          click: () => {
+            createWindow();
+          },
+        },
         { type: 'separator' },
         {
           label: 'Quit',
@@ -237,7 +244,6 @@ export default class MenuBuilder {
               createWindow();
             },
           },
-          { type: 'separator' },
         ],
       },
       {
