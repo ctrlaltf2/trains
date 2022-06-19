@@ -1,6 +1,6 @@
 name: Publish
 
-on: [pull_request]
+on: [pull_request, push]
 jobs:
   publish:
     # To enable auto publishing to github, update your electron publisher
@@ -43,3 +43,4 @@ jobs:
           npm run postinstall
           npm run build
           npm exec electron-builder -- --publish always --win --mac --linux
+          npm electron-packager .
