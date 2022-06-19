@@ -1,14 +1,16 @@
-name: Build/release
+name: Build/Test
 
-on: push
+on: [pull_request, push]
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
 
+    steps:
       - name: Cleanup artifacts
         if: matrix.os != 'windows-latest'
         run: |
