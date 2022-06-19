@@ -5,6 +5,7 @@ import {
   BrowserWindow,
   MenuItemConstructorOptions,
 } from 'electron';
+// eslint-disable-next-line import/no-cycle
 import { createWindow } from './main';
 
 interface DarwinMenuItemConstructorOptions extends MenuItemConstructorOptions {
@@ -234,14 +235,14 @@ export default class MenuBuilder {
             accelerator: 'Ctrl+N',
             click: () => {
               this.mainWindow.send('file-new');
-            }
+            },
           },
           {
             label: 'New Window',
             accelerator: 'Shift+Ctrl+N',
             click: () => {
               createWindow();
-            }
+            },
           },
           { type: 'separator' },
         ],
