@@ -23,8 +23,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // These will be called by the electron:renderer process for this module
   // send*Message:    Asynchronously send a message (no response expected)
   // receive*Message: Asynchronously send a message (and expect a response)
-  sendTrackControllerMessage:    (payload) => ipcRenderer.send(Channels.TRACK_CONTROLLER, payload),
-  receiveTrackControllerMessage: (payload) => ipcRenderer.invoke(Channels.TRACK_CONTROLLER, payload),
+  sendTrackControllerMessage:     (payload) => ipcRenderer.send(Channels.TRACK_CONTROLLER, payload),
+  requestTrackControllerMessage:  (payload) => ipcRenderer.invoke(Channels.TRACK_CONTROLLER, payload),
 
-  receiveTrackModelMessage:      (payload) => ipcRenderer.invoke(Channels.TRACK_MODEL, payload),
+  requestTrackModelMessage:     (payload) => ipcRenderer.invoke(Channels.TRACK_MODEL, payload),
 };
