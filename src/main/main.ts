@@ -12,6 +12,7 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+// eslint-disable-next-line import/no-cycle
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
@@ -57,20 +58,27 @@ const installExtensions = async () => {
 };
 
 export const createWindow = async () => {
-  if (
-    process.env.NODE_ENV === 'development' ||
-    process.env.DEBUG_PROD === 'true'
-  ) {
+  if (isDebug) {
     await installExtensions();
   }
-  let x, y;
+
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
+
+  const getAssetPath = (...paths: string[]): string => {
+    return path.join(RESOURCES_PATH, ...paths);
+  };
+
+  let x;
+  let y;
   const currentWindow = BrowserWindow.getFocusedWindow();
   if (currentWindow) {
     const [currentWindowX, currentWindowY] = currentWindow.getPosition();
     x = currentWindowX + 24;
     y = currentWindowY + 24;
   }
-  let newWindow = new BrowserWindow({
+  const newWindow = new BrowserWindow({
     show: false,
     width: 1200,
     height: 812,
@@ -78,9 +86,14 @@ export const createWindow = async () => {
     y,
     webPreferences: {
       nodeIntegration: true,
+      preload: app.isPackaged
+        ? path.join(__dirname, 'preload.js')
+        : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
-  newWindow.loadURL(`file://${__dirname}/app.html`);
+
+  newWindow.loadURL(resolveHtmlPath('index.html'));
+
   newWindow.webContents.on('did-finish-load', () => {
     if (!newWindow) {
       throw new Error('"newWindow" is not defined');
@@ -94,7 +107,7 @@ export const createWindow = async () => {
   });
   newWindow.on('closed', () => {
     windows.delete(newWindow);
-    newWindow = null;
+    newWindow.destroy();
   });
   newWindow.on('focus', () => {
     const menuBuilder = new MenuBuilder(newWindow);
