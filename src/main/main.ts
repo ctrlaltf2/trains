@@ -10,7 +10,7 @@
  */
 import path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 // eslint-disable-next-line import/no-cycle
@@ -63,14 +63,14 @@ export const createWindow = async () => {
     await installExtensions();
   }
 
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
+  // const RESOURCES_PATH = app.isPackaged
+  //   ? path.join(process.resourcesPath, 'assets')
+  //   : path.join(__dirname, '../../assets');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
+  // const getAssetPath = (...paths: string[]): string => {
+  //   return path.join(RESOURCES_PATH, ...paths);
+  // };
 
   let x;
   let y;

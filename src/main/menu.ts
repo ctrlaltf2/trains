@@ -231,13 +231,6 @@ export default class MenuBuilder {
             },
           },
           {
-            label: 'New',
-            accelerator: 'Ctrl+N',
-            click: () => {
-              this.mainWindow.send('file-new');
-            },
-          },
-          {
             label: 'New Window',
             accelerator: 'Shift+Ctrl+N',
             click: () => {
