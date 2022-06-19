@@ -1,6 +1,6 @@
 name: Publish
 
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   publish:
     # To enable auto publishing to github, update your electron publisher
@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest]
 
     steps:
       - name: Checkout git repo
@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
+
+      - name: install dmg-license
+        run: npm i dmg-license
 
       - name: Publish releases
         env:
