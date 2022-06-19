@@ -3,7 +3,9 @@ name: Build/release
 on: push
 
 jobs:
-  strategy:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
