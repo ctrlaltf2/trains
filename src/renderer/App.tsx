@@ -7,8 +7,7 @@ import TrackController from '../modules/TrackController';
 import TrackModel from '../modules/TrackModel';
 import TrainModel from '../modules/TrainModel';
 import TrainControllerHW from '../modules/TrainControllerHW';
-import TrainControllerSW from '../modules/TrainControllerSW.jsx';
-
+import TrainControllerSW from '../modules/TrainControllerSW';
 
 const Main = () => {
   const activeModule = window.location.hash.slice(1);

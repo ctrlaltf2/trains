@@ -15,7 +15,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
-import * as Channels from './channels';
+import * as Modules from './modules';
 
 export default class AppUpdater {
   constructor() {
@@ -57,6 +57,9 @@ const activeModules = [
   'CTCOffice',
   'TrackController',
   'TrackModel',
+  'TrainModel',
+  'TrainControllerHW',
+  'TrainControllerSW',
 ];
 
 const createWindow = async (moduleName: string) => {
@@ -142,5 +145,25 @@ app
           createWindow(activeModule);
       }
     });
+
+    /*
+    Cases:
+     1. Module sends data to another module (no reply expected)
+      1. Pattern 1: send message from renderer to main
+      2. Pattern 3: relay that message from main to renderer, selecting the correct module window
+     2. Module requests data from another module
+      1. Pattern 2: async call main with request
+      2. Pattern ?: from main, request data from module (webcontents?)
+      3. Pattern 2: finish up async call and send data back
+    */
+
+    for(let moduleName of Object.values(Modules.ALL_MODULES)) {
+      // Setup relay for messages between modules expecting no reply
+      ipcMain.on(moduleName, (_event, payload) => {
+        moduleWindows[moduleName].webContents.send(moduleName, payload);
+      });
+
+      // TODO: Setup relay for messages between modules with reply
+    }
   })
   .catch(console.log);

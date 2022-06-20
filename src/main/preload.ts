@@ -1,30 +1,46 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-import * as Channels from './channels';
+import * as Modules from './modules';
+
+/*
+Cases:
+ 1. Module sends data to another module (no reply expected)
+  1. Pattern 1: send message from renderer to main
+  2. Pattern 3: relay that message from main to renderer, selecting the correct module window
+ 2. Module requests data from another module
+  1. Pattern 2: async call main with request
+  2. Pattern ?: from main, request data from module (webcontents?)
+  3. Pattern 2: finish up async call and send data back
+*/
+
+console.log(Modules.CTC_OFFICE);
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Called by electron:main to send to this module
-  relayCTCMessage:              (callback) => ipcRenderer.on(Channels.CTC_OFFICE, callback),
-  relayTrackControllerMessage:  (callback) => ipcRenderer.on(Channels.TRACK_CONTROLLER, callback),
-  relayTrackModelMessage:       (callback) => ipcRenderer.on(Channels.TRACK_MODEL, callback),
-  relayTrainModelMessage:       (callback) => ipcRenderer.on(Channels.TRAIN_MODEL, callback),
-  relayTrainControllerMessage:  (callback) => ipcRenderer.on(Channels.TRAIN_CONTROLLER, callback),
+  subscribeCTCMessage:              (callback) => ipcRenderer.on(Modules.CTC_OFFICE, callback),
+  subscribeTrackControllerMessage:  (callback) => ipcRenderer.on(Modules.TRACK_CONTROLLER, callback),
+  subscribeTrackModelMessage:       (callback) => ipcRenderer.on(Modules.TRACK_MODEL, callback),
+  subscribeTrainModelMessage:       (callback) => ipcRenderer.on(Modules.TRAIN_MODEL, callback),
+  subscribeTrainControllerMessage:  (callback) => ipcRenderer.on(Modules.TRAIN_CONTROLLER, callback),
 
   // These will be called by the electron:renderer process for this module
   // send*Message:    Asynchronously send a message (no response expected)
   // receive*Message: Asynchronously send a message (and expect a response)
-  sendCTCMessage:                 (payload) => ipcRenderer.send(Channels.CTC_OFFICE, payload),
-  requestCTCMessage:              (payload) => ipcRenderer.invoke(Channels.CTC_OFFICE, payload),
+  sendCTCMessage:                 (payload) => ipcRenderer.send(Modules.CTC_OFFICE, payload),
+  requestCTCMessage:              (payload) => ipcRenderer.invoke(Modules.CTC_OFFICE, payload),
 
-  sendTrackControllerMessage:     (payload) => ipcRenderer.send(Channels.TRACK_CONTROLLER, payload),
-  requestTrackControllerMessage:  (payload) => ipcRenderer.invoke(Channels.TRACK_CONTROLLER, payload),
+  sendTrackControllerMessage:     (payload) => ipcRenderer.send(Modules.TRACK_CONTROLLER, payload),
+  requestTrackControllerMessage:  (payload) => ipcRenderer.invoke(Modules.TRACK_CONTROLLER, payload),
 
-  sendTrackModelMessage:          (payload) => ipcRenderer.send(Channels.TRACK_MODEL, payload),
-  requestTrackModelMessage:       (payload) => ipcRenderer.invoke(Channels.TRACK_MODEL, payload),
+  sendTrackModelMessage:          (payload) => ipcRenderer.send(Modules.TRACK_MODEL, payload),
+  requestTrackModelMessage:       (payload) => ipcRenderer.invoke(Modules.TRACK_MODEL, payload),
 
-  sendTrainModelMessage:          (payload) => ipcRenderer.send(Channels.TRAIN_MODEL, payload),
-  requestTrainModelMessage:       (payload) => ipcRenderer.invoke(Channels.TRAIN_MODEL, payload),
+  sendTrainModelMessage:          (payload) => ipcRenderer.send(Modules.TRAIN_MODEL, payload),
+  requestTrainModelMessage:       (payload) => ipcRenderer.invoke(Modules.TRAIN_MODEL, payload),
 
-  sendTrainControllerMessage:     (payload) => ipcRenderer.send(Channels.TRAIN_CONTROLLER, payload),
-  requestTrainControllerMessage:  (payload) => ipcRenderer.invoke(Channels.TRAIN_CONTROLLER, payload),
+  sendTrainControllerSWMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
+  requestTrainControllerSWMessage:  (payload) => ipcRenderer.invoke(Modules.TRAIN_CONTROLLER_SW, payload),
+
+  sendTrainControllerHWMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
+  requestTrainControllerHWMessage:  (payload) => ipcRenderer.invoke(Modules.TRAIN_CONTROLLER_SW, payload),
 });
