@@ -15,6 +15,8 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
+import * as Modules from './modules';
+
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -23,13 +25,8 @@ export default class AppUpdater {
   }
 }
 
-let mainWindow: BrowserWindow | null = null;
-
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
+// Dict[ModuleName: string, moduleWindow: BrowserWindow]
+const moduleWindows = {}
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -56,7 +53,16 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const createWindow = async () => {
+const activeModules = [
+  'CTCOffice',
+  'TrackController',
+  'TrackModel',
+  'TrainModel',
+  'TrainControllerHW',
+  'TrainControllerSW',
+];
+
+const createWindow = async (moduleName: string) => {
   if (isDebug) {
     await installExtensions();
   }
@@ -69,7 +75,7 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
-  mainWindow = new BrowserWindow({
+  let moduleWindow = new BrowserWindow({
     show: false,
     width: 1024,
     height: 728,
@@ -80,29 +86,30 @@ const createWindow = async () => {
         : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
+  moduleWindows[moduleName] = moduleWindow;
 
-  mainWindow.loadURL(resolveHtmlPath('index.html'));
+  moduleWindow.loadURL(`${resolveHtmlPath('index.html')}#${moduleName}`);
 
-  mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) {
-      throw new Error('"mainWindow" is not defined');
+  moduleWindow.on('ready-to-show', () => {
+    if (!moduleWindow) {
+      throw new Error(`"moduleWindow: ${moduleWindow}" is not defined.`);
     }
     if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
+      moduleWindow.minimize();
     } else {
-      mainWindow.show();
+      moduleWindow.show();
     }
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  moduleWindow.on('closed', () => {
+    moduleWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
+  const menuBuilder = new MenuBuilder(moduleWindow);
   menuBuilder.buildMenu();
 
   // Open urls in the user's browser
-  mainWindow.webContents.setWindowOpenHandler((edata) => {
+  moduleWindow.webContents.setWindowOpenHandler((edata) => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
@@ -127,11 +134,35 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    createWindow();
+    activeModules.forEach(mod => createWindow(mod));
+    /*
+    for(const activeModule of activeModules)
+      createWindow(activeModule); */
+
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
+      activeModules.forEach(mod => {
+        if(moduleWindows[mod] === undefined)
+          createWindow(mod);
+      });
+    });
+
+    /*
+    Cases:
+     1. Module sends data to another module (no reply expected)
+      1. Pattern 1: send message from renderer to main
+      2. Pattern 3: relay that message from main to renderer, selecting the correct module window
+     2. Module requests data from another module
+      1. Pattern 2: async call main with request
+      2. Pattern ?: from main, request data from module (webcontents?)
+      3. Pattern 2: finish up async call and send data back
+    */
+
+    Object.values(Modules.ALL_MODULES).forEach(moduleName => {
+      ipcMain.on(moduleName, (_event, payload) => {
+        moduleWindows[moduleName].webContents.send(moduleName, payload);
+      });
     });
   })
   .catch(console.log);
