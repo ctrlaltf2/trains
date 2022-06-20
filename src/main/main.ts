@@ -25,7 +25,8 @@ export default class AppUpdater {
   }
 }
 
-let mainWindow: BrowserWindow | null = null;
+// Dict[ModuleName: string, moduleWindow: BrowserWindow]
+let moduleWindows = {}
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -52,7 +53,13 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const createWindow = async () => {
+const activeModules = [
+  'CTCOffice',
+  'TrackController',
+  'TrackModel',
+];
+
+const createWindow = async (moduleName: string) => {
   if (isDebug) {
     await installExtensions();
   }
@@ -65,7 +72,7 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
-  mainWindow = new BrowserWindow({
+  let moduleWindow = new BrowserWindow({
     show: false,
     width: 1024,
     height: 728,
@@ -76,29 +83,30 @@ const createWindow = async () => {
         : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
+  moduleWindows[moduleName] = moduleWindow;
 
-  mainWindow.loadURL(resolveHtmlPath('index.html') + '#CTCOffice');
+  moduleWindow.loadURL(resolveHtmlPath('index.html') + '#' + moduleName);
 
-  mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) {
-      throw new Error('"mainWindow" is not defined');
+  moduleWindow.on('ready-to-show', () => {
+    if (!moduleWindow) {
+      throw new Error('"moduleWindow:' + moduleName + '" is not defined.');
     }
     if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
+      moduleWindow.minimize();
     } else {
-      mainWindow.show();
+      moduleWindow.show();
     }
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  moduleWindow.on('closed', () => {
+    moduleWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
+  const menuBuilder = new MenuBuilder(moduleWindow);
   menuBuilder.buildMenu();
 
   // Open urls in the user's browser
-  mainWindow.webContents.setWindowOpenHandler((edata) => {
+  moduleWindow.webContents.setWindowOpenHandler((edata) => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
@@ -123,16 +131,16 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    // Setup channels
+    for(let activeModule of activeModules)
+      createWindow(activeModule);
 
-
-
-
-    createWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
+      for(let activeModule of activeModules) {
+        if(moduleWindows[activeModule] == undefined)
+          createWindow(activeModule);
+      }
     });
   })
   .catch(console.log);
