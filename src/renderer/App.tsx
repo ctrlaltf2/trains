@@ -1,5 +1,4 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import icon from '../../assets/icon.svg';
 import '../../assets/css/pico.min.css';
 
 import CTCOffice from '../modules/CTCOffice';
@@ -12,7 +11,7 @@ import TrainControllerSW from '../modules/TrainControllerSW';
 const Main = () => {
   const activeModule = window.location.hash.slice(1);
 
-  let moduleToRender = (<p>Invalid module render selected!</p>);
+  let moduleToRender;
 
   switch(activeModule) {
     case 'CTCOffice':
@@ -33,6 +32,8 @@ const Main = () => {
     case 'TrainControllerHW':
       moduleToRender = (<TrainControllerHW/>);
       break;
+    default:
+      moduleToRender = (<p>Invalid module render selected!</p>);
   };
 
   return moduleToRender;
