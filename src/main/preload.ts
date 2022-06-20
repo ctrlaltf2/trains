@@ -1,19 +1,6 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
 import * as Modules from './modules';
-
-/*
-Cases:
- 1. Module sends data to another module (no reply expected)
-  1. Pattern 1: send message from renderer to main
-  2. Pattern 3: relay that message from main to renderer, selecting the correct module window
- 2. Module requests data from another module
-  1. Pattern 2: async call main with request
-  2. Pattern ?: from main, request data from module (webcontents?)
-  3. Pattern 2: finish up async call and send data back
-*/
-
-console.log(Modules.CTC_OFFICE);
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Called by electron:main to send to this module

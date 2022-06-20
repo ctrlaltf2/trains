@@ -26,7 +26,7 @@ export default class AppUpdater {
 }
 
 // Dict[ModuleName: string, moduleWindow: BrowserWindow]
-let moduleWindows = {}
+const moduleWindows = {}
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -88,11 +88,11 @@ const createWindow = async (moduleName: string) => {
   });
   moduleWindows[moduleName] = moduleWindow;
 
-  moduleWindow.loadURL(resolveHtmlPath('index.html') + '#' + moduleName);
+  moduleWindow.loadURL(`${resolveHtmlPath('index.html')}#${moduleName}`);
 
   moduleWindow.on('ready-to-show', () => {
     if (!moduleWindow) {
-      throw new Error('"moduleWindow:' + moduleName + '" is not defined.');
+      throw new Error(`"moduleWindow: ${moduleWindow}" is not defined.`);
     }
     if (process.env.START_MINIMIZED) {
       moduleWindow.minimize();
@@ -134,16 +134,18 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    for(let activeModule of activeModules)
-      createWindow(activeModule);
+    activeModules.forEach(mod => createWindow(mod));
+    /*
+    for(const activeModule of activeModules)
+      createWindow(activeModule); */
 
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      for(let activeModule of activeModules) {
-        if(moduleWindows[activeModule] == undefined)
-          createWindow(activeModule);
-      }
+      activeModules.forEach(mod => {
+        if(moduleWindows[mod] === undefined)
+          createWindow(mod);
+      });
     });
 
     /*
@@ -157,13 +159,10 @@ app
       3. Pattern 2: finish up async call and send data back
     */
 
-    for(let moduleName of Object.values(Modules.ALL_MODULES)) {
-      // Setup relay for messages between modules expecting no reply
+    Object.values(Modules.ALL_MODULES).forEach(moduleName => {
       ipcMain.on(moduleName, (_event, payload) => {
         moduleWindows[moduleName].webContents.send(moduleName, payload);
       });
-
-      // TODO: Setup relay for messages between modules with reply
-    }
+    });
   })
   .catch(console.log);
