@@ -1,0 +1,15 @@
+
+.h1{
+  display: flex;
+  font-size: small;
+  font-weight: bold;
+  align-self: center;
+  justify-content: center;
+}
+
+.Container{
+  background-color: aqua;
+  border-width: 5px;
+  border-style: dotted;
+  border-color: black;
+}
