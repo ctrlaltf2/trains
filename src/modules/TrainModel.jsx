@@ -1,5 +1,5 @@
-const TrackModel = () => {
-  return <p>Track Model</p>;
+const TrainModel = () => {
+  return <p>Train Model</p>;
 };
 
-export default TrackModel;
+export default TrainModel;
