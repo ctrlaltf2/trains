@@ -6,6 +6,9 @@ module.exports = {
     'import/no-unresolved': 'error',
     // Since React 17 and typescript 4.1 you can safely disable the rule
     'react/react-in-jsx-scope': 'off',
+    'prettier/prettier': 0,
+    'import/prefer-default-export': 1,
+    '@typescript-eslint/no-non-null-assertion': 0,
   },
   parserOptions: {
     ecmaVersion: 2020,
