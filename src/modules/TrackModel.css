@@ -1,10 +1,8 @@
-
-.h1{
-  display: flex;
-  font-size: small;
-  font-weight: bold;
-  align-self: center;
-  justify-content: center;
+.Center{
+  text-align: center;
+  font-size: larger;
+  font-weight: lighter;
+  padding-bottom: 20px;
 }
 
 .Container{
