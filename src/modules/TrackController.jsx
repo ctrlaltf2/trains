@@ -39,7 +39,7 @@ class Block {
       id,
       transitLight: null,
       occupancy: null,
-      switch: null,
+      switchPosition: null,
     };
   }
 }
@@ -52,19 +52,22 @@ class TrackController extends React.Component {
     const blocks = [];
     blocks.push({
       id: 1,
+      switchPosition: 1,
     });
     blocks.push({
       id: 2,
+      switchPosition: 2,
     });
     blocks.push({
       id: 3,
+      switchPosition: 3,
     });
 
     this.state = {
       testMode: false,
       blocks,
       maintenanceMode: false,
-      activeBlock: 1,
+      activeBlock: 0,
     };
 
     // this.setState({
@@ -83,7 +86,7 @@ class TrackController extends React.Component {
 
   handleChange(event) {
     this.setState({
-      activeBlock: event.target.value,
+      activeBlock: event.target.value - 1,
     });
     console.log(this.state.activeBlock);
   }
@@ -122,7 +125,7 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-Block"
                       id="select-Block"
-                      value={this.state.activeBlock}
+                      value={this.state.activeBlock + 1}
                       label="Blocks"
                       onChange={this.handleChange}
                     >
@@ -147,7 +150,7 @@ class TrackController extends React.Component {
               <Grid item xs={4}>
                 <div className="left">
                   <Chip
-                    label="Switch Position 3"
+                    label= {`Switch Position: ${this.state.blocks[this.state.activeBlock].switchPosition}`}
                     color="success"
                     variant="outlined"
                   />
@@ -347,7 +350,7 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-Block"
                       id="select-Block"
-                      value={this.state.activeBlock}
+                      value={this.state.activeBlock + 1}
                       label="Blocks"
                       onChange={this.handleChange}
                     >
@@ -372,7 +375,7 @@ class TrackController extends React.Component {
               <Grid item xs={4}>
                 <div className="left">
                   <Chip
-                    label="Switch Position 3"
+                    label= {`Switch Position: ${this.state.blocks[this.state.activeBlock].switchPosition}`}
                     color="success"
                     variant="outlined"
                   />
