@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import {
@@ -31,21 +32,47 @@ window.electronAPI.subscribeTrackControllerMessage((_event, payload) => {
   console.log('IPC:TrackController: ', payload);
 });
 
-class TrackController extends React.Component {
-  constructor(props) {
-    super(props);
+class Block {
+  constructor(id) {
     this.state = {
-      testMode: false,
+      transitLight: null,
+      occupancy: null,
+      switch: null,
     };
   }
+}
 
-  testUI() {
-    return <p>Track controller test ui</p>;
+class TrackController extends React.Component {
+  constructor(props, name) {
+    super(props);
+    this.name = name;
+
+    this.state = {
+      testMode: false,
+      blocks: [],
+      maintenanceMode: false,
+    };
+    console.log("testing mm", this.state.maintenanceMode)
+
+    this.toggle = this.toggle.bind(this);
+    this.mmMode = this.mmMode.bind(this);
   }
 
-  render() {
-    if (this.state.testMode) return this.testUI();
+  mmMode() {
+    this.setState((prevState) => ({
+      maintenanceMode: !prevState.maintenanceMode,
+    }));
+  }
 
+  toggle() {
+    this.setState(prevState => ({
+      testMode: !prevState.testMode,
+    })
+    );
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  testUI() {
     return (
       <div>
         <ThemeProvider theme={darkTheme}>
@@ -70,7 +97,7 @@ class TrackController extends React.Component {
                 </div>
               </Grid>
               <Grid item xs={6}>
-                <div className="text-centered">Track Controller</div>
+                <div className="text-centered">Track Controller Test Panel</div>
               </Grid>
               <Grid item xs={3}>
                 <div className="text-centered">Track Line:__</div>
@@ -248,6 +275,228 @@ class TrackController extends React.Component {
             </Grid>
           </Box>
         </ThemeProvider>
+        <Button variant="contained" onClick={this.toggle}>toggle test ui</Button>
+
+      </div>
+
+    );
+  }
+
+  render() {
+    if (this.state.testMode) return this.testUI();
+
+    const mmMode = this.maintenanceMode
+    return (
+      <div>
+        <ThemeProvider theme={darkTheme}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Grid container spacing={12}>
+              <Grid item xs={3}>
+                <div className="left">
+                  <FormControl fullWidth>
+                    <InputLabel id="select-Block">Block</InputLabel>
+                    <Select
+                      labelId="select-Block"
+                      id="select-Block"
+                      // value=0
+                      label="Blocks"
+                      // onChange={handleChange}
+                    >
+                      <MenuItem value={10}>1</MenuItem>
+                      <MenuItem value={20}>2</MenuItem>
+                      <MenuItem value={30}>3 </MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              </Grid>
+              <Grid item xs={6}>
+                <div className="text-centered">Track Controller</div>
+              </Grid>
+              <Grid item xs={3}>
+                <div className="text-centered">Track Line:__</div>
+              </Grid>
+            </Grid>
+
+            <Grid container spacing={12}>
+              <Grid item xs={4}>
+                <div className="left">
+                  <Chip
+                    label="Switch Position 3"
+                    color="success"
+                    variant="outlined"
+                  />
+                </div>
+              </Grid>
+              <Grid item xs="auto">
+                <div className="centered">
+                  { this.state.maintenanceMode ? (
+                    <Chip
+                      label="Maintenence Mode Activated"
+                      color="warning"
+                      variant="filled"
+                    />
+                  ) : (
+                    <Chip
+                      label="Maintenence Mode Deactivated"
+                      color="success"
+                      variant="filled"
+                    />
+                  )}
+                </div>
+              </Grid>
+              <Grid item xs>
+                <div className="right">
+                  <Chip label="Light" color="success" variant="outlined" />
+                </div>
+              </Grid>
+            </Grid>
+
+            <Grid container spacing={12}>
+              <Grid item xs="auto">
+                <TableContainer className="metrics">
+                  <Table
+                    sx={{ minWidth: 'auto' }}
+                    size="small"
+                    aria-label="table"
+                  >
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Train Metrics</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Suggested Velocity</TableCell>
+                        <TableCell align="right">mph</TableCell>
+                      </TableRow>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Authority</TableCell>
+                        <TableCell align="right">miles</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                  <Table
+                    sx={{ minWidth: 'auto' }}
+                    size="small"
+                    aria-label="table"
+                  >
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Track Metrics</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Gates</TableCell>
+                        <TableCell align="right">status</TableCell>
+                      </TableRow>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Crossing Lights</TableCell>
+                        <TableCell align="right">status</TableCell>
+                      </TableRow>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Track Occupency</TableCell>
+                        <TableCell align="right">status</TableCell>
+                      </TableRow>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Direction</TableCell>
+                        <TableCell align="right">bool</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+              <Grid item xs="auto">
+                <TableContainer>
+                  <Table
+                    sx={{ minWidth: 'auto' }}
+                    size="small"
+                    aria-label="table"
+                  >
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Failures</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Rail</TableCell>
+                        <TableCell align="right">OK</TableCell>
+                      </TableRow>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Light</TableCell>
+                        <TableCell align="right">OK</TableCell>
+                      </TableRow>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Engine</TableCell>
+                        <TableCell align="right">OK</TableCell>
+                      </TableRow>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Signal</TableCell>
+                        <TableCell align="right">OK</TableCell>
+                      </TableRow>
+                      <TableRow
+                        sx={{
+                          '&:last-child td, &:last-child th': { border: 0 },
+                        }}
+                      >
+                        <TableCell component="th">Brake</TableCell>
+                        <TableCell align="right">OK</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+              <Grid item xs>
+                <div className="centered">
+                  <Button variant="contained">Load plc</Button>
+                </div>
+              </Grid>
+            </Grid>
+          </Box>
+        </ThemeProvider>
+        <Button variant="contained" onClick={this.toggle}>toggle test ui</Button>
       </div>
     );
   }
