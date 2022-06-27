@@ -19,6 +19,7 @@ import {
   TableContainer,
   TableBody,
 } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 
 import './TrackController.css';
 
@@ -35,6 +36,7 @@ window.electronAPI.subscribeTrackControllerMessage((_event, payload) => {
 class Block {
   constructor(id) {
     this.state = {
+      id,
       transitLight: null,
       occupancy: null,
       switch: null,
@@ -47,14 +49,49 @@ class TrackController extends React.Component {
     super(props);
     this.name = name;
 
+    const blocks = [];
+    blocks.push({
+      id: 1,
+    });
+    blocks.push({
+      id: 2,
+    });
+    blocks.push({
+      id: 3,
+    });
+
     this.state = {
       testMode: false,
-      blocks: [],
+      blocks,
       maintenanceMode: false,
+      activeBlock: 1,
     };
+
+    // this.setState({
+    //   blocks: [this.state.blocks, new Block(1)],
+    // });
+    // this.setState({
+    //   blocks: [this.state.blocks, new Block(2)],
+    // });
+    console.log(this.state.blocks);
 
     this.toggle = this.toggle.bind(this);
     this.mmMode = this.mmMode.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    // this.initializeBlocks = this.initializeBlocks.bind(this);
+  }
+
+  handleChange(event) {
+    this.setState({
+      activeBlock: event.target.value,
+    });
+    console.log(this.state.activeBlock);
+  }
+
+  toggle() {
+    this.setState((prevState) => ({
+      testMode: !prevState.testMode,
+    }));
   }
 
   mmMode() {
@@ -63,12 +100,13 @@ class TrackController extends React.Component {
     }));
   }
 
-  toggle() {
-    this.setState(prevState => ({
-      testMode: !prevState.testMode,
-    })
-    );
-  }
+  // initializeBlocks() {
+  //   this.setState({
+  //     // eslint-disable-next-line react/destructuring-assignment
+  //     blocks: [this.state.blocks, new Block],
+  //   });
+  //   console.log(this.state.blocks)
+  // }
 
   // eslint-disable-next-line class-methods-use-this
   testUI() {
@@ -84,13 +122,15 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-Block"
                       id="select-Block"
-                      // value=0
+                      value={this.state.activeBlock}
                       label="Blocks"
-                      // onChange={handleChange}
+                      onChange={this.handleChange}
                     >
-                      <MenuItem value={10}>1</MenuItem>
-                      <MenuItem value={20}>2</MenuItem>
-                      <MenuItem value={30}>3 </MenuItem>
+                      {this.state.blocks.map((block) => (
+                        <MenuItem key={block.id} value={block.id}>
+                          {String(block.id)}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -115,14 +155,16 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                   { this.state.maintenanceMode ? (
-                    <Chip onClick={this.mmMode}
+                  {this.state.maintenanceMode ? (
+                    <Chip
+                      onClick={this.mmMode}
                       label="Maintenence Mode Activated"
                       color="warning"
                       variant="filled"
                     />
                   ) : (
-                    <Chip onClick={this.mmMode}
+                    <Chip
+                      onClick={this.mmMode}
                       label="Maintenence Mode Deactivated"
                       color="success"
                       variant="filled"
@@ -282,17 +324,17 @@ class TrackController extends React.Component {
             </Grid>
           </Box>
         </ThemeProvider>
-        <Button variant="contained" onClick={this.toggle}>toggle test ui</Button>
-
+        <Button variant="contained" onClick={this.toggle}>
+          toggle test ui
+        </Button>
       </div>
-
     );
   }
 
   render() {
     if (this.state.testMode) return this.testUI();
 
-    const mmMode = this.maintenanceMode
+    const mmMode = this.maintenanceMode;
     return (
       <div>
         <ThemeProvider theme={darkTheme}>
@@ -305,13 +347,15 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-Block"
                       id="select-Block"
-                      // value=0
+                      value={this.state.activeBlock}
                       label="Blocks"
-                      // onChange={handleChange}
+                      onChange={this.handleChange}
                     >
-                      <MenuItem value={10}>1</MenuItem>
-                      <MenuItem value={20}>2</MenuItem>
-                      <MenuItem value={30}>3 </MenuItem>
+                      {this.state.blocks.map((block, index) => (
+                        <MenuItem key={block.id} value={block.id}>
+                          {String(block.id)}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -336,7 +380,7 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  { this.state.maintenanceMode ? (
+                  {this.state.maintenanceMode ? (
                     <Chip
                       label="Maintenence Mode Activated"
                       color="warning"
@@ -503,7 +547,9 @@ class TrackController extends React.Component {
             </Grid>
           </Box>
         </ThemeProvider>
-        <Button variant="contained" onClick={this.toggle}>toggle test ui</Button>
+        <Button variant="contained" onClick={this.toggle}>
+          toggle test ui
+        </Button>
       </div>
     );
   }
