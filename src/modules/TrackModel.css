@@ -11,3 +11,8 @@
   border-style: dotted;
   border-color: black;
 }
+
+.HeaderText{
+  font-size: xx-large;
+  justify-self: center;
+}
