@@ -137,6 +137,7 @@
     "@mui/material": "^5.8.5",
     "@picocss/pico": "^1.5.2",
     "cytoscape": "^3.21.2",
+    "cytoscape-dagre": "^2.4.0",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.7",
     "electron-updater": "^5.0.1",
