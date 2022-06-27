@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button, ThemeProvider, createTheme } from '@mui/material';
 
+import SystemMap from './CTCOffice/SystemMap';
+
 import './CTCOffice.css';
 
 const darkTheme = createTheme({
@@ -31,6 +33,7 @@ class CTCOffice extends React.Component {
 
       switch(payload.type) {
         case 'throughput':
+          // TODO: message validation
           switch(payload.line) {
             case 'red':
               this.setState({
@@ -51,6 +54,10 @@ class CTCOffice extends React.Component {
               console.warn(`Got throughput for an unknown line ${payload.line}`);
           }
           break;
+        case 'occupancy':
+          // TODO: message validation
+          this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -66,7 +73,16 @@ class CTCOffice extends React.Component {
       // trainSelection: undefined,
       // blockSelection: undefined,
       // trackControllerSelection: undefined,
+      occupancy: { // occupancy[line][block_id] = is_occupied: bool
+        'red': {},
+        'green': {},
+        'blue': {},
+      },
     };
+  }
+
+  updateBlockOccupancy(line, block_id, is_occupied) {
+    occupancy[line][block_id] = !!is_occupied;
   }
 
   renderTest() {
@@ -121,6 +137,8 @@ class CTCOffice extends React.Component {
 
   // TODO: integrate this into dashboard
   renderMap() {
+    const { occupancy } = this.state;
+
     return (
       <ThemeProvider theme={darkTheme}>
         <Button className="backButton" variant="contained" onClick={() => {
@@ -128,7 +146,9 @@ class CTCOffice extends React.Component {
         }}>
           Return to dashboard
         </Button>
-        <div className="mapContainer"/>
+      <SystemMap
+        occupancy={occupancy}
+      />
       </ThemeProvider>
     );
   }
