@@ -52,7 +52,6 @@ class TrackController extends React.Component {
       blocks: [],
       maintenanceMode: false,
     };
-    console.log("testing mm", this.state.maintenanceMode)
 
     this.toggle = this.toggle.bind(this);
     this.mmMode = this.mmMode.bind(this);
@@ -116,11 +115,19 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  <Chip
-                    label="Maintenence Mode Activated"
-                    color="success"
-                    variant="outlined"
-                  />
+                   { this.state.maintenanceMode ? (
+                    <Chip onClick={this.mmMode}
+                      label="Maintenence Mode Activated"
+                      color="warning"
+                      variant="filled"
+                    />
+                  ) : (
+                    <Chip onClick={this.mmMode}
+                      label="Maintenence Mode Deactivated"
+                      color="success"
+                      variant="filled"
+                    />
+                  )}
                 </div>
               </Grid>
               <Grid item xs>
