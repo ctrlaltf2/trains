@@ -98,6 +98,7 @@
                 {
                     "data": {
                         "id": "1::E",
+                        "section": "A",
                         "source": "y-1",
                         "target": "1-2"
                     }
@@ -105,6 +106,7 @@
                 {
                     "data": {
                         "id": "1::W",
+                        "section": "A",
                         "source": "1-2",
                         "target": "y-1"
                     }
@@ -112,6 +114,7 @@
                 {
                     "data": {
                         "id": "2::E",
+                        "section": "A",
                         "source": "1-2",
                         "target": "2-3"
                     }
@@ -119,6 +122,7 @@
                 {
                     "data": {
                         "id": "2::W",
+                        "section": "A",
                         "source": "2-3",
                         "target": "1-2"
                     }
@@ -126,6 +130,7 @@
                 {
                     "data": {
                         "id": "3::E",
+                        "section": "A",
                         "source": "2-3",
                         "target": "3-4"
                     }
@@ -133,6 +138,7 @@
                 {
                     "data": {
                         "id": "3::W",
+                        "section": "A",
                         "source": "3-4",
                         "target": "2-3"
                     }
@@ -140,6 +146,7 @@
                 {
                     "data": {
                         "id": "4::E",
+                        "section": "A",
                         "source": "3-4",
                         "target": "4-5"
                     }
@@ -147,6 +154,7 @@
                 {
                     "data": {
                         "id": "4::W",
+                        "section": "A",
                         "source": "4-5",
                         "target": "3-4"
                     }
@@ -154,6 +162,7 @@
                 {
                     "data": {
                         "id": "5::E",
+                        "section": "A",
                         "source": "4-5",
                         "target": "5-6-11"
                     }
@@ -161,6 +170,7 @@
                 {
                     "data": {
                         "id": "5::W",
+                        "section": "A",
                         "source": "5-6-11",
                         "target": "4-5"
                     }
@@ -168,6 +178,7 @@
                 {
                     "data": {
                         "id": "6::E",
+                        "section": "B",
                         "source": "5-6-11",
                         "target": "6-7"
                     }
@@ -175,6 +186,7 @@
                 {
                     "data": {
                         "id": "6::W",
+                        "section": "B",
                         "source": "6-7",
                         "target": "5-6-11"
                     }
@@ -182,6 +194,7 @@
                 {
                     "data": {
                         "id": "7::E",
+                        "section": "B",
                         "source": "6-7",
                         "target": "7-8"
                     }
@@ -189,6 +202,7 @@
                 {
                     "data": {
                         "id": "7::W",
+                        "section": "B",
                         "source": "7-8",
                         "target": "6-7"
                     }
@@ -196,6 +210,7 @@
                 {
                     "data": {
                         "id": "8::E",
+                        "section": "B",
                         "source": "7-8",
                         "target": "8-9"
                     }
@@ -203,6 +218,7 @@
                 {
                     "data": {
                         "id": "8::W",
+                        "section": "B",
                         "source": "8-9",
                         "target": "7-8"
                     }
@@ -210,6 +226,7 @@
                 {
                     "data": {
                         "id": "9::E",
+                        "section": "B",
                         "source": "8-9",
                         "target": "9-10"
                     }
@@ -217,6 +234,7 @@
                 {
                     "data": {
                         "id": "9::W",
+                        "section": "B",
                         "source": "9-10",
                         "target": "8-9"
                     }
@@ -224,6 +242,7 @@
                 {
                     "data": {
                         "id": "10::E",
+                        "section": "B",
                         "source": "9-10",
                         "target": "10-e",
                         "station": "Station B"
@@ -232,6 +251,7 @@
                 {
                     "data": {
                         "id": "10::W",
+                        "section": "B",
                         "source": "10-e",
                         "target": "9-10",
                         "station": "Station B"
@@ -240,6 +260,7 @@
                 {
                     "data": {
                         "id": "11::E",
+                        "section": "C",
                         "source": "5-6-11",
                         "target": "11-12"
                     }
@@ -247,6 +268,7 @@
                 {
                     "data": {
                         "id": "11::W",
+                        "section": "C",
                         "source": "11-12",
                         "target": "5-6-11"
                     }
@@ -254,6 +276,7 @@
                 {
                     "data": {
                         "id": "12::E",
+                        "section": "C",
                         "source": "11-12",
                         "target": "12-13"
                     }
@@ -261,6 +284,7 @@
                 {
                     "data": {
                         "id": "12::W",
+                        "section": "C",
                         "source": "12-13",
                         "target": "11-12"
                     }
@@ -268,6 +292,7 @@
                 {
                     "data": {
                         "id": "13::E",
+                        "section": "C",
                         "source": "12-13",
                         "target": "13-14"
                     }
@@ -275,6 +300,7 @@
                 {
                     "data": {
                         "id": "13::W",
+                        "section": "C",
                         "source": "13-14",
                         "target": "12-13"
                     }
@@ -282,6 +308,7 @@
                 {
                     "data": {
                         "id": "14::E",
+                        "section": "C",
                         "source": "13-14",
                         "target": "14-15"
                     }
@@ -289,6 +316,7 @@
                 {
                     "data": {
                         "id": "14::W",
+                        "section": "C",
                         "source": "14-15",
                         "target": "13-14"
                     }
@@ -296,6 +324,7 @@
                 {
                     "data": {
                         "id": "15::E",
+                        "section": "C",
                         "source": "14-15",
                         "target": "15-e",
                         "station": "Station C"
@@ -304,6 +333,7 @@
                 {
                     "data": {
                         "id": "15::W",
+                        "section": "C",
                         "source": "15-e",
                         "target": "14-15",
                         "station": "Station C"
