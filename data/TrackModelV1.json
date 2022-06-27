@@ -1,0 +1,314 @@
+{
+    "lines": {
+        "blue": {
+            "nodes": [
+                {
+                    "data": {
+                        "id": "yard"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "y-1"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "1-2"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "2-3"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "3-4"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "4-5"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "5-6-11"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "6-7"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "7-8"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "8-9"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "9-10"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "10-e"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "5-11"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "11-12"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "12-13"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "13-14"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "14-15"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "15-e"
+                    }
+                }
+            ],
+            "edges": [
+                {
+                    "data": {
+                        "id": "1::E",
+                        "source": "y-1",
+                        "target": "1-2"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "1::W",
+                        "source": "1-2",
+                        "target": "y-1"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "2::E",
+                        "source": "1-2",
+                        "target": "2-3"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "2::W",
+                        "source": "2-3",
+                        "target": "1-2"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "3::E",
+                        "source": "2-3",
+                        "target": "3-4"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "3::W",
+                        "source": "3-4",
+                        "target": "2-3"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "4::E",
+                        "source": "3-4",
+                        "target": "4-5"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "4::W",
+                        "source": "4-5",
+                        "target": "3-4"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "5::E",
+                        "source": "4-5",
+                        "target": "5-6-11"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "5::W",
+                        "source": "5-6-11",
+                        "target": "4-5"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "6::E",
+                        "source": "5-6-11",
+                        "target": "6-7"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "6::W",
+                        "source": "6-7",
+                        "target": "5-6-11"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "7::E",
+                        "source": "6-7",
+                        "target": "7-8"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "7::W",
+                        "source": "7-8",
+                        "target": "6-7"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "8::E",
+                        "source": "7-8",
+                        "target": "8-9"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "8::W",
+                        "source": "8-9",
+                        "target": "7-8"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "9::E",
+                        "source": "8-9",
+                        "target": "9-10"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "9::W",
+                        "source": "9-10",
+                        "target": "8-9"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "10::E",
+                        "source": "9-10",
+                        "target": "10-e",
+                        "station": "Station B"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "10::W",
+                        "source": "10-e",
+                        "target": "9-10",
+                        "station": "Station B"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "11::E",
+                        "source": "5-6-11",
+                        "target": "11-12"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "11::W",
+                        "source": "11-12",
+                        "target": "5-6-11"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "12::E",
+                        "source": "11-12",
+                        "target": "12-13"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "12::W",
+                        "source": "12-13",
+                        "target": "11-12"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "13::E",
+                        "source": "12-13",
+                        "target": "13-14"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "13::W",
+                        "source": "13-14",
+                        "target": "12-13"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "14::E",
+                        "source": "13-14",
+                        "target": "14-15"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "14::W",
+                        "source": "14-15",
+                        "target": "13-14"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "15::E",
+                        "source": "14-15",
+                        "target": "15-e",
+                        "station": "Station C"
+                    }
+                },
+                {
+                    "data": {
+                        "id": "15::W",
+                        "source": "15-e",
+                        "target": "14-15",
+                        "station": "Station C"
+                    }
+                }
+            ]
+        }
+    }
+}
