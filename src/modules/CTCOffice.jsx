@@ -40,9 +40,9 @@ class CTCOffice extends React.Component {
 
     this.state = {
       UIMode: UIState.Main,
-      //trainSelection: undefined,
-      //blockSelection: undefined,
-      //trackControllerSelection: undefined,
+      // trainSelection: undefined,
+      // blockSelection: undefined,
+      // trackControllerSelection: undefined,
     };
   }
 
@@ -145,10 +145,10 @@ class CTCOffice extends React.Component {
             Load System Schedule
           </Button>
           <div className="throughputContainer">
-            <h4>Throughput Statistics</h4>
+            <h4 className="throughputTitle">Throughput Statistics</h4>
             <div className="throughputGrid">
               <div className="throughputLabel" id="blueLineLabel">Blue Line Throughput</div>
-              <div className="throughputValue" id="blueLineValue">42 train/hr</div>
+              <div className="throughputValue" id="blueLineValue">42 trains/hr</div>
               <div className="throughputLabel" id="redLineLabel">Red Line Throughput</div>
               <div className="throughputValue" id="redLineValue">42 trains/hr</div>
               <div className="throughputLabel" id="greenLineLabel">Green Line Throughput</div>
