@@ -39,7 +39,10 @@ class CTCOffice extends React.Component {
     super(props);
 
     this.state = {
-      UIMode: UIState.Main
+      UIMode: UIState.Main,
+      //trainSelection: undefined,
+      //blockSelection: undefined,
+      //trackControllerSelection: undefined,
     };
   }
 
@@ -49,10 +52,19 @@ class CTCOffice extends React.Component {
         <div className="testUIContainer">
           <div className="inputContainer">
             <h4 className="containerTitle">From Track Controller (Inputs to module)</h4>
-            <div className="testUIRow">Track Controller Selection</div>
+            <div className="horiz-div"/>
+            <div className="testUIRow row-title">Track Controller Selection</div>
+            <div className="testUIRow">Throughput</div>
+            <div className="horiz-div"/>
+            <div className="testUIRow row-title">Train Selection</div>
             <Button variant="contained">Brake Failure Event</Button>
             <Button variant="contained">Engine Failure Event</Button>
             <Button variant="contained">Broken Rail Event</Button>
+            <div className="horiz-div"/>
+            <div className="testUIRow row-title">Block Selection</div>
+            <div className="horiz-div"/>
+
+
           </div>
           <div className="outputContainer">
             <h4 className="containerTitle">To Track Controller (Outputs from module)</h4>
@@ -68,6 +80,7 @@ class CTCOffice extends React.Component {
     );
   }
 
+  // TODO: integrate this into dashboard
   renderDispatch() {
     return (
       <ThemeProvider theme={darkTheme}>
@@ -77,12 +90,13 @@ class CTCOffice extends React.Component {
           Return to dashboard
         </Button>
         <div className="dispatchContainer">
-
+          <h1>Manual Dispatch</h1>
         </div>
       </ThemeProvider>
     );
   }
 
+  // TODO: integrate this into dashboard
   renderMap() {
     return (
       <ThemeProvider theme={darkTheme}>
@@ -91,13 +105,12 @@ class CTCOffice extends React.Component {
         }}>
           Return to dashboard
         </Button>
-        <div className="mapContainer">
-
-        </div>
+        <div className="mapContainer"/>
       </ThemeProvider>
     );
   }
 
+  // TODO: integrate this into dashboard
   renderScheduler() {
     return (
       <ThemeProvider theme={darkTheme}>
@@ -106,9 +119,7 @@ class CTCOffice extends React.Component {
         }}>
           Return to dashboard
         </Button>
-        <div className="schedulerContainer">
-
-        </div>
+        <div className="schedulerContainer"/>
       </ThemeProvider>
     );
   }
@@ -121,7 +132,7 @@ class CTCOffice extends React.Component {
           <Button variant="contained" onClick={() => {
               this.setState({UIMode: UIState.Dispatching});
           }}>
-            Dispatch Train
+            Manually Dispatch Train
           </Button>
           <Button variant="contained" onClick={() => {
               this.setState({UIMode: UIState.Map});

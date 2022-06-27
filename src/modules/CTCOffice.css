@@ -45,8 +45,19 @@
   width: fit-content;
 }
 
+.horiz-div {
+  height: 1px;
+  width: 85%;
+  margin: 0 4em;
+  border: 1px solid #dedede;
+}
+
 .grow-divider {
   flex-grow: 1;
+}
+
+.row-title {
+  font-weight: bold;
 }
 
 .backButton {
