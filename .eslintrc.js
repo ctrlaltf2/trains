@@ -10,6 +10,7 @@ module.exports = {
     'import/prefer-default-export': 1,
     '@typescript-eslint/no-non-null-assertion': 0,
     'spaced-comment': 1, // downgrade to warning
+    'react/prop-types': 1,
   },
   parserOptions: {
     ecmaVersion: 2020,
