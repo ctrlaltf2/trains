@@ -1,0 +1,21 @@
+.testUIContainer {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  flex-direction: row;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.inputContainer, .outputContainer {
+  width: 50%;
+  border: 1px solid #dedede;
+  height: 100%;
+}
+
+.containerTitle {
+  width: 100%;
+  text-align: left;
+  margin: 0.5em 1em;
+}
