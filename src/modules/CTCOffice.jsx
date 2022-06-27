@@ -47,7 +47,10 @@ class CTCOffice extends React.Component {
                 blueLineThroughput: payload.value,
               });
               break;
+            default:
+              console.warn(`Got throughput for an unknown line ${payload.line}`);
           }
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
