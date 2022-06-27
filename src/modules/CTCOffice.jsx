@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
+import React from 'react';
 
-import { ThemeProvider, createTheme } from '@mui/material';
+import { Button, ThemeProvider, createTheme } from '@mui/material';
 
 import './CTCOffice.css';
 
@@ -41,7 +40,7 @@ class CTCOffice extends React.Component {
 
     this.state = {
       testMode: true,
-      UIState: UIState.Main
+      UIMode: UIState.Main
     };
   }
 
@@ -51,6 +50,10 @@ class CTCOffice extends React.Component {
         <div className="testUIContainer">
           <div className="inputContainer">
             <h4 className="containerTitle">From Track Controller (Inputs to module)</h4>
+            <div className="testUIRow">Track Controller Selection</div>
+            <Button variant="contained">Brake Failure Event</Button>
+            <Button variant="contained">Engine Failure Event</Button>
+            <Button variant="contained">Broken Rail Event</Button>
           </div>
           <div className="outputContainer">
             <h4 className="containerTitle">To Track Controller (Outputs from module)</h4>
@@ -63,13 +66,22 @@ class CTCOffice extends React.Component {
   renderMain() {
     return (
       <ThemeProvider theme={darkTheme}>
-        <p>Je voudrais pour abandonner d'universite</p>
+        <div className="mainContainer">
+          <h1>What would you like to do?</h1>
+          <Button variant="contained">Dispatch Train</Button>
+          <Button variant="contained">View System Map</Button>
+          <Button variant="contained">Load System Schedule</Button>
+          <div className="grow-divider"></div>
+          <Button variant="contained">Switch to test UI</Button>
+        </div>
       </ThemeProvider>
     );
   }
 
   render() {
-    switch(this.state.UIState) {
+    const { UIMode } = this.state;
+
+    switch(UIMode) {
       case UIState.Main:
         return this.renderMain();
       case UIState.Test:
@@ -82,9 +94,9 @@ class CTCOffice extends React.Component {
       case UIState.Viewing.RedLine:
       case UIState.Viewing.GreenLine:
       default:
-        console.warn('Unimplemented UI state: ', this.state.UIState);
+        console.warn('Unimplemented UI state: ', UIMode);
         return (
-          <p>Unimplemented UI state of {this.state.UIState}</p>
+          <p>Unimplemented UI state of {UIMode}</p>
         );
     }
   }
