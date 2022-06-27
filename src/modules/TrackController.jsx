@@ -34,13 +34,28 @@ window.electronAPI.subscribeTrackControllerMessage((_event, payload) => {
 });
 
 class Block {
-  constructor(id) {
+  constructor(id, position) {
     this.state = {
       id,
       transitLight: null,
       occupancy: null,
-      switchPosition: null,
+      switchPosition: position ,
+      engineFailure: false,
+      lightFailure: false,
+      brakeFailure: false,
+      signalFailure: false,
+      railFailure: true,
     };
+
+    this.brakeFail = this.brakeFail.bind(this);
+  }
+
+  brakeFail() {
+    this.setState((prevState) => ({
+      brakeFailure: !prevState.brakeFailure,
+    }));
+    console.log(this.brakeFailure)
+
   }
 }
 
@@ -50,25 +65,21 @@ class TrackController extends React.Component {
     this.name = name;
 
     const blocks = [];
-    blocks.push({
-      id: 1,
-      switchPosition: 1,
-    });
-    blocks.push({
-      id: 2,
-      switchPosition: 2,
-    });
-    blocks.push({
-      id: 3,
-      switchPosition: 3,
-    });
+    blocks.push(new Block(1,1));
+    blocks.push(new Block(2,2));
+    blocks.push(new Block(3,3));
+
+    console.log(blocks);
 
     this.state = {
       testMode: false,
       blocks,
       maintenanceMode: false,
       activeBlock: 0,
+      currBlock: blocks[0],
     };
+
+    console.log(this.state.currBlock)
 
     // this.setState({
     //   blocks: [this.state.blocks, new Block(1)],
@@ -87,8 +98,10 @@ class TrackController extends React.Component {
   handleChange(event) {
     this.setState({
       activeBlock: event.target.value - 1,
+      // currBlock: this.state.blocks.find(block => block.id === event.target.value),
+      currBlock: this.state.blocks[event.target.value - 1],
+
     });
-    console.log(this.state.activeBlock);
   }
 
   toggle() {
@@ -102,6 +115,15 @@ class TrackController extends React.Component {
       maintenanceMode: !prevState.maintenanceMode,
     }));
   }
+
+
+
+  // brakeFail() {
+  //   console.log("brake fail");
+  //   this.setState((prevState) => ({
+  //     this.state.blocks[this.state.activeBlock].brakeFailure: !prevState.brakeFailure,
+  //   }))
+  // }
 
   // initializeBlocks() {
   //   this.setState({
@@ -125,13 +147,13 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-Block"
                       id="select-Block"
-                      value={this.state.activeBlock + 1}
+                      value={this.state.currBlock.state.id}
                       label="Blocks"
                       onChange={this.handleChange}
                     >
                       {this.state.blocks.map((block) => (
-                        <MenuItem key={block.id} value={block.id}>
-                          {String(block.id)}
+                        <MenuItem key={block.state.id} value={block.state.id}>
+                          {String(block.state.id)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -150,7 +172,9 @@ class TrackController extends React.Component {
               <Grid item xs={4}>
                 <div className="left">
                   <Chip
-                    label= {`Switch Position: ${this.state.blocks[this.state.activeBlock].switchPosition}`}
+                    label={`Switch Position: ${
+                      this.state.currBlock.state.switchPosition
+                    }`}
                     color="success"
                     variant="outlined"
                   />
@@ -275,13 +299,18 @@ class TrackController extends React.Component {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      <TableRow
+                    <TableRow
                         sx={{
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
                         <TableCell component="th">Rail</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        { this.state.currBlock.state.railFailure
+? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                       <TableRow
                         sx={{
@@ -289,7 +318,12 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Light</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        {this.state.currBlock.state
+                          .lightFailure ? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                       <TableRow
                         sx={{
@@ -297,7 +331,12 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Engine</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        {this.state.currBlock.state
+                          .engineFailure ? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                       <TableRow
                         sx={{
@@ -305,15 +344,24 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Signal</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        {this.state.currBlock.state
+                          .signalFailure ? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                       <TableRow
                         sx={{
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th">Brake</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        <TableCell component="th"><Button onClick={this.state.currBlock.brakeFail}>Brake</Button></TableCell>
+                        {this.state.currBlock.state.brakeFailure ? 
+                          <TableCell align="right">FAIL</TableCell>
+                         : 
+                          <TableCell align="right">OK</TableCell>
+                        }
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -350,13 +398,13 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-Block"
                       id="select-Block"
-                      value={this.state.activeBlock + 1}
+                      value={this.state.currBlock.state.id}
                       label="Blocks"
                       onChange={this.handleChange}
                     >
                       {this.state.blocks.map((block, index) => (
-                        <MenuItem key={block.id} value={block.id}>
-                          {String(block.id)}
+                        <MenuItem key={block.state.id} value={block.state.id}>
+                          {String(block.state.id)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -375,7 +423,9 @@ class TrackController extends React.Component {
               <Grid item xs={4}>
                 <div className="left">
                   <Chip
-                    label= {`Switch Position: ${this.state.blocks[this.state.activeBlock].switchPosition}`}
+                    label={`Switch Position: ${
+                      this.state.currBlock.state.switchPosition
+                    }`}
                     color="success"
                     variant="outlined"
                   />
@@ -504,7 +554,12 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Rail</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        {this.state.currBlock.state
+                          .railFailure ? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                       <TableRow
                         sx={{
@@ -512,7 +567,12 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Light</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        {this.state.currBlock.state
+                          .lightFailure ? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                       <TableRow
                         sx={{
@@ -520,7 +580,12 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Engine</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        {this.state.currBlock.state
+                          .engineFailure ? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                       <TableRow
                         sx={{
@@ -528,7 +593,12 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Signal</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        {this.state.currBlock.state
+                          .signalFailure ? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                       <TableRow
                         sx={{
@@ -536,7 +606,12 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Brake</TableCell>
-                        <TableCell align="right">OK</TableCell>
+                        {this.state.currBlock.state
+                          .brakeFailure ? (
+                          <TableCell align="right">FAIL</TableCell>
+                        ) : (
+                          <TableCell align="right">OK</TableCell>
+                        )}
                       </TableRow>
                     </TableBody>
                   </Table>
