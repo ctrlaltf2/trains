@@ -17,7 +17,10 @@ class SystemMap extends React.Component {
 
   render() {
     console.log(TrackModel);
-    const layout = { name: 'dagre' };
+    const layout = {
+      name: 'dagre',
+      rankDir: 'LR',
+    };
 
     return (
       <CytoscapeComponent
