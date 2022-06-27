@@ -7,7 +7,8 @@ import{
   FormControlLabel,
   Switch,
   Button,
-  Slider
+  Slider,
+  Stack
 } from "@mui/material";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -27,35 +28,35 @@ const TrainControllerSW = () => {
   return (
 <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={4}>
-        <Grid item xs={6} md={8}>
-          <Item>
-            <FormGroup>
-              <FormControlLabel control={<Switch defaultChecked />} label="Train Lights" />
-            </FormGroup>
-          </Item>
-        </Grid>
-        <Grid item xs={6} md={4}>
+        <Grid item xs={3} md={8}>
           <Item>
             <FormGroup>
               <FormControlLabel control={<Switch defaultChecked />} label="Left Train Doors" />
             </FormGroup>
           </Item>
         </Grid>
-        <Grid item xs={6} md={4}>
-          <Item>
-            <FormGroup>
-              <FormControlLabel control={<Switch defaultChecked />} label="Cabin Lights" />
-            </FormGroup>
-          </Item>
-        </Grid>
-        <Grid item xs={6} md={8}>
+        <Grid item xs={3} md={4}>
           <Item>
             <FormGroup>
               <FormControlLabel control={<Switch defaultChecked />} label="Right Train Doors" />
             </FormGroup>
           </Item>
         </Grid>
-        <Grid item xs={6} md={8}>
+        <Grid item xs={3} md={4}>
+          <Item>
+            <FormGroup>
+              <FormControlLabel control={<Switch defaultChecked />} label="Cabin Lights" />
+            </FormGroup>
+          </Item>
+        </Grid>
+        <Grid item xs={3} md={8}>
+          <Item>
+            <FormGroup>
+              <FormControlLabel control={<Switch defaultChecked />} label="Train Lights" />
+            </FormGroup>
+          </Item>
+        </Grid>
+        <Grid item xs={5} md={8}>
           <Item>
             <FormGroup>
               <FormControlLabel control={<Switch defaultChecked />} label="Automatic/Manual Mode" />
@@ -69,8 +70,11 @@ const TrainControllerSW = () => {
             </Button>
           </Item>
         </Grid>
-        <Grid item xs={6} md={8}>
+        <Grid item xs={4} md={2}>
           <Item>Power: _ Watts</Item>
+        </Grid>
+        <Grid item xs={6} md={8}>
+          <Item>Cabin Temperature</Item>
         </Grid>
         <Box sx={{ height: 300 }}>
           <Slider
@@ -100,6 +104,26 @@ const TrainControllerSW = () => {
             onKeyDown={preventHorizontalKeyboardNavigation}
           />
         </Box>
+        <Grid item xs={4} md={2}>
+          <Item>SPEED: _ MPH</Item>
+        </Grid>
+        <Grid item xs={4} md={2}>
+          <Item>Commanded Speed: _ MPH</Item>
+        </Grid>
+        <Grid item xs={4} md={2}>
+          <Item>Authority: _ Miles</Item>
+        </Grid>
+        <Grid item xs={5} md={2}>
+          <Item>Next Stop: _</Item>
+        </Grid>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={0}
+        >
+          <Item>Engine Failure</Item>
+          <Item>Brake Failure</Item>
+          <Item>Signal Pickup Failure</Item>
+      </Stack>
       </Grid>
     </Box>
 
