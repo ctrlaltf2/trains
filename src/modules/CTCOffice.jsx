@@ -39,7 +39,6 @@ class CTCOffice extends React.Component {
     super(props);
 
     this.state = {
-      testMode: true,
       UIMode: UIState.Main
     };
   }
@@ -57,6 +56,12 @@ class CTCOffice extends React.Component {
           </div>
           <div className="outputContainer">
             <h4 className="containerTitle">To Track Controller (Outputs from module)</h4>
+            <div className="grow-divider"></div>
+            <Button variant="contained" onClick={() => {
+              this.setState({UIMode: UIState.Main});
+            }}>
+              Return to dashboard
+            </Button>
           </div>
         </div>
       </ThemeProvider>
@@ -72,7 +77,11 @@ class CTCOffice extends React.Component {
           <Button variant="contained">View System Map</Button>
           <Button variant="contained">Load System Schedule</Button>
           <div className="grow-divider"></div>
-          <Button variant="contained">Switch to test UI</Button>
+          <Button variant="contained" onClick={() => {
+            this.setState({UIMode: UIState.Test});
+          }}>
+            Switch to test UI
+          </Button>
         </div>
       </ThemeProvider>
     );
