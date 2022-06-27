@@ -1,9 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Cytoscape from 'cytoscape';
 import CytoscapeComponent from 'react-cytoscapejs';
+import dagre from 'cytoscape-dagre';
 
 import './SystemMap.css';
 import TrackModel from '../../../data/TrackModelV1.json';
+
+Cytoscape.use(dagre);
 
 class SystemMap extends React.Component {
   constructor(props) {
@@ -13,7 +17,7 @@ class SystemMap extends React.Component {
 
   render() {
     console.log(TrackModel);
-    const layout = { name: 'random' };
+    const layout = { name: 'dagre' };
 
     return (
       <CytoscapeComponent
