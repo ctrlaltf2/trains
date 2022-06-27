@@ -9,6 +9,7 @@ module.exports = {
     'prettier/prettier': 0,
     'import/prefer-default-export': 1,
     '@typescript-eslint/no-non-null-assertion': 0,
+    'spaced-comment': 1, // downgrade to warning
   },
   parserOptions: {
     ecmaVersion: 2020,

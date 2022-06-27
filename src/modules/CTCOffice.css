@@ -74,8 +74,9 @@
   padding: 0.5em 1em;
 }
 
-.throughputContainer > h4 {
-  margin-bottom: 1em;
+.throughputTitle {
+  border-bottom: 1px solid #dedede;
+  margin-bottom: 0.5em;
 }
 
 .throughputGrid {
@@ -92,6 +93,7 @@
 
 .throughputValue {
   grid-column: 3;
+  text-align: right;
 }
 
 #redLineLabel, #redlineValue {
