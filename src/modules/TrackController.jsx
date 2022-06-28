@@ -77,7 +77,7 @@ class TrackController extends React.Component {
       blocks.push({
         id: blueLine[key]['Block Number'],
         transitLight: 'green',
-        occupancy: null,
+        occupancy: false,
         switchPosition: blueLine[key]['switch'],
         engineFailure: false,
         lightFailure: false,
@@ -94,6 +94,8 @@ class TrackController extends React.Component {
       maintenanceMode: false,
       currBlock: blocks[0],
       appState: false,
+      direction: true,
+      trackLine: 'blue',
       // inputFile: useRef(null),
     };
 
@@ -106,6 +108,8 @@ class TrackController extends React.Component {
 
     this.toggle = this.toggle.bind(this);
     this.mmMode = this.mmMode.bind(this);
+    this.toggleDirection = this.toggleDirection.bind(this);
+    this.occupancy = this.occupancy.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.brakeFailure = this.brakeFailure.bind(this);
     this.engineFailure = this.engineFailure.bind(this);
@@ -113,10 +117,16 @@ class TrackController extends React.Component {
     this.lightFailure = this.lightFailure.bind(this);
     this.signalFailure = this.signalFailure.bind(this);
 
-
     // this.initializeBlocks = this.initializeBlocks.bind(this);
   }
 
+  occupancy() {
+    this.state.currBlock.occupancy = !this.state.currBlock.occupancy;
+    this.setState((prevState) => ({
+      appState: !prevState.appState,
+    }));
+    console.log(this.state.currBlock.occupancy);
+  }
 
 
   handleFileChange(e) {
@@ -151,9 +161,13 @@ class TrackController extends React.Component {
     }));
   }
 
+  toggleDirection() {
+    this.setState((prevState) => ({
+      direction: !prevState.direction,
+    }));  }
+
   brakeFailure() {
     this.state.currBlock.brakeFailure = !this.state.currBlock.brakeFailure;
-
     this.setState((prevState) => ({
       appState: !prevState.appState,
     }));
@@ -246,10 +260,10 @@ class TrackController extends React.Component {
                 </div>
               </Grid>
               <Grid item xs={6}>
-                <div className="text-centered">Track Controller Test Panel</div>
+              <div className="text-centered"><Button onClick={this.toggleDirection}>Test Panel: {this.state.direction ? 'forward' : 'backward'}</Button></div>
               </Grid>
               <Grid item xs={3}>
-                <div className="text-centered">Track Line:__</div>
+                <div className="text-centered">Track Line: {this.state.trackLine}</div>
               </Grid>
             </Grid>
 
@@ -353,8 +367,8 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th">Track Occupency</TableCell>
-                        <TableCell align="right">status</TableCell>
+                        <TableCell component="th"><Button onClick={this.occupancy}>Track Occupancy</Button></TableCell>
+                        <TableCell align="right">{String(this.state.currBlock.occupancy)}</TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
@@ -502,10 +516,10 @@ class TrackController extends React.Component {
                 </div>
               </Grid>
               <Grid item xs={6}>
-                <div className="text-centered">Track Controller</div>
+                <div className="text-centered"><Button onClick={this.toggleDirection}>Track Controller {this.state.direction ? 'forward' : 'backward'}</Button></div>
               </Grid>
               <Grid item xs={3}>
-                <div className="text-centered">Track Line:__</div>
+                <div className="text-centered">Track Line: {this.state.trackLine}</div>
               </Grid>
             </Grid>
 
@@ -608,7 +622,7 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Track Occupency</TableCell>
-                        <TableCell align="right">status</TableCell>
+                        <TableCell align="right">{String(this.state.currBlock.occupancy)}</TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
