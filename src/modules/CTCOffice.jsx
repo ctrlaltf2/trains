@@ -118,8 +118,8 @@ class CTCOffice extends React.Component {
 
   handleLineSelect(self, ev, elem) {
     self.setState({
-      test: {
-        ...this.state.test,
+      testUI: {
+        ...this.state.testUI,
         lineSelection: ev.target.value
       }
     });
@@ -127,8 +127,8 @@ class CTCOffice extends React.Component {
 
   handleTrainSelect(self, ev, elem) {
     self.setState({
-      test: {
-        ...this.state.test,
+      testUI: {
+        ...this.state.testUI,
         trainSelection: ev.target.value
       }
     });
@@ -154,15 +154,14 @@ class CTCOffice extends React.Component {
                 label="Line"
                 onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
               >
-                <MenuItem value={'Blue'}>Blue</MenuItem>
-                <MenuItem value={'Red'}>Red</MenuItem>
-                <MenuItem value={'Green'}>Green</MenuItem>
+                <MenuItem value={'blue'}>Blue</MenuItem>
+                <MenuItem value={'red'}>Red</MenuItem>
+                <MenuItem value={'green'}>Green</MenuItem>
               </Select>
             </FormControl>
             <div className="horiz-div"/>
             <div className="testUIRow row-title">Train Selection</div>
-            <FormControl disabled={...(lineSelection ? {disabled: true} : {disabled: false})}>
-                
+            <FormControl>
               <InputLabel id="train-select-label">Train</InputLabel>
               <Select
                 labelId="train-select-label"
@@ -171,9 +170,12 @@ class CTCOffice extends React.Component {
                 onChange={(ev, elem) => { this.handleTrainSelect(this, ev, elem)}}
               >
                 {
-                  activeTrainIDs['blue'].map((train_id) => {
-                    return <MenuItem value={train_id}>{train_id}</MenuItem>;
-                  })
+                  lineSelection ?
+                    activeTrainIDs[lineSelection].map((train_id) => {
+                      return <MenuItem value={train_id}>{train_id}</MenuItem>;
+                    })
+                  :
+                    []
                 }
               </Select>
             </FormControl>
