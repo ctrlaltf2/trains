@@ -10,12 +10,14 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
+import cytoscape from 'cytoscape';
 
 import _ from 'lodash';
 
 import SystemMap from './CTCOffice/SystemMap';
 import Train from './CTCOffice/Train';
 import Switch from './CTCOffice/Switch';
+import TrackModel from '../../data/TrackModelV1.json';
 
 import './CTCOffice.css';
 
@@ -61,7 +63,7 @@ class CTCOffice extends React.Component {
     });
 
     this.state = {
-      UIMode: UIState.Test,
+      UIMode: UIState.Main,
       throughput: {
         'red': 0,
         'green': 1,
@@ -97,6 +99,27 @@ class CTCOffice extends React.Component {
       ]
     };
     this.systemMapRef = React.createRef();
+
+    // Off-screen cytoscape element for routing algos and other shenanigans
+    // Indexed by line
+    this.cy = {
+      'blue': undefined,
+      'red': undefined,
+      'green': undefined,
+    };
+
+    this.initCy();
+  }
+
+
+  initCy() {
+    for(const line in TrackModel.lines) {
+      this.cy[line] = cytoscape({
+        elements: TrackModel.lines[line]
+      });
+    }
+
+    console.log(this.cy);
   }
 
   updateBlockOccupancy(line, block_id, is_occupied) {
