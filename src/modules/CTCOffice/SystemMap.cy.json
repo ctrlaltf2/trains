@@ -13,11 +13,10 @@
       "selector": "edge",
       "style": {
         "width": 10,
-        "font-size": 14,
+        "font-size": 12,
         "content": "data(block_name)",
         "curve-style": "taxi",
         "haystack-radius": 0,
-        "opacity": 0.5,
         "source-arrow-shape": "triangle",
         "target-arrow-shape": "triangle",
         "arrow-scale": 0.5
@@ -63,7 +62,9 @@
       "selector": "edge",
       "style": {
         "line-color": "#283593",
-        "color": "#fff"
+        "color": "#fff",
+        "source-arrow-color": "#283593",
+        "target-arrow-color": "#283593"
       }
     }
   ]
