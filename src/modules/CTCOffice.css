@@ -50,6 +50,7 @@
   width: 85%;
   margin: 0 4em;
   border: 1px solid #dedede;
+  opacity: 0.5;
 }
 
 .grow-divider {
@@ -136,4 +137,19 @@
 .bottomRightButtonGroup > button {
   width: fit-content;
   padding: 1em;
+}
+
+.testUIConfigDropdown {
+  width: 10ch;
+}
+
+.testUIConfig {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+}
+
+.testUIRow {
+  display: flex;
+  flex-direction: row;
 }

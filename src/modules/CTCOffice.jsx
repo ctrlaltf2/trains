@@ -3,7 +3,8 @@ import {
   Button,
   ThemeProvider,
   createTheme,
-  Modal
+  Modal,
+  TextField
 } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -43,25 +44,12 @@ class CTCOffice extends React.Component {
       switch(payload.type) {
         case 'throughput':
           // TODO: message validation
-          switch(payload.line) {
-            case 'red':
-              this.setState({
-                redLineThroughput: payload.value,
-              });
-              break;
-            case 'green':
-              this.setState({
-                greenLineThroughput: payload.value,
-              });
-              break;
-            case 'blue':
-              this.setState({
-                blueLineThroughput: payload.value,
-              });
-              break;
-            default:
-              console.warn(`Got throughput for an unknown line ${payload.line}`);
-          }
+          const throughput = _.cloneDeep(this.state.throughput);
+          throughput[payload.line] = payload.value;
+
+          this.setState({
+            throughput: throughput
+          });
           break;
         case 'occupancy':
           // TODO: message validation
@@ -73,13 +61,16 @@ class CTCOffice extends React.Component {
     });
 
     this.state = {
-      UIMode: UIState.Main,
-      redLineThroughput: 0,
-      greenLineThroughput: 1,
-      blueLineThroughput: 2,
+      UIMode: UIState.Test,
+      throughput: {
+        'red': 0,
+        'green': 1,
+        'blue': 2,
+      },
       testUI: {
         lineSelection: undefined,
         trainSelection: undefined,
+        throughputValue: undefined,
       },
       occupancy: { // occupancy[line][block_id] = is_occupied: bool
         'red': {},
@@ -108,7 +99,6 @@ class CTCOffice extends React.Component {
 
   updateBlockOccupancy(line, block_id, is_occupied) {
     const occupancy = _.cloneDeep(this.state.occupancy);
-
     occupancy[line][block_id] = !!is_occupied;
 
     this.setState({
@@ -135,7 +125,7 @@ class CTCOffice extends React.Component {
   }
 
   renderTest() {
-    const { lineSelection, trainSelection } = this.state.testUI;
+    const { lineSelection, trainSelection, throughputValue } = this.state.testUI;
     const { activeTrainIDs } = this.state;
 
     return (
@@ -143,42 +133,62 @@ class CTCOffice extends React.Component {
         <div className="testUIContainer">
           <div className="inputContainer">
             <h4 className="containerTitle">From Track Controller (Inputs to module)</h4>
+            <div className="testUIConfig">
+              <FormControl className="testUIConfigDropdown">
+                <InputLabel id="line-select-label">Line</InputLabel>
+                <Select
+                  labelId="line-select-label"
+                  value={lineSelection}
+                  label="Line"
+                  onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
+                >
+                  <MenuItem value={'blue'}>Blue</MenuItem>
+                  <MenuItem value={'red'}>Red</MenuItem>
+                  <MenuItem value={'green'}>Green</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl className="testUIConfigDropdown">
+                <InputLabel id="train-select-label">Train</InputLabel>
+                <Select
+                  labelId="train-select-label"
+                  value={trainSelection}
+                  label="Train"
+                  onChange={(ev, elem) => { this.handleTrainSelect(this, ev, elem)}}
+                >
+                  {
+                    lineSelection ?
+                      activeTrainIDs[lineSelection].map((train_id) => {
+                        return <MenuItem value={train_id}>{train_id}</MenuItem>;
+                      })
+                    :
+                      []
+                  }
+                </Select>
+              </FormControl>
+            </div>
             <div className="horiz-div"/>
-            <div className="testUIRow row-title">Track Controller Selection</div>
-            <div className="testUIRow">Throughput</div>
-            <FormControl>
-              <InputLabel id="line-select-label">Line</InputLabel>
-              <Select
-                labelId="line-select-label"
-                value={lineSelection}
-                label="Line"
-                onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
-              >
-                <MenuItem value={'blue'}>Blue</MenuItem>
-                <MenuItem value={'red'}>Red</MenuItem>
-                <MenuItem value={'green'}>Green</MenuItem>
-              </Select>
-            </FormControl>
-            <div className="horiz-div"/>
-            <div className="testUIRow row-title">Train Selection</div>
-            <FormControl>
-              <InputLabel id="train-select-label">Train</InputLabel>
-              <Select
-                labelId="train-select-label"
-                value={trainSelection}
-                label="Train"
-                onChange={(ev, elem) => { this.handleTrainSelect(this, ev, elem)}}
-              >
-                {
-                  lineSelection ?
-                    activeTrainIDs[lineSelection].map((train_id) => {
-                      return <MenuItem value={train_id}>{train_id}</MenuItem>;
-                    })
-                  :
-                    []
+            <div className="testUIRow row-title">
+              <TextField margin="none" size="small" label="Throughput" variant="standard" onChange={(ev) => {
+                const testUI = _.cloneDeep(this.state.testUI);
+                testUI['throughputValue'] = ev.target.value;
+
+                this.setState({
+                  testUI: testUI
+                });
+              }}/>
+              <Button variant="container" onClick={() => {
+                if(lineSelection && throughputValue) {
+                  const throughput = _.cloneDeep(this.state.throughput);
+                  throughput[lineSelection] = throughputValue;
+
+                  this.setState({
+                    throughput: throughput
+                  });
                 }
-              </Select>
-            </FormControl>
+              }}>
+                Commit
+              </Button>
+            </div>
             <Button variant="contained">Brake Failure Event</Button>
             <Button variant="contained">Engine Failure Event</Button>
             <Button variant="contained">Broken Rail Event</Button>
@@ -201,7 +211,11 @@ class CTCOffice extends React.Component {
   }
 
   renderMain() {
-    const { occupancy, redLineThroughput, greenLineThroughput, blueLineThroughput } = this.state;
+    const { occupancy, throughput } = this.state;
+
+    const redLineThroughput = throughput['red'];
+    const greenLineThroughput = throughput['green'];
+    const blueLineThroughput = throughput['blue'];
 
     return (
       <div id="appContainer">
