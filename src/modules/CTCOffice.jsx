@@ -19,10 +19,6 @@ const UIState = {
   Scheduling:   'Scheduling',
   Viewing: {
     Train:      'ViewingTrain',
-    BlueLine:   'ViewingBlueLine',
-    RedLine:    'ViewingRedLine',
-    GreenLine:  'ViewingGreenLine',
-    Map:        'Map',
   },
   Test:         'Test',
 };
@@ -185,7 +181,6 @@ class CTCOffice extends React.Component {
     );
   }
 
-  // TODO: integrate this into dashboard
   renderScheduler() {
     return (
       <ThemeProvider theme={darkTheme}>
@@ -196,18 +191,6 @@ class CTCOffice extends React.Component {
         </Button>
         <div className="schedulerContainer"/>
       </ThemeProvider>
-    );
-  }
-
-  renderMainOld() {
-    return (
-      <div>
-        <ThemeProvider theme={darkTheme}>
-          <div className="mainContainer">
-            <h1>What would you like to do?</h1>
-          </div>
-        </ThemeProvider>
-      </div>
     );
   }
 
@@ -223,12 +206,6 @@ class CTCOffice extends React.Component {
         return this.renderDispatch();
       case UIState.Scheduling:
         return this.renderScheduler();
-      case UIState.Map:
-        return this.renderMap();
-      case UIState.Viewing.Train:
-      case UIState.Viewing.BlueLine:
-      case UIState.Viewing.RedLine:
-      case UIState.Viewing.GreenLine:
       default:
         console.warn('Unimplemented UI state: ', UIMode);
         return (
