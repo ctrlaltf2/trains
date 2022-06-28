@@ -142,22 +142,45 @@ class CTCOffice extends React.Component {
     );
   }
 
-  // TODO: integrate this into dashboard
-  renderMap() {
-    const { occupancy } = this.state;
+  renderMain() {
+    const { occupancy, redLineThroughput, greenLineThroughput, blueLineThroughput } = this.state;
 
     return (
-      <div data-theme="dark">
-        <ThemeProvider theme={darkTheme}>
-          <Button className="backButton" variant="contained" onClick={() => {
-            this.setState({UIMode: UIState.Main});
+      <div id="appContainer">
+        <div className="throughputContainer floating">
+          <h4 className="throughputTitle">Throughput Statistics</h4>
+          <div className="throughputGrid">
+            <div className="throughputLabel" id="blueLineLabel">Blue Line Throughput</div>
+            <div className="throughputValue" id="blueLineValue">{blueLineThroughput} trains/hr</div>
+            <div className="throughputLabel" id="redLineLabel">Red Line Throughput</div>
+            <div className="throughputValue" id="redLineValue">{redLineThroughput} trains/hr</div>
+            <div className="throughputLabel" id="greenLineLabel">Green Line Throughput</div>
+            <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
+          </div>
+        </div>
+        <Button variant="contained" className="floating" id="testUIButton" onClick={() => {
+          this.setState({UIMode: UIState.Test});
+        }}>
+          Switch to test UI
+        </Button>
+        <div id="bottomRightButtonGroup" className="floating">
+          <Button variant="contained" id="dispatchButton" onClick={() => {
+              this.setState({UIMode: UIState.Dispatching});
           }}>
-            Return to dashboard
+            Manually Dispatch Train
           </Button>
-        <SystemMap
-          occupancy={occupancy}
-        />
-        </ThemeProvider>
+          <Button variant="contained" id="systemScheduleButton" onClick={() => {
+              this.setState({UIMode: UIState.Scheduling});
+          }}>
+            Load System Schedule
+          </Button>
+        </div>
+        <div id="systemMap">
+          <SystemMap
+            occupancy={occupancy}
+          />
+        </div>
+
       </div>
     );
   }
@@ -176,46 +199,12 @@ class CTCOffice extends React.Component {
     );
   }
 
-  renderMain() {
-    const { redLineThroughput, greenLineThroughput, blueLineThroughput } = this.state;
-
+  renderMainOld() {
     return (
       <div>
         <ThemeProvider theme={darkTheme}>
           <div className="mainContainer">
             <h1>What would you like to do?</h1>
-            <Button variant="contained" onClick={() => {
-                this.setState({UIMode: UIState.Dispatching});
-            }}>
-              Manually Dispatch Train
-            </Button>
-            <Button variant="contained" onClick={() => {
-                this.setState({UIMode: UIState.Map});
-            }}>
-              View System Map
-            </Button>
-            <Button variant="contained" onClick={() => {
-                this.setState({UIMode: UIState.Scheduling});
-            }}>
-              Load System Schedule
-            </Button>
-            <div className="throughputContainer">
-              <h4 className="throughputTitle">Throughput Statistics</h4>
-              <div className="throughputGrid">
-                <div className="throughputLabel" id="blueLineLabel">Blue Line Throughput</div>
-                <div className="throughputValue" id="blueLineValue">{blueLineThroughput} trains/hr</div>
-                <div className="throughputLabel" id="redLineLabel">Red Line Throughput</div>
-                <div className="throughputValue" id="redLineValue">{redLineThroughput} trains/hr</div>
-                <div className="throughputLabel" id="greenLineLabel">Green Line Throughput</div>
-                <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
-              </div>
-            </div>
-            <div className="grow-divider"/>
-            <Button variant="contained" onClick={() => {
-              this.setState({UIMode: UIState.Test});
-            }}>
-              Switch to test UI
-            </Button>
           </div>
         </ThemeProvider>
       </div>
