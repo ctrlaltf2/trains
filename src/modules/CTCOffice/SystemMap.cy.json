@@ -15,7 +15,7 @@
         "width": 10,
         "font-size": 12,
         "content": "data(block_name)",
-        "curve-style": "taxi",
+        "curve-style": "straight",
         "haystack-radius": 0,
         "source-arrow-shape": "triangle",
         "target-arrow-shape": "triangle",
@@ -26,6 +26,14 @@
       "selector": "node[node_name]",
       "style": {
         "content": "data(node_name)"
+      }
+    },
+    {
+      "selector": ".occupied",
+      "style": {
+        "line-color": "white",
+        "source-arrow-color": "white",
+        "target-arrow-color": "white"
       }
     },
     {
@@ -59,7 +67,7 @@
   ],
   "blue_line": [
     {
-      "selector": "edge",
+      "selector": "edge[^.occupied]",
       "style": {
         "line-color": "#283593",
         "color": "#fff",
