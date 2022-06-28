@@ -70,6 +70,7 @@ class CTCOffice extends React.Component {
       testUI: {
         lineSelection: undefined,
         trainSelection: undefined,
+        blockSelection: undefined,
         throughputValue: undefined,
       },
       occupancy: { // occupancy[line][block_id] = is_occupied: bool
@@ -95,6 +96,7 @@ class CTCOffice extends React.Component {
         new Switch(undefined, '5', ['6', '11'])
       ]
     };
+    this.systemMapRef = React.createRef();
   }
 
   updateBlockOccupancy(line, block_id, is_occupied) {
@@ -217,6 +219,8 @@ class CTCOffice extends React.Component {
     const greenLineThroughput = throughput['green'];
     const blueLineThroughput = throughput['blue'];
 
+    setTimeout(() => console.log(this.systemMapRef.current), 2000);
+
     return (
       <div id="appContainer">
         <div className="throughputContainer floating">
@@ -250,6 +254,7 @@ class CTCOffice extends React.Component {
         <div id="systemMap">
           <SystemMap
             occupancy={occupancy}
+            ref={this.systemMapRef}
           />
         </div>
       </div>
