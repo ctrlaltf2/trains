@@ -82,7 +82,13 @@ class CTCOffice extends React.Component {
   }
 
   updateBlockOccupancy(line, block_id, is_occupied) {
+    const { occupancy } = this.state;
+
     occupancy[line][block_id] = !!is_occupied;
+
+    this.setState({
+      occupancy: occupancy
+    });
   }
 
   renderTest() {
@@ -140,16 +146,18 @@ class CTCOffice extends React.Component {
     const { occupancy } = this.state;
 
     return (
-      <ThemeProvider theme={darkTheme}>
-        <Button className="backButton" variant="contained" onClick={() => {
-          this.setState({UIMode: UIState.Main});
-        }}>
-          Return to dashboard
-        </Button>
-      <SystemMap
-        occupancy={occupancy}
-      />
-      </ThemeProvider>
+      <div data-theme="dark">
+        <ThemeProvider theme={darkTheme}>
+          <Button className="backButton" variant="contained" onClick={() => {
+            this.setState({UIMode: UIState.Main});
+          }}>
+            Return to dashboard
+          </Button>
+        <SystemMap
+          occupancy={occupancy}
+        />
+        </ThemeProvider>
+      </div>
     );
   }
 
