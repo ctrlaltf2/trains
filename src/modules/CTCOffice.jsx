@@ -1,8 +1,10 @@
 import React from 'react';
-import { Button, ThemeProvider, createTheme } from '@mui/material';
+import { Button, ThemeProvider, createTheme, Modal } from '@mui/material';
 import _ from 'lodash';
 
 import SystemMap from './CTCOffice/SystemMap';
+import Train from './CTCOffice/Train';
+import Switch from './CTCOffice/Switch';
 
 import './CTCOffice.css';
 
@@ -15,8 +17,6 @@ const darkTheme = createTheme({
 // Enum-like structure for all UI states
 const UIState = {
   Main:         'Main',
-  Dispatching:  'Dispatching',
-  Scheduling:   'Scheduling',
   Viewing: {
     Train:      'ViewingTrain',
   },
@@ -75,6 +75,19 @@ class CTCOffice extends React.Component {
         'green': {},
         'blue': {},
       },
+      activeTrainIDs: {
+        'red': [],
+        'green': [],
+        'blue': [],
+      },
+    };
+
+    this.nextTrainID = 1;
+    this.trains = [];
+    this.switches = {
+      'blue': [
+        new Switch(undefined, '5', ['6', '11'])
+      ]
     };
   }
 
@@ -89,6 +102,8 @@ class CTCOffice extends React.Component {
   }
 
   renderTest() {
+    const { trainSelection, blockSelection, trackControllerSelection } = this.state;
+
     return (
       <ThemeProvider theme={darkTheme}>
         <div className="testUIContainer">
@@ -114,24 +129,6 @@ class CTCOffice extends React.Component {
             }}>
               Return to dashboard
             </Button>
-          </div>
-        </div>
-      </ThemeProvider>
-    );
-  }
-
-  // TODO: integrate this into dashboard
-  renderDispatch() {
-    return (
-      <ThemeProvider theme={darkTheme}>
-        <div className="dispatchContainer">
-          <Button className="backButton" variant="contained" onClick={() => {
-            this.setState({UIMode: UIState.Main});
-          }}>
-            Return to dashboard
-          </Button>
-          <div className="dispatchContainer">
-            <h1>Manual Dispatch</h1>
           </div>
         </div>
       </ThemeProvider>
@@ -176,21 +173,7 @@ class CTCOffice extends React.Component {
             occupancy={occupancy}
           />
         </div>
-
       </div>
-    );
-  }
-
-  renderScheduler() {
-    return (
-      <ThemeProvider theme={darkTheme}>
-        <Button className="backButton" variant="contained" onClick={() => {
-          this.setState({UIMode: UIState.Main});
-        }}>
-          Return to dashboard
-        </Button>
-        <div className="schedulerContainer"/>
-      </ThemeProvider>
     );
   }
 
@@ -202,10 +185,6 @@ class CTCOffice extends React.Component {
         return this.renderMain();
       case UIState.Test:
         return this.renderTest();
-      case UIState.Dispatching:
-        return this.renderDispatch();
-      case UIState.Scheduling:
-        return this.renderScheduler();
       default:
         console.warn('Unimplemented UI state: ', UIMode);
         return (
