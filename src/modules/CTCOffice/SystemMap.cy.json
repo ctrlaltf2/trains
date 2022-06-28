@@ -63,6 +63,18 @@
         "active-bg-color": "#fff",
         "active-bg-opacity": 0.333
       }
+    },
+    {
+      "selector": "node[?switch]",
+      "style": {
+        "shape": "triangle"
+      }
+    },
+    {
+      "selector": "node[node_name = 'Yard']",
+      "style": {
+        "shape": "rectangle"
+      }
     }
   ],
   "blue_line": [
