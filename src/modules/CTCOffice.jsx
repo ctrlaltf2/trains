@@ -119,7 +119,16 @@ class CTCOffice extends React.Component {
       });
     }
 
-    console.log(this.cy);
+    console.log(this.getBlocks('blue'));
+  }
+
+  getBlocks(line) {
+    if(this.cy[line])
+      return new Set(this.cy[line].filter('edge[block_name]').map( (elem) => {
+        return elem.data('block_name');
+      }));
+    else
+      return new Set([]);
   }
 
   updateBlockOccupancy(line, block_id, is_occupied) {
@@ -129,6 +138,8 @@ class CTCOffice extends React.Component {
     this.setState({
       occupancy: occupancy,
     });
+
+    // TODO: Update occupancy in cytoscape graph to impact routing decisions
   }
 
   handleLineSelect(self, ev, elem) {
@@ -149,8 +160,17 @@ class CTCOffice extends React.Component {
     });
   }
 
+  handleBlockSelect(self, ev, elem) {
+    self.setState({
+      testUI: {
+        ...this.state.testUI,
+        blockSelection: ev.target.value
+      }
+    });
+  }
+
   renderTest() {
-    const { lineSelection, trainSelection, throughputValue } = this.state.testUI;
+    const { lineSelection, trainSelection, blockSelection, throughputValue } = this.state.testUI;
     const { activeTrainIDs } = this.state;
 
     return (
@@ -190,6 +210,24 @@ class CTCOffice extends React.Component {
                   }
                 </Select>
               </FormControl>
+              <FormControl className="testUIConfigDropdown">
+                <InputLabel id="block-select-label">Block</InputLabel>
+                <Select
+                  labelId="block-select-label"
+                  value={blockSelection}
+                  label="Block"
+                  onChange={(ev, elem) => { this.handleBlockSelect(this, ev, elem)}}
+                >
+                  {
+                    lineSelection ?
+                      Array.from(this.getBlocks(lineSelection)).map((block_id) => {
+                        return <MenuItem value={block_id}>{block_id}</MenuItem>;
+                      })
+                    :
+                      []
+                  }
+                </Select>
+              </FormControl>
             </div>
             <div className="horiz-div"/>
             <div className="testUIRow row-title">
@@ -204,7 +242,7 @@ class CTCOffice extends React.Component {
               <Button variant="container" onClick={() => {
                 if(lineSelection && throughputValue) {
                   const throughput = _.cloneDeep(this.state.throughput);
-                  throughput[lineSelection] = throughputValue;
+                  throughput[lineSelection] = parseInt(throughputValue, 10);
 
                   this.setState({
                     throughput: throughput
@@ -217,9 +255,6 @@ class CTCOffice extends React.Component {
             <Button variant="contained">Brake Failure Event</Button>
             <Button variant="contained">Engine Failure Event</Button>
             <Button variant="contained">Broken Rail Event</Button>
-            <div className="horiz-div"/>
-            <div className="testUIRow row-title">Block Selection</div>
-            <div className="horiz-div"/>
           </div>
           <div className="outputContainer">
             <h4 className="containerTitle">To Track Controller (Outputs from module)</h4>
