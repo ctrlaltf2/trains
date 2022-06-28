@@ -12,7 +12,8 @@ import {
   Stack,
   AppBar,
   Typography,
-  Toolbar
+  Toolbar,
+  TextField
 } from '@mui/material';
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -157,10 +158,28 @@ class TrainControllerSW extends React.Component {
             </Item>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>Power: _ Watts</Item>
+            <Box
+                component="form"
+                sx={{
+                  '& > :not(style)': { m: 1, width: '25ch' },
+                }}
+                noValidate
+                autoComplete="off"
+              >
+                <TextField id="outlined-basic" label="Power" type="number" variant="outlined" />
+              </Box>
           </Grid>
           <Grid item xs={6} md={8}>
-            <Item>Cabin Temperature</Item>
+            <Box
+              component="form"
+              sx={{
+                '& > :not(style)': { m: 1, width: '25ch' },
+              }}
+              noValidate
+              autoComplete="off"
+            >
+              <TextField id="outlined-basic" label="Cabin Temperature" type="number" variant="outlined" />
+            </Box>
           </Grid>
           <Box sx={{ height: 300 }}>
             <Slider
@@ -191,16 +210,52 @@ class TrainControllerSW extends React.Component {
             />
           </Box>
           <Grid item xs={4} md={2}>
-            <Item>SPEED: _ MPH</Item>
+            <Box
+                component="form"
+                sx={{
+                  '& > :not(style)': { m: 1, width: '25ch' },
+                }}
+                noValidate
+                autoComplete="off"
+              >
+                <TextField id="outlined-basic" label="Speed" type="number" variant="outlined" />
+              </Box>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>Commanded Speed: _ MPH</Item>
+            <Box
+                component="form"
+                sx={{
+                  '& > :not(style)': { m: 1, width: '25ch' },
+                }}
+                noValidate
+                autoComplete="off"
+              >
+                <TextField id="outlined-basic" label="Commanded Speed" type="number" variant="outlined" />
+              </Box>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>Authority: _ Miles</Item>
+            <Box
+                component="form"
+                sx={{
+                  '& > :not(style)': { m: 1, width: '25ch' },
+                }}
+                noValidate
+                autoComplete="off"
+              >
+                <TextField id="outlined-basic" label="Authority" type="number" variant="outlined" />
+              </Box>
           </Grid>
           <Grid item xs={5} md={2}>
-            <Item>Next Stop: _</Item>
+            <Box
+              component="form"
+              sx={{
+                '& > :not(style)': { m: 1, width: '25ch' },
+              }}
+              noValidate
+              autoComplete="off"
+            >
+              <TextField id="outlined-basic" label="Next Stop" variant="outlined" />
+            </Box>
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
             {this.state.brakeFailureDisplay ? (
@@ -223,11 +278,11 @@ class TrainControllerSW extends React.Component {
               )}
             {this.state.signalPickupFailureDisplay ? (
               <Button variant="contained" color="error" onClick={this.signalPickupFailure}>
-                Signal Pickup Status: Error
+                Signal Pickup Status: Broken
               </Button>
               ) : (
               <Button variant="contained" color="success" onClick={this.signalPickupFailure}>
-                Signal Status: Strong
+                Signal Pickup Status: Connected
               </Button>
               )}
           </Stack>
