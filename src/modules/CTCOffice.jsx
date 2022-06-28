@@ -4,7 +4,10 @@ import {
   ThemeProvider,
   createTheme,
   Modal,
-  TextField
+  TextField,
+  Switch,
+  FormGroup,
+  FormControlLabel
 } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -16,7 +19,7 @@ import _ from 'lodash';
 
 import SystemMap from './CTCOffice/SystemMap';
 import Train from './CTCOffice/Train';
-import Switch from './CTCOffice/Switch';
+import TrackSwitch from './CTCOffice/Switch';
 import TrackModel from '../../data/TrackModelV1.json';
 
 import './CTCOffice.css';
@@ -63,7 +66,7 @@ class CTCOffice extends React.Component {
     });
 
     this.state = {
-      UIMode: UIState.Main,
+      UIMode: UIState.Test,
       throughput: {
         'red': 0,
         'green': 1,
@@ -95,7 +98,7 @@ class CTCOffice extends React.Component {
     this.trains = [];
     this.switches = {
       'blue': [
-        new Switch(undefined, '5', ['6', '11'])
+        new TrackSwitch(undefined, '5', ['6', '11'])
       ]
     };
     this.systemMapRef = React.createRef();
@@ -110,7 +113,6 @@ class CTCOffice extends React.Component {
 
     this.initCy();
   }
-
 
   initCy() {
     for(const line in TrackModel.lines) {
@@ -230,31 +232,75 @@ class CTCOffice extends React.Component {
               </FormControl>
             </div>
             <div className="horiz-div"/>
+            <div className="testUIRow row-title">Line-related</div>
             <div className="testUIRow row-title">
-              <TextField margin="none" size="small" label="Throughput" variant="standard" onChange={(ev) => {
-                const testUI = _.cloneDeep(this.state.testUI);
-                testUI['throughputValue'] = ev.target.value;
-
-                this.setState({
-                  testUI: testUI
-                });
-              }}/>
-              <Button variant="container" onClick={() => {
-                if(lineSelection && throughputValue) {
-                  const throughput = _.cloneDeep(this.state.throughput);
-                  throughput[lineSelection] = parseInt(throughputValue, 10);
+            {
+              (lineSelection) ?
+                <TextField margin="none" size="small" label="Throughput" variant="standard" onChange={(ev) => {
+                  const testUI = _.cloneDeep(this.state.testUI);
+                  testUI['throughputValue'] = ev.target.value;
 
                   this.setState({
-                    throughput: throughput
+                    testUI: testUI
                   });
-                }
-              }}>
-                Commit
-              </Button>
+                }}/>
+              :
+
+                <TextField disabled margin="none" size="small" label="Throughput" variant="standard"/>
+            }
+            {
+              (lineSelection && throughputValue) ?
+                <Button variant="container" onClick={() => {
+                  if(lineSelection && throughputValue) {
+                    const throughput = _.cloneDeep(this.state.throughput);
+                    throughput[lineSelection] = parseInt(throughputValue, 10);
+
+                    this.setState({
+                      throughput: throughput
+                    });
+                  }
+                }}>
+                  Commit
+                </Button>
+              :
+                <Button disabled variant="container">
+                  Commit
+                </Button>
+            }
             </div>
-            <Button variant="contained">Brake Failure Event</Button>
-            <Button variant="contained">Engine Failure Event</Button>
-            <Button variant="contained">Broken Rail Event</Button>
+            <div className="testUIRow row-title">Train-related</div>
+            {
+              trainSelection ?
+                <Button variant="contained">Brake Failure Event</Button>
+              :
+                <Button disabled variant="contained">Brake Failure Event</Button>
+            }
+            {
+              trainSelection ?
+                <Button variant="contained">Engine Failure Event</Button>
+              :
+                <Button disabled variant="contained">Engine Failure Event</Button>
+            }
+
+            <div className="testUIRow row-title">Block-related</div>
+            <FormGroup>
+              {
+                blockSelection ?
+                  <FormControlLabel control={<Switch/>} label="Broken Rail"/>
+                :
+                  <FormControlLabel disabled control={<Switch/>} label="Broken Rail"/>
+
+              }
+            </FormGroup>
+            <FormGroup>
+              {
+                blockSelection ?
+                  <FormControlLabel control={<Switch/>} label="Block Occupied"/>
+                :
+                  <FormControlLabel disabled control={<Switch/>} label="Block Occupied"/>
+
+              }
+            </FormGroup>
           </div>
           <div className="outputContainer">
             <h4 className="containerTitle">To Track Controller (Outputs from module)</h4>
