@@ -15,9 +15,12 @@
         "width": 10,
         "font-size": 14,
         "content": "data(block_name)",
-        "curve-style": "haystack",
+        "curve-style": "taxi",
         "haystack-radius": 0,
-        "opacity": 0.5
+        "opacity": 0.5,
+        "source-arrow-shape": "triangle",
+        "target-arrow-shape": "triangle",
+        "arrow-scale": 0.5
       }
     },
     {
