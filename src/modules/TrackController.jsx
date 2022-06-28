@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import {
   Button,
@@ -20,7 +20,12 @@ import {
   TableBody,
 } from '@mui/material';
 
+import blueLine from './blue.json';
+
 import './TrackController.css';
+
+console.log(blueLine);
+
 
 const darkTheme = createTheme({
   palette: {
@@ -66,42 +71,22 @@ class TrackController extends React.Component {
     super(props);
     this.name = name;
 
+    // Bad practice, should be seperate block class --- will rework later
     const blocks = [];
-    blocks.push({
-      id: 1,
-      transitLight: null,
-      occupancy: null,
-      switchPosition: 1,
-      engineFailure: false,
-      lightFailure: false,
-      brakeFailure: true,
-      signalFailure: false,
-      railFailure: true,
-    });
-    blocks.push({
-      id: 2,
-      transitLight: null,
-      occupancy: null,
-      switchPosition: 2,
-      engineFailure: false,
-      lightFailure: false,
-      brakeFailure: true,
-      signalFailure: false,
-      railFailure: true,
-    });
-    blocks.push({
-      id: 3,
-      transitLight: null,
-      occupancy: null,
-      switchPosition: 3,
-      engineFailure: false,
-      lightFailure: false,
-      brakeFailure: true,
-      signalFailure: false,
-      railFailure: true,
-    });
-
-    console.log(blocks);
+    for (const key in blueLine){
+      blocks.push({
+        id: blueLine[key]['Block Number'],
+        transitLight: 'green',
+        occupancy: null,
+        switchPosition: blueLine[key]['switch'],
+        engineFailure: false,
+        lightFailure: false,
+        brakeFailure: false,
+        signalFailure: false,
+        railFailure: false,
+      });
+      console.log(blueLine[key]);
+    }
 
     this.state = {
       testMode: false,
@@ -109,10 +94,15 @@ class TrackController extends React.Component {
       maintenanceMode: false,
       currBlock: blocks[0],
       appState: false,
+      // inputFile: useRef(null),
     };
 
-    console.log(this.state.currBlock);
-    console.log(this.state.blocks);
+    // For inputting file
+    this.inputFileRef = React.createRef(null);
+    this.onFileChange = this.handleFileChange.bind(this);
+    this.onBtnClick = this.handleBtnClick.bind(this);
+    // this.readPLC = this.readPLC.bind(this);
+    // this.triggerInputFile = this.triggerInputFile.bind(this);
 
     this.toggle = this.toggle.bind(this);
     this.mmMode = this.mmMode.bind(this);
@@ -123,7 +113,22 @@ class TrackController extends React.Component {
     this.lightFailure = this.lightFailure.bind(this);
     this.signalFailure = this.signalFailure.bind(this);
 
+
     // this.initializeBlocks = this.initializeBlocks.bind(this);
+  }
+
+
+
+  handleFileChange(e) {
+    /* Selected files data can be collected here. */
+    console.log(e.target.files);
+    console.log(e.target.files[0].path);
+    this.readPLC(String(e.target.files[0].path))
+  }
+
+  handleBtnClick() {
+    /* Collecting node-element and performing click */
+    this.inputFileRef.current.click();
   }
 
   handleChange(event) {
@@ -181,6 +186,22 @@ class TrackController extends React.Component {
       appState: !prevState.appState,
     }));
   }
+
+  // readPLC(path) {
+  //   const reader = new FileReader();
+  //   reader.addEventListener('load', (event) => {
+  //     const result = event.target.result;
+  //     // Do something with result
+  //   });
+
+  //   reader.addEventListener('progress', (event) => {
+  //     if (event.loaded && event.total) {
+  //       const percent = (event.loaded / event.total) * 100;
+  //       console.log(`Progress: ${Math.round(percent)}`);
+  //     }
+  //   });
+  //   reader.readAsDataURL(path);
+  // }
 
   // brakeFail() {
   //   console.log("brake fail");
@@ -366,7 +387,9 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th"><Button onClick={this.railFailure}>Rail</Button></TableCell>
+                        <TableCell component="th">
+                          <Button onClick={this.railFailure}>Rail</Button>
+                        </TableCell>
                         {this.state.currBlock.railFailure ? (
                           <TableCell align="right">FAIL</TableCell>
                         ) : (
@@ -378,7 +401,9 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th"><Button onClick={this.lightFailure}>Light</Button></TableCell>
+                        <TableCell component="th">
+                          <Button onClick={this.lightFailure}>Light</Button>
+                        </TableCell>
                         {this.state.currBlock.lightFailure ? (
                           <TableCell align="right">FAIL</TableCell>
                         ) : (
@@ -390,7 +415,9 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th"><Button onClick={this.engineFailure}>Engine</Button></TableCell>
+                        <TableCell component="th">
+                          <Button onClick={this.engineFailure}>Engine</Button>
+                        </TableCell>
                         {this.state.currBlock.engineFailure ? (
                           <TableCell align="right">FAIL</TableCell>
                         ) : (
@@ -402,7 +429,9 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th"><Button onClick={this.signalFailure}>Signal</Button></TableCell>
+                        <TableCell component="th">
+                          <Button onClick={this.signalFailure}>Signal</Button>
+                        </TableCell>
                         {this.state.currBlock.signalFailure ? (
                           <TableCell align="right">FAIL</TableCell>
                         ) : (
@@ -446,6 +475,7 @@ class TrackController extends React.Component {
     if (this.state.testMode) return this.testUI();
 
     const mmMode = this.maintenanceMode;
+
     return (
       <div>
         <ThemeProvider theme={darkTheme}>
@@ -672,7 +702,15 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="centered">
-                  <Button variant="contained">Load plc</Button>
+                  <input
+                    type="file"
+                    ref={this.inputFileRef}
+                    onChange={this.onFileChange}
+                    style={{display:'none'}}
+                  />
+                  <button variant="contained" onClick={this.onBtnClick}>
+                    Load plc
+                  </button>
                 </div>
               </Grid>
             </Grid>
