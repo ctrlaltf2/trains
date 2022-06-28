@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, ThemeProvider, createTheme } from '@mui/material';
+import _ from 'lodash';
 
 import SystemMap from './CTCOffice/SystemMap';
 
@@ -28,6 +29,8 @@ const UIState = {
 
 class CTCOffice extends React.Component {
   constructor(props) {
+    super(props);
+
     window.electronAPI.subscribeCTCMessage( (_event, payload) => {
       console.log('IPC:CTCOffice: ', payload);
 
@@ -63,8 +66,6 @@ class CTCOffice extends React.Component {
       }
     });
 
-    super(props);
-
     this.state = {
       UIMode: UIState.Main,
       redLineThroughput: 0,
@@ -82,12 +83,12 @@ class CTCOffice extends React.Component {
   }
 
   updateBlockOccupancy(line, block_id, is_occupied) {
-    const { occupancy } = this.state;
+    const occupancy = _.cloneDeep(this.state.occupancy);
 
     occupancy[line][block_id] = !!is_occupied;
 
     this.setState({
-      occupancy: occupancy
+      occupancy: occupancy,
     });
   }
 
