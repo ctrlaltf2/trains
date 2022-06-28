@@ -43,10 +43,110 @@ const TrackModel = () => {
 
         {/* Column 1 */}
         <Grid item xs={4}>
+          {/* within grid want two more columns for label and data flowing in */}
           <Grid
             container
-            spacing={12}>
-          <></>
+            column spacing={1}>
+            <Grid item xs={6}>
+              <div className="label">Rail Status</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 1</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Track Power</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 2</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Track Circuit Recieved</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 3</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Track Circuit Sent</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 4</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Switch Position</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 5</div>
+            </Grid>
+
+            <Grid item xs={6}>
+              <div className="label">Speed Limit</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 6</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Block Length</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 7</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Direction of Travel</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 8</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Train Occupancy</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 9</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Block Occupancy</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 10</div>
+            </Grid>
+
+
+            <Grid item xs={6}>
+              <div className="label">Track Heater Status</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 11</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Enviornment Temp</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 12</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Persons at Station</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 13</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Beacon Status</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 14</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Railway Crossing</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 15</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label">Elevation</div>
+            </Grid>
+            <Grid item xs={6}>
+              <div className="label"> Data 16</div>
+            </Grid>
+
           </Grid>
         </Grid>
 
@@ -91,8 +191,8 @@ const TrackModel = () => {
             <Button>Reset Sending Track Circuit</Button>
           </Grid>
 
-          <Grid item xs={6}>
-            <Button>Stop Recieveing Track Cicuit</Button>
+            <Grid item xs={6}>
+              <Button label = "label" labelStyle={{fontSize: 8}}>h</Button>
           </Grid>
 
           <Grid item xs={6}>
@@ -131,5 +231,20 @@ const TrackModel = () => {
     </Container>
   )
 };
+
+// Class for Track Model
+class TrackModel
+{
+  constructor();
+
+  //function to return UI
+  trackModelUI()
+  {
+    return ();
+  }
+
+}
+
+//Class for Block
 
 export default TrackModel;
