@@ -431,7 +431,8 @@
                         "grade": 0.0,
                         "speed_limit": 50,
                         "source": "14-15",
-                        "target": "15-e"
+                        "target": "15-e",
+                        "occupied": true
                     }
                 },
                 {
@@ -443,7 +444,8 @@
                         "grade": 0.0,
                         "speed_limit": 50,
                         "source": "15-e",
-                        "target": "14-15"
+                        "target": "14-15",
+                        "occupied": true
                     }
                 }
             ]
