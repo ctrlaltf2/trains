@@ -173,7 +173,14 @@ class CTCOffice extends React.Component {
 
   renderTest() {
     const { lineSelection, trainSelection, blockSelection, throughputValue } = this.state.testUI;
-    const { activeTrainIDs } = this.state;
+    const { activeTrainIDs, occupancy } = this.state;
+
+    // Parse occupancy from selected stuff
+    let selected_block_occupied = false;
+    if(lineSelection && blockSelection) {
+      if(occupancy[lineSelection] && occupancy[lineSelection][blockSelection])
+        selected_block_occupied = occupancy[lineSelection][blockSelection]
+    }
 
     return (
       <ThemeProvider theme={darkTheme}>
@@ -295,7 +302,9 @@ class CTCOffice extends React.Component {
             <FormGroup>
               {
                 blockSelection ?
-                  <FormControlLabel control={<Switch/>} label="Block Occupied"/>
+                  <FormControlLabel checked={selected_block_occupied} control={<Switch onChange={(ev) => {
+                    this.updateBlockOccupancy(lineSelection, blockSelection, ev.target.checked);
+                  }}/>} label="Block Occupied"/>
                 :
                   <FormControlLabel disabled control={<Switch/>} label="Block Occupied"/>
 
