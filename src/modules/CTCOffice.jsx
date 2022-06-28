@@ -1,5 +1,15 @@
 import React from 'react';
-import { Button, ThemeProvider, createTheme, Modal } from '@mui/material';
+import {
+  Button,
+  ThemeProvider,
+  createTheme,
+  Modal
+} from '@mui/material';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+
 import _ from 'lodash';
 
 import SystemMap from './CTCOffice/SystemMap';
@@ -67,9 +77,10 @@ class CTCOffice extends React.Component {
       redLineThroughput: 0,
       greenLineThroughput: 1,
       blueLineThroughput: 2,
-      // trainSelection: undefined,
-      // blockSelection: undefined,
-      // trackControllerSelection: undefined,
+      testUI: {
+        lineSelection: undefined,
+        trainSelection: undefined,
+      },
       occupancy: { // occupancy[line][block_id] = is_occupied: bool
         'red': {},
         'green': {},
@@ -78,7 +89,11 @@ class CTCOffice extends React.Component {
       activeTrainIDs: {
         'red': [],
         'green': [],
-        'blue': [],
+        'blue': [
+          'A',
+          'B',
+          'C',
+        ],
       },
     };
 
@@ -101,8 +116,27 @@ class CTCOffice extends React.Component {
     });
   }
 
+  handleLineSelect(self, ev, elem) {
+    self.setState({
+      test: {
+        ...this.state.test,
+        lineSelection: ev.target.value
+      }
+    });
+  }
+
+  handleTrainSelect(self, ev, elem) {
+    self.setState({
+      test: {
+        ...this.state.test,
+        trainSelection: ev.target.value
+      }
+    });
+  }
+
   renderTest() {
-    const { trainSelection, blockSelection, trackControllerSelection } = this.state;
+    const { lineSelection, trainSelection } = this.state.testUI;
+    const { activeTrainIDs } = this.state;
 
     return (
       <ThemeProvider theme={darkTheme}>
@@ -112,8 +146,37 @@ class CTCOffice extends React.Component {
             <div className="horiz-div"/>
             <div className="testUIRow row-title">Track Controller Selection</div>
             <div className="testUIRow">Throughput</div>
+            <FormControl>
+              <InputLabel id="line-select-label">Line</InputLabel>
+              <Select
+                labelId="line-select-label"
+                value={lineSelection}
+                label="Line"
+                onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
+              >
+                <MenuItem value={'Blue'}>Blue</MenuItem>
+                <MenuItem value={'Red'}>Red</MenuItem>
+                <MenuItem value={'Green'}>Green</MenuItem>
+              </Select>
+            </FormControl>
             <div className="horiz-div"/>
             <div className="testUIRow row-title">Train Selection</div>
+            <FormControl disabled={...(lineSelection ? {disabled: true} : {disabled: false})}>
+                
+              <InputLabel id="train-select-label">Train</InputLabel>
+              <Select
+                labelId="train-select-label"
+                value={trainSelection}
+                label="Train"
+                onChange={(ev, elem) => { this.handleTrainSelect(this, ev, elem)}}
+              >
+                {
+                  activeTrainIDs['blue'].map((train_id) => {
+                    return <MenuItem value={train_id}>{train_id}</MenuItem>;
+                  })
+                }
+              </Select>
+            </FormControl>
             <Button variant="contained">Brake Failure Event</Button>
             <Button variant="contained">Engine Failure Event</Button>
             <Button variant="contained">Broken Rail Event</Button>
