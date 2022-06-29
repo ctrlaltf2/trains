@@ -351,7 +351,9 @@ class TrackController extends React.Component {
           } else {
             this.state.blocks[i].transitLight = 'green';
           }
-        } else if (i < this.state.blocks.length - 2) {
+        } 
+        else if (i < this.state.blocks.length - 2) {
+          // light 1
           if (this.state.blocks[i + 1].occupancy === true) {
             this.state.blocks[i].transitLight = 'red';
           } else if (this.state.blocks[i + 2].occupancy === true) {
@@ -359,9 +361,39 @@ class TrackController extends React.Component {
           } else {
             this.state.blocks[i].transitLight = 'green';
           }
+
+          if (i > 2){
+            if (this.state.blocks[i-1].occupancy === true) {
+              this.state.blocks[i].transitLight2 = 'red';
+            } 
+            else if (this.state.blocks[i-2].occupancy === true) {
+              this.state.blocks[i].transitLight2 = 'yellow';
+            } 
+            else {
+              this.state.blocks[i].transitLight2 = 'green';
+            }
+          }
+          
         } else if (i < this.state.blocks.length - 1) {
           if (this.state.blocks[i + 1].occupancy === true) {
             this.state.blocks[i].transitLight = 'red';
+          } 
+
+          if (this.state.blocks[i - 1].occupancy === true) {
+            this.state.blocks[i].transitLight2 = 'red';
+          } 
+        }
+        else {
+        //   if (this.state.blocks[this.state.blocks.length-1].occupancy === true) {
+        //     this.state.blocks[this.state.blocks.length].transitLight = 'red';
+        //   } else {
+        //     this.state.blocks[this.state.blocks.length].transitLight = 'green';
+        //   }
+
+          if (this.state.blocks[0].occupancy === true) {
+            this.state.blocks[1].transitLight2 = 'red';
+          } else {
+            this.state.blocks[1].transitLight2 = 'green';
           }
         }
       }
@@ -374,6 +406,7 @@ class TrackController extends React.Component {
   }
 
   setLight() {
+    //Light 1
     for (let i = 0; i < this.state.blocks.length - 2; i++) {
       if (this.state.blocks[i].occupancy === true) {
         this.state.blocks[i].transitLight = 'red';
@@ -389,6 +422,23 @@ class TrackController extends React.Component {
     } else {
       this.state.blocks[this.state.blocks.length].transitLight = 'green';
     }
+
+    // Light 2
+    for (let i = 2; i < this.state.blocks.length; i++) {
+      if (this.state.blocks[i-1].occupancy === true) {
+        this.state.blocks[i].transitLight2 = 'red';
+      } else if (this.state.blocks[i-2].occupancy === true) {
+        this.state.blocks[i].transitLight2 = 'yellow';
+      } else {
+        this.state.blocks[i].transitLight2 = 'green';
+      }
+    }
+
+    if (this.state.blocks[0].occupancy === true) {
+      this.state.blocks[1].transitLight2 = 'red';
+    } else {
+      this.state.blocks[1].transitLight2 = 'green';
+    }
   }
 
   reset() {
@@ -402,7 +452,7 @@ class TrackController extends React.Component {
       if (e.target.value < 15) {
         this.setState({
           schedule: e.target.value,
-        });
+        }); 
 
         // reset state for all
         for (let i = 0; i < this.state.blocks.length; i++) {
