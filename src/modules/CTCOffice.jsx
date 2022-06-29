@@ -91,7 +91,8 @@ class CTCOffice extends React.Component {
         'green': [],
         'blue': [],
       },
-      enteredETA: undefined
+      enteredETA: undefined,
+      manualMode: false
     };
 
     this.nextTrainID = 1;
@@ -428,7 +429,7 @@ class CTCOffice extends React.Component {
   }
 
   renderMain() {
-    const { occupancy, throughput, isDispatchModalOpen, enteredETA } = this.state;
+    const { occupancy, throughput, isDispatchModalOpen, enteredETA, manualMode } = this.state;
     const { lineSelection, blockSelection } = this.state.testUI;
 
     const redLineThroughput = throughput['red'];
@@ -449,6 +450,13 @@ class CTCOffice extends React.Component {
               <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
             </div>
           </div>
+          <FormGroup className="floating" id="manualModeGroup">
+          <FormControlLabel checked={manualMode} control={<Switch onChange={(ev) => {
+            this.setState({
+              manualMode: ev.target.checked
+            });
+          }}/>} label="Manual Mode"/>
+          </FormGroup>
           <Button variant="contained" className="floating" id="testUIButton" onClick={() => {
             this.setState({UIMode: UIState.Test});
           }}>
