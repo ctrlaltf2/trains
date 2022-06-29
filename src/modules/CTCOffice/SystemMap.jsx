@@ -65,15 +65,15 @@ class SystemMap extends React.Component {
           const is_occupied = newOccupancy[line][block];
 
           if(is_occupied) {
-            this.cy.$(`[block_name = '${block}']`).style('line-color', 'white');
-            this.cy.$(`[block_name = '${block}']`).style('source-arrow-color', 'white');
-            this.cy.$(`[block_name = '${block}']`).style('target-arrow-color', 'white');
-            this.cy.$(`[block_name = '${block}']`).style('color', 'black');
+            this.cy.$(`[block_id = '${block}']`).style('line-color', 'white');
+            this.cy.$(`[block_id = '${block}']`).style('source-arrow-color', 'white');
+            this.cy.$(`[block_id = '${block}']`).style('target-arrow-color', 'white');
+            this.cy.$(`[block_id = '${block}']`).style('color', 'black');
           } else {
-            this.cy.$(`[block_name = '${block}']`).removeStyle('line-color');
-            this.cy.$(`[block_name = '${block}']`).removeStyle('source-arrow-color');
-            this.cy.$(`[block_name = '${block}']`).removeStyle('target-arrow-color');
-            this.cy.$(`[block_name = '${block}']`).removeStyle('color');
+            this.cy.$(`[block_id = '${block}']`).removeStyle('line-color');
+            this.cy.$(`[block_id = '${block}']`).removeStyle('source-arrow-color');
+            this.cy.$(`[block_id = '${block}']`).removeStyle('target-arrow-color');
+            this.cy.$(`[block_id = '${block}']`).removeStyle('color');
           }
         }
       }
