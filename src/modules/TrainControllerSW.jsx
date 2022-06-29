@@ -13,8 +13,10 @@ import {
   AppBar,
   Typography,
   Toolbar,
-  TextField
+  TextField,
 } from '@mui/material';
+import { type } from 'os';
+
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -28,7 +30,9 @@ function preventHorizontalKeyboardNavigation(event) {
     event.preventDefault();
   }
 }
-
+// max train speed: 70 km/h ~= 43 MPH
+// service brake deceleration 1.2m/s^2
+// emergency brake deceleration 2.73 m/s^2
 class TrainControllerSW extends React.Component {
   constructor(props, name) {
     super(props);
@@ -42,11 +46,51 @@ class TrainControllerSW extends React.Component {
       signalPickupFailureDisplay: false,
     };
 
+    // Initializing all needed variables to 0 or empty
+    this.speed = 0;
+    this.commandedSpeed = 0;
+    this.authority = 0;
+    this.power = 0;
+    this.stationName = "";
+
     this.toggle = this.toggle.bind(this);
     this.emergencyBrake = this.emergencyBrake.bind(this);
     this.brakeFailure = this.brakeFailure.bind(this);
     this.engineFailure = this.engineFailure.bind(this);
     this.signalPickupFailure = this.signalPickupFailure.bind(this);
+    this.handleSpeedChange = this.handleSpeedChange.bind(this);
+    this.handleCommandedSpeedChange = this.handleCommandedSpeedChange.bind(this);
+    this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
+    this.handleSpeedSubmit = this.handleSpeedSubmit.bind(this);
+    this.handleCommandedSpeedSubmit = this.handleCommandedSpeedSubmit.bind(this);
+    this.handleAuthoritySubmit = this.handleAuthoritySubmit.bind(this);
+  };
+
+  handleSpeedChange(event) {
+    this.setState({speed: event.target.value});
+  }
+
+  handleCommandedSpeedChange(event) {
+    this.setState({commandedSpeed: event.target.value});
+  }
+
+  handleAuthorityChange(event) {
+    this.setState({authority: event.target.value});
+  }
+
+  handleSpeedSubmit(event) {
+    alert('Speed is set: ' + this.state.speed + ' MPH');
+    event.preventDefault();
+  }
+
+  handleCommandedSpeedSubmit(event) {
+    alert('Commanded Speed is set: ' + this.state.commandedSpeed + ' MPH');
+    event.preventDefault();
+  }
+
+  handleAuthoritySubmit(event) {
+    alert('Authority is set: ' + this.state.authority + ' Miles');
+    event.preventDefault();
   }
 
   toggle() { // Toggles between regular UI and Test UI
@@ -181,69 +225,47 @@ class TrainControllerSW extends React.Component {
               <TextField id="outlined-basic" label="Cabin Temperature" type="number" variant="outlined" />
             </Box>
           </Grid>
-          <Box sx={{ height: 300 }}>
-            <Slider
-              sx={{
-                '& input[type="range"]': {
-                  WebkitAppearance: 'slider-vertical',
-                },
-              }}
-              orientation="vertical"
-              defaultValue={30}
-              aria-label="Temperature"
-              valueLabelDisplay="auto"
-              onKeyDown={preventHorizontalKeyboardNavigation}
-            />
-          </Box>
-          <Box sx={{ height: 300 }}>
-            <Slider
-              sx={{
-                '& input[type="range"]': {
-                  WebkitAppearance: 'slider-vertical',
-                },
-              }}
-              orientation="vertical"
-              defaultValue={30}
-              aria-label="Temperature"
-              valueLabelDisplay="auto"
-              onKeyDown={preventHorizontalKeyboardNavigation}
-            />
-          </Box>
           <Grid item xs={4} md={2}>
-            <Box
-                component="form"
-                sx={{
-                  '& > :not(style)': { m: 1, width: '25ch' },
-                }}
-                noValidate
-                autoComplete="off"
-              >
-                <TextField id="outlined-basic" label="Speed" type="number" variant="outlined" />
-              </Box>
+            <form onSubmit={this.handleSpeedSubmit}>
+              <label>
+                Speed:
+                <input type="number" value={this.state.speed} onChange={this.handleSpeedChange} />
+              </label>
+                <input type="submit" value="Submit" />
+            </form>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Box
-                component="form"
-                sx={{
-                  '& > :not(style)': { m: 1, width: '25ch' },
-                }}
-                noValidate
-                autoComplete="off"
-              >
-                <TextField id="outlined-basic" label="Commanded Speed" type="number" variant="outlined" />
-              </Box>
+            <form onSubmit={this.handleCommandedSpeedSubmit}>
+              <label>
+                Commanded Speed:
+                <input type="number" value={this.state.commandedSpeed} onChange={this.handleCommandedSpeedChange} />
+              </label>
+                <input type="submit" value="Submit" />
+            </form>
+              {/* <Box
+                  component="form"
+                  sx={{
+                    '& > :not(style)': { m: 1, width: '25ch' },
+                  }}
+                  noValidate
+                  autoComplete="off"
+                >
+                  <TextField
+                    id="outlined-basic"
+                    label="Commanded Speed"
+                    type="number"
+                    variant="outlined"
+                  />
+              </Box> */}
           </Grid>
           <Grid item xs={4} md={2}>
-            <Box
-                component="form"
-                sx={{
-                  '& > :not(style)': { m: 1, width: '25ch' },
-                }}
-                noValidate
-                autoComplete="off"
-              >
-                <TextField id="outlined-basic" label="Authority" type="number" variant="outlined" />
-              </Box>
+            <form onSubmit={this.handleAuthoritySubmit}>
+              <label>
+                Authority:
+                <input type="number" value={this.state.authority} onChange={this.handleAuthorityChange} />
+              </label>
+                <input type="submit" value="Submit" />
+            </form>
           </Grid>
           <Grid item xs={5} md={2}>
             <Box
