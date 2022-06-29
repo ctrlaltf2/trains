@@ -95,6 +95,8 @@ class TrackController extends React.Component {
         id: blueLine[key]['Block Number'],
         section: blueLine[key].Section,
         transitLight: 'green',
+        transitLight2: 'green',
+        crossing: false,
         // direction: true, // true is forward, false backward
         occupancy: false,
         nextOccupancy: false,
@@ -341,14 +343,12 @@ class TrackController extends React.Component {
           }
 
           //Set light for switch too
-          let sw = this.state.blocks[i].switchPosition
-          if (this.state.blocks[sw-1].occupancy === true) {
+          let sw = this.state.blocks[i].switchPosition;
+          if (this.state.blocks[sw - 1].occupancy === true) {
             this.state.blocks[i].transitLight = 'red';
-          }
-          else if  (this.state.blocks[sw].occupancy === true) {
+          } else if (this.state.blocks[sw].occupancy === true) {
             this.state.blocks[i].transitLight = 'yellow';
-          }
-          else {
+          } else {
             this.state.blocks[i].transitLight = 'green';
           }
         } else if (i < this.state.blocks.length - 2) {
@@ -359,7 +359,7 @@ class TrackController extends React.Component {
           } else {
             this.state.blocks[i].transitLight = 'green';
           }
-        } else if (i < this.state.blocks.length - 1){
+        } else if (i < this.state.blocks.length - 1) {
           if (this.state.blocks[i + 1].occupancy === true) {
             this.state.blocks[i].transitLight = 'red';
           }
@@ -618,10 +618,14 @@ class TrackController extends React.Component {
 
             <Grid container spacing={12}>
               <Grid item xs={4}>
-                <div className="left" >
+                <div className="left">
                   <Chip
                     label={`Switch Position: ${this.state.currBlock.switchPosition}`}
-                    color={this.state.currBlock.switchPosition === 'null' ? "default" : "success"}
+                    color={
+                      this.state.currBlock.switchPosition === 'null'
+                        ? 'default'
+                        : 'success'
+                    }
                     variant="outlined"
                   />
                 </div>
@@ -648,13 +652,26 @@ class TrackController extends React.Component {
               <Grid item xs>
                 <div className="right">
                   <Chip
-                    label="Light"
+                    label="Light 1"
                     color={
                       this.state.currBlock.transitLight === 'green'
                         ? 'success'
                         : this.state.currBlock.transitLight === 'yellow'
                         ? 'warning'
                         : this.state.currBlock.transitLight === 'red'
+                        ? 'error'
+                        : 'default'
+                    }
+                    variant="filled"
+                  />
+                  <Chip
+                    label="Light 2"
+                    color={
+                      this.state.currBlock.transitLight2 === 'green'
+                        ? 'success'
+                        : this.state.currBlock.transitLight2 === 'yellow'
+                        ? 'warning'
+                        : this.state.currBlock.transitLight2 === 'red'
                         ? 'error'
                         : 'default'
                     }
@@ -713,7 +730,20 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Gates</TableCell>
-                        <TableCell align="right">status</TableCell>
+                        <TableCell align="right">
+                          {' '}
+                          <Chip
+                            label={String(this.state.currBlock.crossing)}
+                            color={
+                              this.state.currBlock.crossing === false
+                                ? 'success'
+                                : this.state.currBlock.crossing === true
+                                ? 'error'
+                                : 'default'
+                            }
+                            variant="filled"
+                          />
+                        </TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
@@ -721,7 +751,20 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Crossing Lights</TableCell>
-                        <TableCell align="right">status</TableCell>
+                        <TableCell align="right">
+                          {' '}
+                          <Chip
+                            label={String(this.state.currBlock.crossing)}
+                            color={
+                              this.state.currBlock.crossing === false
+                                ? 'success'
+                                : this.state.currBlock.crossing === true
+                                ? 'error'
+                                : 'default'
+                            }
+                            variant="filled"
+                          />
+                        </TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
@@ -734,7 +777,17 @@ class TrackController extends React.Component {
                           </Button>
                         </TableCell>
                         <TableCell align="right">
-                          {String(this.state.currBlock.occupancy)}
+                          <Chip
+                            label={String(this.state.currBlock.occupancy)}
+                            color={
+                              this.state.currBlock.occupancy === false
+                                ? 'success'
+                                : this.state.currBlock.occupancy === true
+                                ? 'error'
+                                : 'default'
+                            }
+                            variant="filled"
+                          />{' '}
                         </TableCell>
                       </TableRow>
                       <TableRow
@@ -742,7 +795,7 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th">
+                        {/* <TableCell component="th">
                           <Button onClick={this.blockDirection}>
                             Direction
                           </Button>
@@ -751,7 +804,7 @@ class TrackController extends React.Component {
                           {this.state.currSection.direction
                             ? 'forward'
                             : 'backward'}
-                        </TableCell>
+                        </TableCell> */}
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -939,7 +992,11 @@ class TrackController extends React.Component {
                 <div className="left">
                   <Chip
                     label={`Switch Position: ${this.state.currBlock.switchPosition}`}
-                    color={this.state.currBlock.switchPosition === 'null' ? "default" : "success"}
+                    color={
+                      this.state.currBlock.switchPosition === 'null'
+                        ? 'default'
+                        : 'success'
+                    }
                     variant="outlined"
                   />
                 </div>
@@ -963,8 +1020,8 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="right">
-                  <Chip
-                    label="Light"
+                <Chip
+                    label="Light 1"
                     color={
                       this.state.currBlock.transitLight === 'green'
                         ? 'success'
@@ -975,7 +1032,20 @@ class TrackController extends React.Component {
                         : 'default'
                     }
                     variant="filled"
-                  />{' '}
+                  />
+                  <Chip
+                    label="Light 2"
+                    color={
+                      this.state.currBlock.transitLight2 === 'green'
+                        ? 'success'
+                        : this.state.currBlock.transitLight2 === 'yellow'
+                        ? 'warning'
+                        : this.state.currBlock.transitLight2 === 'red'
+                        ? 'error'
+                        : 'default'
+                    }
+                    variant="filled"
+                  />
                 </div>
               </Grid>
             </Grid>
@@ -1029,7 +1099,19 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Gates</TableCell>
-                        <TableCell align="right">status</TableCell>
+                        <TableCell align="right">
+                          <Chip
+                            label={String(this.state.currBlock.crossing)}
+                            color={
+                              this.state.currBlock.crossing === false
+                                ? 'success'
+                                : this.state.currBlock.crossing === true
+                                ? 'error'
+                                : 'default'
+                            }
+                            variant="filled"
+                          />
+                        </TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
@@ -1037,7 +1119,20 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Crossing Lights</TableCell>
-                        <TableCell align="right">status</TableCell>
+                        <TableCell align="right">
+                          {' '}
+                          <Chip
+                            label={String(this.state.currBlock.crossing)}
+                            color={
+                              this.state.currBlock.crossing === false
+                                ? 'success'
+                                : this.state.currBlock.crossing === true
+                                ? 'error'
+                                : 'default'
+                            }
+                            variant="filled"
+                          />
+                        </TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
@@ -1046,7 +1141,17 @@ class TrackController extends React.Component {
                       >
                         <TableCell component="th">Track Occupency</TableCell>
                         <TableCell align="right">
-                          {String(this.state.currBlock.occupancy)}
+                          <Chip
+                            label={String(this.state.currBlock.occupancy)}
+                            color={
+                              this.state.currBlock.occupancy === false
+                                ? 'success'
+                                : this.state.currBlock.occupancy === true
+                                ? 'error'
+                                : 'default'
+                            }
+                            variant="filled"
+                          />{' '}
                         </TableCell>
                       </TableRow>
                       <TableRow
@@ -1054,12 +1159,12 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th">Direction</TableCell>
+                        {/* <TableCell component="th">Direction</TableCell>
                         <TableCell align="right">
                           {this.state.currSection.direction
                             ? 'forward'
                             : 'backward'}
-                        </TableCell>
+                        </TableCell> */}
                       </TableRow>
                     </TableBody>
                   </Table>
