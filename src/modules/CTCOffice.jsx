@@ -20,7 +20,7 @@ import _ from 'lodash';
 import SystemMap from './CTCOffice/SystemMap';
 import Train from './CTCOffice/Train';
 import TrackSwitch from './CTCOffice/Switch';
-import TrackModel from '../../data/TrackModelV1.json';
+import TrackModel from '../../data/TrackModel-route.json';
 
 import './CTCOffice.css';
 
@@ -121,13 +121,13 @@ class CTCOffice extends React.Component {
       });
     }
 
-    console.log(this.getBlocks('blue'));
+    console.log(this.cy);
   }
 
   getBlocks(line) {
     if(this.cy[line])
-      return new Set(this.cy[line].filter('edge[block_name]').map( (elem) => {
-        return elem.data('block_name');
+      return new Set(this.cy[line].filter('edge[block_id]').map( (elem) => {
+        return elem.data('block_id');
       }));
     else
       return new Set([]);
@@ -142,6 +142,56 @@ class CTCOffice extends React.Component {
     });
 
     // TODO: Update occupancy in cytoscape graph to impact routing decisions
+  }
+
+  /**
+   * Return cytoscape query that points to the starting block out of the yard
+   */
+  getStartingBlockQuery(line) {
+    switch(line) {
+      case 'blue':
+        return `edge[edge_name = '1::E']`;
+      default:
+        console.warn(`Unimplemented line '${line}' for starting block query detected`);
+        return 'oops';
+    }
+    return `node[node_name = 'Yard']`;
+  }
+
+  buildCyBlockQuery(block_id) { return `edge[id ^= ${block_id}::]`; }
+
+  // Major TODO: when a block that's part of another train's route changes occupancy state, recalculate route for that other train and relay that to Track Controller
+  dispatchTrain(line, destination_block_id, do_cicle_back) {
+    // Build route
+    // Run A* over the graph complement to route between edges and not nodes
+    const routable_graph = this.cy.elements().not();
+
+    // First, yard -> destination_block
+    // TODO: Do this A* twice for both station edges probably, take the shorter path of the two
+    // TODO: Make a separate track model that more strongly defines where the train can go. needed for red/green line support
+    const to_dst_route = routable_graph.elements().aStar({
+      root: getStartingBlockQuery(line),
+      goal: buildCyBlockQuery(destination_block_id),
+      weight: (edge) => {
+        return edge.data('length') / edge.data('speed_limit'); // Minimize time in blocks
+      },
+      directed: true
+    });
+
+    cosole.log(to_dst_route);
+
+    if(do_circle_back) {
+
+    }
+
+    const pain = new Train( // This line sums up this whole class
+      this.nextTrainID,
+      line,
+      destination_block,
+      50, // TODO: Query the speed limit out of the yard
+      11, // TODO: Settle on a good authority
+      undefined
+    );
   }
 
   handleLineSelect(self, ev, elem) {
@@ -331,8 +381,6 @@ class CTCOffice extends React.Component {
     const redLineThroughput = throughput['red'];
     const greenLineThroughput = throughput['green'];
     const blueLineThroughput = throughput['blue'];
-
-    setTimeout(() => console.log(this.systemMapRef.current), 2000);
 
     return (
       <div id="appContainer">
