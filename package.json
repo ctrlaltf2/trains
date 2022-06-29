@@ -134,7 +134,7 @@
   "dependencies": {
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
-    "@mui/material": "^5.8.5",
+    "@mui/material": "^5.8.6",
     "@picocss/pico": "^1.5.2",
     "cytoscape": "^3.21.2",
     "cytoscape-dagre": "^2.4.0",
