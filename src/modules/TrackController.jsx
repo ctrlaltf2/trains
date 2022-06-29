@@ -96,6 +96,7 @@ class TrackController extends React.Component {
         section: blueLine[key].Section,
         transitLight: 'green',
         transitLight2: 'green',
+        authority: false,
         crossing: false,
         // direction: true, // true is forward, false backward
         occupancy: false,
@@ -317,13 +318,6 @@ class TrackController extends React.Component {
           // Condition to swt switch to true (low num)
           console.log(this.state.blocks[i].switchPosition);
           let curr = this.state.blocks[i];
-          // console.log(curr);
-          // console.log(this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1]);
-          // console.log(!this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]);
-          // console.log(this.state.blocks[curr.SWFalse.block][curr.SWFalse.arg1]);
-          // console.log(
-          //   !this.state.blocks[curr.SWFalse.block2][curr.SWFalse.arg2]
-          // );
           if (
             this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1] &&
             !this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]
@@ -351,8 +345,7 @@ class TrackController extends React.Component {
           } else {
             this.state.blocks[i].transitLight = 'green';
           }
-        }
-        else if (i < this.state.blocks.length - 2) {
+        } else if (i < this.state.blocks.length - 2) {
           // light 1
           if (this.state.blocks[i + 1].occupancy === true) {
             this.state.blocks[i].transitLight = 'red';
@@ -362,18 +355,15 @@ class TrackController extends React.Component {
             this.state.blocks[i].transitLight = 'green';
           }
 
-          if (i > 2){
-            if (this.state.blocks[i-1].occupancy === true) {
+          if (i > 2) {
+            if (this.state.blocks[i - 1].occupancy === true) {
               this.state.blocks[i].transitLight2 = 'red';
-            }
-            else if (this.state.blocks[i-2].occupancy === true) {
+            } else if (this.state.blocks[i - 2].occupancy === true) {
               this.state.blocks[i].transitLight2 = 'yellow';
-            }
-            else {
+            } else {
               this.state.blocks[i].transitLight2 = 'green';
             }
           }
-
         } else if (i < this.state.blocks.length - 1) {
           if (this.state.blocks[i + 1].occupancy === true) {
             this.state.blocks[i].transitLight = 'red';
@@ -382,13 +372,12 @@ class TrackController extends React.Component {
           if (this.state.blocks[i - 1].occupancy === true) {
             this.state.blocks[i].transitLight2 = 'red';
           }
-        }
-        else {
-        //   if (this.state.blocks[this.state.blocks.length-1].occupancy === true) {
-        //     this.state.blocks[this.state.blocks.length].transitLight = 'red';
-        //   } else {
-        //     this.state.blocks[this.state.blocks.length].transitLight = 'green';
-        //   }
+        } else {
+          //   if (this.state.blocks[this.state.blocks.length-1].occupancy === true) {
+          //     this.state.blocks[this.state.blocks.length].transitLight = 'red';
+          //   } else {
+          //     this.state.blocks[this.state.blocks.length].transitLight = 'green';
+          //   }
 
           if (this.state.blocks[0].occupancy === true) {
             this.state.blocks[1].transitLight2 = 'red';
@@ -398,6 +387,18 @@ class TrackController extends React.Component {
         }
       }
 
+      /*
+      *
+      * Set auth
+      *
+      */
+     for (let i = 0; i < this.state.blocks.length ; i++ ) {
+
+      if (this.state.blocks[i].schedule &&( this.state.blocks[i].transitLight === 'green' || this.state.blocks[i].transitLight === 'yellow') ) {
+        this.state.blocks[i].authority = true;
+      }
+     }
+
       this.setState((prevState) => ({
         appSate: !prevState.appState,
       }));
@@ -405,6 +406,11 @@ class TrackController extends React.Component {
     }, 5000);
   }
 
+  /*
+   *
+   * Function not used rn
+   *
+   */
   setLight() {
     //Light 1
     for (let i = 0; i < this.state.blocks.length - 2; i++) {
@@ -425,9 +431,9 @@ class TrackController extends React.Component {
 
     // Light 2
     for (let i = 2; i < this.state.blocks.length; i++) {
-      if (this.state.blocks[i-1].occupancy === true) {
+      if (this.state.blocks[i - 1].occupancy === true) {
         this.state.blocks[i].transitLight2 = 'red';
-      } else if (this.state.blocks[i-2].occupancy === true) {
+      } else if (this.state.blocks[i - 2].occupancy === true) {
         this.state.blocks[i].transitLight2 = 'yellow';
       } else {
         this.state.blocks[i].transitLight2 = 'green';
@@ -444,19 +450,21 @@ class TrackController extends React.Component {
   reset() {
     for (let i = 0; i < this.state.blocks.length; i++) {
       this.state.blocks[i].occupancy = false;
+      this.state.blocks[i].authority = false;
     }
   }
 
   schedule(e) {
     if (!isNaN(e.target.value)) {
-      if (e.target.value < 15) {
+      if (e.target.value <= 15) {
         this.setState({
           schedule: e.target.value,
         });
 
         // reset state for all
         for (let i = 0; i < this.state.blocks.length; i++) {
-          this.state.blocks[i].schedule = false;
+          this.state.blocks[i].schedule = false
+          this.state.blocks[i].authority = false;
         }
 
         // Blue line only have switches manually set TO CHANGE
@@ -466,15 +474,15 @@ class TrackController extends React.Component {
           }
         } else if (e.target.value > 10) {
           for (let j = 0; j < e.target.value; j++) {
-            if (j < 5 || j > 10) {
+            if (j < 5 || j > 9) {
               this.state.blocks[j].schedule = true;
             }
           }
-        } else if (e.target.value > 14) {
-          console.log('too large schedule');
         }
       }
     }
+
+
   }
 
   occupancy() {
@@ -759,7 +767,17 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Authority</TableCell>
-                        <TableCell align="right">miles</TableCell>
+                        <TableCell align="right"> <Chip
+                            label={String(this.state.currBlock.authority)}
+                            color={
+                              this.state.currBlock.authority === false
+                                ? 'error'
+                                : this.state.currBlock.authority === true
+                                ? 'success'
+                                : 'default'
+                            }
+                            variant="filled"
+                          /></TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -1070,7 +1088,7 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="right">
-                <Chip
+                  <Chip
                     label="Light Forward"
                     color={
                       this.state.currBlock.transitLight === 'green'
@@ -1128,7 +1146,17 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Authority</TableCell>
-                        <TableCell align="right">miles</TableCell>
+                        <TableCell align="right"><Chip
+                            label={String(this.state.currBlock.authority)}
+                            color={
+                              this.state.currBlock.authority === false
+                                ? 'error'
+                                : this.state.currBlock.authority === true
+                                ? 'success'
+                                : 'default'
+                            }
+                            variant="filled"
+                          /></TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
