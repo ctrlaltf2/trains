@@ -374,7 +374,8 @@
             "block_id": "10",
             "speed_limit": 50,
             "length": 50,
-            "grade": 0.0
+            "grade": 0.0,
+            "station_name": "Station B"
           }
         },
         {
@@ -386,7 +387,8 @@
             "block_id": "10",
             "speed_limit": 50,
             "length": 50,
-            "grade": 0.0
+            "grade": 0.0,
+            "station_name": "Station B"
           }
         },
         {
@@ -494,7 +496,8 @@
             "block_id": "15",
             "speed_limit": 50,
             "length": 50,
-            "grade": 0.0
+            "grade": 0.0,
+            "station_name": "Station C"
           }
         },
         {
@@ -506,7 +509,8 @@
             "block_id": "15",
             "speed_limit": 50,
             "length": 50,
-            "grade": 0.0
+            "grade": 0.0,
+            "station_name": "Station C"
           }
         }
       ]
