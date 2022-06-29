@@ -9,7 +9,7 @@
     "command": "light",
     "block": "5",
     "color": "yellow",
-    "true": "6 s,&&,6 o,&&,!11 o"
+    "true": "6 s,&&,6 o,&&,! 11 o"
   },
   {
     "command": "light",
@@ -21,12 +21,30 @@
     "command": "light",
     "block": "5",
     "color":"red",
-    "true": "6 sw,&&,! 6 o"
+    "true": "6 sw,&&,! 6 o,||, 11 sw, &&, ! 11 o"
   },
   {
     "command": "light",
     "block": "5",
+    "color":"yellow",
+    "true": "6 sw,&&,7 o,|| 11 sw,&&,! 12 o"
+  },
+  {
+    "command": "light",
+    "block": "1",
+    "color":"green",
+    "true": "2 o && 3 o"
+  },
+  {
+    "command": "light",
+    "block": "1",
     "color":"red",
-    "true": "6 sw,&&,! 6 o"
+    "true": "!2 o"
+  },
+  {
+    "command": "light",
+    "block": "1",
+    "color":"yellow",
+    "true": "2 o && ! 3 o"
   }
 ]

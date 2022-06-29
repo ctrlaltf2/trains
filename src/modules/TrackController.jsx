@@ -618,10 +618,10 @@ class TrackController extends React.Component {
 
             <Grid container spacing={12}>
               <Grid item xs={4}>
-                <div className="left">
+                <div className="left" >
                   <Chip
                     label={`Switch Position: ${this.state.currBlock.switchPosition}`}
-                    color="success"
+                    color={this.state.currBlock.switchPosition === 'null' ? "default" : "success"}
                     variant="outlined"
                   />
                 </div>
@@ -939,7 +939,7 @@ class TrackController extends React.Component {
                 <div className="left">
                   <Chip
                     label={`Switch Position: ${this.state.currBlock.switchPosition}`}
-                    color="success"
+                    color={this.state.currBlock.switchPosition === 'null' ? "default" : "success"}
                     variant="outlined"
                   />
                 </div>
