@@ -115,9 +115,7 @@ class CTCOffice extends React.Component {
     this.initCy();
   }
 
-  componentDidMount() {
-    this.dispatchTrain('blue', 10, '20:00', false);
-  }
+  componentDidMount() { }
 
   initCy() {
     for(const line in TrackModel.lines) {
@@ -473,7 +471,7 @@ class CTCOffice extends React.Component {
                 </Button>
             }
           </div>
-          <Button variant="contained" id="testUIButton" onClick={() => {
+          <Button variant="contained" className="floating" id="testUIButton" onClick={() => {
             this.setState({UIMode: UIState.Test});
           }}>
             Switch to test UI
