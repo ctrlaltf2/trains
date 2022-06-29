@@ -351,7 +351,7 @@ class TrackController extends React.Component {
           } else {
             this.state.blocks[i].transitLight = 'green';
           }
-        } 
+        }
         else if (i < this.state.blocks.length - 2) {
           // light 1
           if (this.state.blocks[i + 1].occupancy === true) {
@@ -365,23 +365,23 @@ class TrackController extends React.Component {
           if (i > 2){
             if (this.state.blocks[i-1].occupancy === true) {
               this.state.blocks[i].transitLight2 = 'red';
-            } 
+            }
             else if (this.state.blocks[i-2].occupancy === true) {
               this.state.blocks[i].transitLight2 = 'yellow';
-            } 
+            }
             else {
               this.state.blocks[i].transitLight2 = 'green';
             }
           }
-          
+
         } else if (i < this.state.blocks.length - 1) {
           if (this.state.blocks[i + 1].occupancy === true) {
             this.state.blocks[i].transitLight = 'red';
-          } 
+          }
 
           if (this.state.blocks[i - 1].occupancy === true) {
             this.state.blocks[i].transitLight2 = 'red';
-          } 
+          }
         }
         else {
         //   if (this.state.blocks[this.state.blocks.length-1].occupancy === true) {
@@ -452,7 +452,7 @@ class TrackController extends React.Component {
       if (e.target.value < 15) {
         this.setState({
           schedule: e.target.value,
-        }); 
+        });
 
         // reset state for all
         for (let i = 0; i < this.state.blocks.length; i++) {
@@ -702,7 +702,7 @@ class TrackController extends React.Component {
               <Grid item xs>
                 <div className="right">
                   <Chip
-                    label="Light 1"
+                    label="Light Forward"
                     color={
                       this.state.currBlock.transitLight === 'green'
                         ? 'success'
@@ -715,7 +715,7 @@ class TrackController extends React.Component {
                     variant="filled"
                   />
                   <Chip
-                    label="Light 2"
+                    label="Light Backward"
                     color={
                       this.state.currBlock.transitLight2 === 'green'
                         ? 'success'
@@ -1071,7 +1071,7 @@ class TrackController extends React.Component {
               <Grid item xs>
                 <div className="right">
                 <Chip
-                    label="Light 1"
+                    label="Light Forward"
                     color={
                       this.state.currBlock.transitLight === 'green'
                         ? 'success'
@@ -1084,7 +1084,7 @@ class TrackController extends React.Component {
                     variant="filled"
                   />
                   <Chip
-                    label="Light 2"
+                    label="Light Backward"
                     color={
                       this.state.currBlock.transitLight2 === 'green'
                         ? 'success'
