@@ -176,3 +176,9 @@
   margin-top: 2em;
   width: fit-content;
 }
+
+#manualModeGroup {
+  bottom: 0;
+  left: 0;
+  margin: 1em;
+}
