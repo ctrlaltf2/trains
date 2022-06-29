@@ -4,5 +4,29 @@
     "block": "5",
     "true": "6 s,&&,6 o,6",
     "false": "11 s,&&,11 o,11"
+  },
+  {
+    "command": "light",
+    "block": "5",
+    "color": "yellow",
+    "true": "6 s,&&,6 o,&&,!11 o"
+  },
+  {
+    "command": "light",
+    "block": "5",
+    "color":"green",
+    "true": "6 sw,&&,6 o,||, 11 sw, &&, 11 o"
+  },
+  {
+    "command": "light",
+    "block": "5",
+    "color":"red",
+    "true": "6 sw,&&,! 6 o"
+  },
+  {
+    "command": "light",
+    "block": "5",
+    "color":"red",
+    "true": "6 sw,&&,! 6 o"
   }
 ]

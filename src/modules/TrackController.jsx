@@ -116,6 +116,29 @@ class TrackController extends React.Component {
           arg2: null,
           dest: null,
         },
+        lightRule: {
+          switch: null,
+          block: null,
+          arg1: null,
+          logical: null,
+          block2: null,
+          arg2: null,
+        },
+        lightRuleY: {
+          block: null,
+          arg1: null,
+          logical: null,
+          block2: null,
+          arg2: null,
+        },
+        lightRuleR: {
+          block: null,
+          arg1: null,
+          logical: null,
+          block2: null,
+          arg2: null,
+        },
+
         engineFailure: false,
         lightFailure: false,
         brakeFailure: false,
@@ -157,6 +180,8 @@ class TrackController extends React.Component {
 
     this.plc = this.plc.bind(this);
     this.handleChangePLC = this.handleChangePLC.bind(this);
+
+    this.reset = this.reset.bind(this);
 
     this.brakeFailure = this.brakeFailure.bind(this);
     this.engineFailure = this.engineFailure.bind(this);
@@ -265,6 +290,9 @@ class TrackController extends React.Component {
 
         console.log(this.state.blocks[file[key].block]);
       }
+      if (file[key].command === 'light') {
+        // TODO improve implementation
+      }
     }
   }
 
@@ -287,13 +315,13 @@ class TrackController extends React.Component {
           // Condition to swt switch to true (low num)
           console.log(this.state.blocks[i].switchPosition);
           let curr = this.state.blocks[i];
-          console.log(curr);
-          console.log(this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1]);
-          console.log(!this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]);
-          console.log(this.state.blocks[curr.SWFalse.block][curr.SWFalse.arg1]);
-          console.log(
-            !this.state.blocks[curr.SWFalse.block2][curr.SWFalse.arg2]
-          );
+          // console.log(curr);
+          // console.log(this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1]);
+          // console.log(!this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]);
+          // console.log(this.state.blocks[curr.SWFalse.block][curr.SWFalse.arg1]);
+          // console.log(
+          //   !this.state.blocks[curr.SWFalse.block2][curr.SWFalse.arg2]
+          // );
           if (
             this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1] &&
             !this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]
@@ -311,9 +339,33 @@ class TrackController extends React.Component {
             // this.state.blocks[curr.SWFalse.dest].switchPosition = true;
             // this.state.blocks[curr.SWTrue.dest].switchPosition = false;
           }
+
+          //Set light for switch too
+          let sw = this.state.blocks[i].switchPosition
+          if (this.state.blocks[sw-1].occupancy === true) {
+            this.state.blocks[i].transitLight = 'red';
+          }
+          else if  (this.state.blocks[sw].occupancy === true) {
+            this.state.blocks[i].transitLight = 'yellow';
+          }
+          else {
+            this.state.blocks[i].transitLight = 'green';
+          }
+        } else if (i < this.state.blocks.length - 2) {
+          if (this.state.blocks[i + 1].occupancy === true) {
+            this.state.blocks[i].transitLight = 'red';
+          } else if (this.state.blocks[i + 2].occupancy === true) {
+            this.state.blocks[i].transitLight = 'yellow';
+          } else {
+            this.state.blocks[i].transitLight = 'green';
+          }
+        } else if (i < this.state.blocks.length - 1){
+          if (this.state.blocks[i + 1].occupancy === true) {
+            this.state.blocks[i].transitLight = 'red';
+          }
         }
-        console.log('good');
       }
+
       this.setState((prevState) => ({
         appSate: !prevState.appState,
       }));
@@ -322,7 +374,7 @@ class TrackController extends React.Component {
   }
 
   setLight() {
-    for (let i = 0; i < this.state.blocks.length - 1; i++) {
+    for (let i = 0; i < this.state.blocks.length - 2; i++) {
       if (this.state.blocks[i].occupancy === true) {
         this.state.blocks[i].transitLight = 'red';
       } else if (this.state.blocks[i + 1].occupancy === true) {
@@ -336,6 +388,12 @@ class TrackController extends React.Component {
       this.state.blocks[this.state.blocks.length].transitLight = 'red';
     } else {
       this.state.blocks[this.state.blocks.length].transitLight = 'green';
+    }
+  }
+
+  reset() {
+    for (let i = 0; i < this.state.blocks.length; i++) {
+      this.state.blocks[i].occupancy = false;
     }
   }
 
@@ -589,7 +647,19 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="right">
-                  <Chip label="Light" color="success" variant="outlined" />
+                  <Chip
+                    label="Light"
+                    color={
+                      this.state.currBlock.transitLight === 'green'
+                        ? 'success'
+                        : this.state.currBlock.transitLight === 'yellow'
+                        ? 'warning'
+                        : this.state.currBlock.transitLight === 'red'
+                        ? 'error'
+                        : 'default'
+                    }
+                    variant="filled"
+                  />
                 </div>
               </Grid>
             </Grid>
@@ -784,6 +854,11 @@ class TrackController extends React.Component {
                     label="Schedule train"
                     variant="standard"
                   />
+                  <div style={{ margin: '1rem' }}>
+                    <Button variant="contained" onClick={this.reset}>
+                      reset
+                    </Button>
+                  </div>
                 </div>
               </Grid>
             </Grid>
@@ -888,7 +963,19 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="right">
-                  <Chip label="Light" color="success" variant="outlined" />
+                  <Chip
+                    label="Light"
+                    color={
+                      this.state.currBlock.transitLight === 'green'
+                        ? 'success'
+                        : this.state.currBlock.transitLight === 'yellow'
+                        ? 'warning'
+                        : this.state.currBlock.transitLight === 'red'
+                        ? 'error'
+                        : 'default'
+                    }
+                    variant="filled"
+                  />{' '}
                 </div>
               </Grid>
             </Grid>
