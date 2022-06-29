@@ -1,0 +1,8 @@
+[
+  {
+    "command": "switch",
+    "block": "5",
+    "true": "6 s,&&,6 o,6",
+    "false": "11 s,&&,11 o,11"
+  }
+]
