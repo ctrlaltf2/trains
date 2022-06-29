@@ -86,11 +86,7 @@ class CTCOffice extends React.Component {
       activeTrainIDs: {
         'red': [],
         'green': [],
-        'blue': [
-          'A',
-          'B',
-          'C',
-        ],
+        'blue': [],
       },
     };
 
