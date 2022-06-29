@@ -21,10 +21,10 @@ import {
   TextField,
 } from '@mui/material';
 
-import blueLine from './blue.json';
-import blueA from './blueA.json';
-import blueB from './blueB.json';
-import blueC from './blueC.json';
+import blueLine from './PLC/blue.json';
+import blueA from './PLC/blueA.json';
+import blueB from './PLC/blueB.json';
+import blueC from './PLC/blueC.json';
 
 import './TrackController.css';
 import { JoinLeft } from '@mui/icons-material';
