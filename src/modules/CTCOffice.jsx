@@ -450,33 +450,42 @@ class CTCOffice extends React.Component {
               <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
             </div>
           </div>
-          <FormGroup className="floating" id="manualModeGroup">
-          <FormControlLabel checked={manualMode} control={<Switch onChange={(ev) => {
-            this.setState({
-              manualMode: ev.target.checked
-            });
-          }}/>} label="Manual Mode"/>
-          </FormGroup>
-          <Button variant="contained" className="floating" id="testUIButton" onClick={() => {
+          <div id="bottomLeftButtonGroup" className="floating">
+            <FormGroup id="manualModeGroup">
+              <FormControlLabel checked={manualMode} control={<Switch onChange={(ev) => {
+                this.setState({
+                  manualMode: ev.target.checked
+                });
+              }}/>} label="Manual Mode"/>
+            </FormGroup>
+            {
+              manualMode ?
+                <Button variant="contained" id="dispatchButton" onClick={() => {
+                  this.setState({
+                    isDispatchModalOpen: !isDispatchModalOpen
+                  });
+                }}>
+                  Manually Dispatch Train
+                </Button>
+              :
+                <Button disabled variant="contained" id="dispatchButton">
+                  Manually Dispatch Train
+                </Button>
+            }
+          </div>
+          <Button variant="contained" id="testUIButton" onClick={() => {
             this.setState({UIMode: UIState.Test});
           }}>
             Switch to test UI
           </Button>
           <div id="bottomRightButtonGroup" className="floating">
-            <Button variant="contained" id="dispatchButton" onClick={() => {
-              this.setState({
-                isDispatchModalOpen: !isDispatchModalOpen
-              });
-            }}>
-              Manually Dispatch Train
-            </Button>
             <Button variant="contained" id="systemScheduleButton" onClick={() => {
                 this.setState({UIMode: UIState.Scheduling});
             }}>
               Load System Schedule
             </Button>
           </div>
-          <div id="systemMap">
+          <div id="systemMap" className="floating">
             <SystemMap
               occupancy={occupancy}
               ref={this.systemMapRef}

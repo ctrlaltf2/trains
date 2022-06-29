@@ -125,18 +125,25 @@
   padding: 1em;
 }
 
-#bottomRightButtonGroup {
+#bottomRightButtonGroup, #bottomLeftButtonGroup {
   display: flex;
   flex-direction: column;
-  bottom: 0;
-  right: 0;
   gap: 1em;
+  bottom: 0;
   margin: 1em;
 }
 
-.bottomRightButtonGroup > button {
+#bottomRightButtonGroup {
+  right: 0;
+}
+
+#bottomLeftButtonGroup {
+  left: 0;
+  gap: 0;
+}
+
+#bottomRightButtonGroup > button {
   width: fit-content;
-  padding: 1em;
 }
 
 .testUIConfigDropdown {
@@ -181,4 +188,10 @@
   bottom: 0;
   left: 0;
   margin: 1em;
+}
+
+#systemMap {
+  top: 0;
+  left: 0;
+  z-index: 0;
 }
