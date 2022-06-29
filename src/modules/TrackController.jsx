@@ -18,14 +18,19 @@ import {
   TableCell,
   TableContainer,
   TableBody,
+  TextField,
 } from '@mui/material';
 
 import blueLine from './blue.json';
+import blueA from './blueA.json';
+import blueB from './blueB.json';
+import blueC from './blueC.json';
 
 import './TrackController.css';
+import { JoinLeft } from '@mui/icons-material';
+import { isNullOrUndefined } from 'util';
 
-console.log(blueLine);
-
+console.log(blueA);
 
 const darkTheme = createTheme({
   palette: {
@@ -73,19 +78,50 @@ class TrackController extends React.Component {
 
     // Bad practice, should be seperate block class --- will rework later
     const blocks = [];
-    for (const key in blueLine){
+    const sections = [];
+
+    for (const key in blueLine) {
+      if (
+        sections.filter((section) => section.id === blueLine[key].Section)
+          .length === 0
+      ) {
+        sections.push({
+          id: blueLine[key].Section,
+          direction: true,
+          plc: false,
+        });
+      }
       blocks.push({
         id: blueLine[key]['Block Number'],
+        section: blueLine[key].Section,
         transitLight: 'green',
+        // direction: true, // true is forward, false backward
         occupancy: false,
-        switchPosition: blueLine[key]['switch'],
+        nextOccupancy: false,
+        schedule: false,
+        switchPosition: blueLine[key].switch,
+        SWTrue: {
+          block: null,
+          arg1: null,
+          logical: null,
+          block2: null,
+          arg2: null,
+          dest: null,
+        },
+        SWFalse: {
+          block: null,
+          arg1: null,
+          logical: null,
+          block2: null,
+          arg2: null,
+          dest: null,
+        },
         engineFailure: false,
         lightFailure: false,
         brakeFailure: false,
         signalFailure: false,
         railFailure: false,
       });
-      console.log(blueLine[key]);
     }
 
     this.state = {
@@ -96,6 +132,10 @@ class TrackController extends React.Component {
       appState: false,
       direction: true,
       trackLine: 'blue',
+      currSection: sections[0],
+      sections,
+      selectedPLC: '',
+      schedule: parseInt(0),
       // inputFile: useRef(null),
     };
 
@@ -108,9 +148,16 @@ class TrackController extends React.Component {
 
     this.toggle = this.toggle.bind(this);
     this.mmMode = this.mmMode.bind(this);
-    this.toggleDirection = this.toggleDirection.bind(this);
+    this.toggleSection = this.toggleSection.bind(this);
     this.occupancy = this.occupancy.bind(this);
+    this.schedule = this.schedule.bind(this);
+    this.blockDirection = this.blockDirection.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleChangeSection = this.handleChangeSection.bind(this);
+
+    this.plc = this.plc.bind(this);
+    this.handleChangePLC = this.handleChangePLC.bind(this);
+
     this.brakeFailure = this.brakeFailure.bind(this);
     this.engineFailure = this.engineFailure.bind(this);
     this.railFailure = this.railFailure.bind(this);
@@ -118,6 +165,208 @@ class TrackController extends React.Component {
     this.signalFailure = this.signalFailure.bind(this);
 
     // this.initializeBlocks = this.initializeBlocks.bind(this);
+  }
+
+  handleChangePLC(event) {
+    this.setState({
+      selectedPLC: event.target.value,
+    });
+
+    if (event.target.value === 'A') {
+      console.log('running plc a');
+      this.plc(blueA);
+      this.state.sections[0].plc = true;
+    } else if (event.target.value === 'B') {
+      this.plc(blueB);
+      this.state.sections[1].plc = true;
+    } else if (event.target.value === 'C') {
+      this.plc(blueC);
+      this.state.sections[2].plc = true;
+    }
+  }
+
+  plc(file) {
+    for (const key in file) {
+      if (file[key].command === 'switch') {
+        let block = null;
+        let block2 = null;
+        let arg1 = null;
+        let arg2 = null;
+        let logical = null;
+        let dest = null;
+
+        // set when switch is true (does to low number)
+        let temp = file[key].true.split(',');
+
+        // for blue line, simple 2 way switch
+        block = temp[0].split(' ')[0];
+        arg1 =
+          temp[0].split(' ')[1] === 'o'
+            ? 'occupancy'
+            : temp[0].split(' ')[1] === 's'
+            ? 'schedule'
+            : '';
+        logical = temp[1];
+        block2 = temp[2].split(' ')[0];
+        arg2 =
+          temp[2].split(' ')[1] === 'o'
+            ? 'occupancy'
+            : temp[0].split(' ')[1] === 's'
+            ? 'schedule'
+            : '';
+        dest = temp[3];
+
+        console.log(
+          `Block ${block} ${arg1} ${logical} block ${block2} ${arg2}`
+        );
+
+        this.state.blocks[file[key].block - 1].SWTrue = {
+          block: block,
+          arg1: arg1,
+          logical: logical,
+          block2: block2,
+          arg2: arg2,
+          dest: dest,
+        };
+
+        // set when switch is true (does to low number)
+        temp = file[key].false.split(',');
+
+        // for blue line, simple 2 way switch
+        block = temp[0].split(' ')[0];
+        arg1 =
+          temp[0].split(' ')[1] === 'o'
+            ? 'occupancy'
+            : temp[0].split(' ')[1] === 's'
+            ? 'schedule'
+            : '';
+        logical = temp[1];
+        block2 = temp[2].split(' ')[0];
+        arg2 =
+          temp[2].split(' ')[1] === 'o'
+            ? 'occupancy'
+            : temp[0].split(' ')[1] === 's'
+            ? 'schedule'
+            : '';
+
+        dest = temp[3];
+
+        console.log(
+          `Block ${block} ${arg1} ${logical} block ${block2} ${arg2}`
+        );
+        this.state.blocks[file[key].block - 1].SWFalse = {
+          block: block,
+          arg1: arg1,
+          logical: logical,
+          block2: block2,
+          arg2: arg2,
+          dest: dest,
+        };
+
+        console.log(this.state.blocks[file[key].block]);
+      }
+    }
+  }
+
+  // Always keep status of blocks ----- prob not correct implementation
+  componentDidMount() {
+    const interval = setInterval(() => {
+      // console.log(this.state.blocks.length);
+      for (let i = 0; i < this.state.blocks.length; i++) {
+        // If it is a switch block
+        if (
+          this.state.blocks[i].switchPosition != 'null' &&
+          (this.state.blocks[i].section === 'A'
+            ? this.state.sections[0].plc
+            : this.state.blocks[i].section === 'B'
+            ? this.state.sections[1].plc
+            : this.state.blocks[i].section === 'C'
+            ? this.state.sections[2].plc
+            : false)
+        ) {
+          // Condition to swt switch to true (low num)
+          console.log(this.state.blocks[i].switchPosition);
+          let curr = this.state.blocks[i];
+          console.log(curr);
+          console.log(this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1]);
+          console.log(!this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]);
+          console.log(this.state.blocks[curr.SWFalse.block][curr.SWFalse.arg1]);
+          console.log(
+            !this.state.blocks[curr.SWFalse.block2][curr.SWFalse.arg2]
+          );
+          if (
+            this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1] &&
+            !this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]
+          ) {
+            this.state.blocks[i].switchPosition = curr.SWTrue.dest;
+            // this.state.blocks[curr.SWFalse.dest].switchPosition = false;
+            // this.state.blocks[curr.SWTrue.dest].switchPosition = true;
+            console.log(curr.SWTrue.dest);
+          } else if (
+            this.state.blocks[curr.SWFalse.block][curr.SWFalse.arg1] &&
+            !this.state.blocks[curr.SWFalse.block2][curr.SWFalse.arg2]
+          ) {
+            console.log(curr.SWFalse.dest);
+            this.state.blocks[i].switchPosition = curr.SWFalse.dest;
+            // this.state.blocks[curr.SWFalse.dest].switchPosition = true;
+            // this.state.blocks[curr.SWTrue.dest].switchPosition = false;
+          }
+        }
+        console.log('good');
+      }
+      this.setState((prevState) => ({
+        appSate: !prevState.appState,
+      }));
+      console.log('Blocks up to date');
+    }, 5000);
+  }
+
+  setLight() {
+    for (let i = 0; i < this.state.blocks.length - 1; i++) {
+      if (this.state.blocks[i].occupancy === true) {
+        this.state.blocks[i].transitLight = 'red';
+      } else if (this.state.blocks[i + 1].occupancy === true) {
+        this.state.blocks[i].transitLight = 'yellow';
+      } else {
+        this.state.blocks[i].transitLight = 'green';
+      }
+    }
+
+    if (this.state.blocks[this.state.blocks.length].occupancy === true) {
+      this.state.blocks[this.state.blocks.length].transitLight = 'red';
+    } else {
+      this.state.blocks[this.state.blocks.length].transitLight = 'green';
+    }
+  }
+
+  schedule(e) {
+    if (!isNaN(e.target.value)) {
+      if (e.target.value < 15) {
+        this.setState({
+          schedule: e.target.value,
+        });
+
+        // reset state for all
+        for (let i = 0; i < this.state.blocks.length; i++) {
+          this.state.blocks[i].schedule = false;
+        }
+
+        // Blue line only have switches manually set TO CHANGE
+        if (e.target.value < 11) {
+          for (let i = 0; i < e.target.value; i++) {
+            this.state.blocks[i].schedule = true;
+          }
+        } else if (e.target.value > 10) {
+          for (let j = 0; j < e.target.value; j++) {
+            if (j < 5 || j > 10) {
+              this.state.blocks[j].schedule = true;
+            }
+          }
+        } else if (e.target.value > 14) {
+          console.log('too large schedule');
+        }
+      }
+    }
   }
 
   occupancy() {
@@ -128,12 +377,20 @@ class TrackController extends React.Component {
     console.log(this.state.currBlock.occupancy);
   }
 
+  blockDirection() {
+    this.state.currSection.direction = !this.state.currSection.direction;
+    this.setState((prevState) => ({
+      appSate: !prevState.appState,
+    }));
+    console.log(this.state.currSection.direction);
+  }
 
   handleFileChange(e) {
     /* Selected files data can be collected here. */
-    console.log(e.target.files);
-    console.log(e.target.files[0].path);
-    this.readPLC(String(e.target.files[0].path))
+    console.log(e.target.result);
+
+    const reader = new FileReader();
+    reader.readAsText(event.target.files[0]);
   }
 
   handleBtnClick() {
@@ -143,10 +400,20 @@ class TrackController extends React.Component {
 
   handleChange(event) {
     this.setState({
-      activeBlock: event.target.value - 1,
-      // currBlock: this.state.blocks.find(block => block.id === event.target.value),
       currBlock: this.state.blocks[event.target.value - 1],
     });
+  }
+
+  handleChangeSection(event) {
+    this.setState({
+      currSection: this.state.sections[event.target.value.charCodeAt(0) - 65],
+      // currBlock: this.state.blocks
+      // .filter(
+      //   (block) => block.section === event.target.value.charCodeAt(0) - 65
+      // )[0],
+    });
+
+    console.log(this.state.sections);
   }
 
   toggle() {
@@ -161,10 +428,11 @@ class TrackController extends React.Component {
     }));
   }
 
-  toggleDirection() {
-    this.setState((prevState) => ({
-      direction: !prevState.direction,
-    }));  }
+  toggleSection(section) {
+    this.setState({
+      currSection: section,
+    });
+  }
 
   brakeFailure() {
     this.state.currBlock.brakeFailure = !this.state.currBlock.brakeFailure;
@@ -250,20 +518,43 @@ class TrackController extends React.Component {
                       label="Blocks"
                       onChange={this.handleChange}
                     >
-                      {this.state.blocks.map((block) => (
-                        <MenuItem key={block.id} value={block.id}>
-                          {String(block.id)}
+                      {this.state.blocks
+                        .filter(
+                          (block) => block.section === this.state.currSection.id
+                        )
+                        .map((block) => (
+                          <MenuItem key={block.id} value={block.id}>
+                            {String(block.id)}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                </div>
+              </Grid>
+              <Grid item xs={6}>
+                <div className="centered">
+                  <FormControl fullWidth>
+                    <InputLabel id="select-section">TEST</InputLabel>
+                    <Select
+                      labelId="select-section"
+                      id="select-section"
+                      value={this.state.currSection.id}
+                      label="Sections"
+                      onChange={this.handleChangeSection}
+                    >
+                      {this.state.sections.map((section) => (
+                        <MenuItem key={section.id} value={section.id}>
+                          {String(section.id)}
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                 </div>
               </Grid>
-              <Grid item xs={6}>
-              <div className="text-centered"><Button onClick={this.toggleDirection}>Test Panel: {this.state.direction ? 'forward' : 'backward'}</Button></div>
-              </Grid>
               <Grid item xs={3}>
-                <div className="text-centered">Track Line: {this.state.trackLine}</div>
+                <div className="text-centered">
+                  Track Line: {this.state.trackLine}
+                </div>
               </Grid>
             </Grid>
 
@@ -367,16 +658,30 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th"><Button onClick={this.occupancy}>Track Occupancy</Button></TableCell>
-                        <TableCell align="right">{String(this.state.currBlock.occupancy)}</TableCell>
+                        <TableCell component="th">
+                          <Button onClick={this.occupancy}>
+                            Track Occupancy
+                          </Button>
+                        </TableCell>
+                        <TableCell align="right">
+                          {String(this.state.currBlock.occupancy)}
+                        </TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th">Direction</TableCell>
-                        <TableCell align="right">bool</TableCell>
+                        <TableCell component="th">
+                          <Button onClick={this.blockDirection}>
+                            Direction
+                          </Button>
+                        </TableCell>
+                        <TableCell align="right">
+                          {this.state.currSection.direction
+                            ? 'forward'
+                            : 'backward'}
+                        </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -472,7 +777,13 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="centered">
-                  <Button variant="contained">Load plc</Button>
+                  <TextField
+                    value={this.state.schedule}
+                    onChange={this.schedule}
+                    id="standard-basic"
+                    label="Schedule train"
+                    variant="standard"
+                  />
                 </div>
               </Grid>
             </Grid>
@@ -506,20 +817,45 @@ class TrackController extends React.Component {
                       label="Blocks"
                       onChange={this.handleChange}
                     >
-                      {this.state.blocks.map((block, index) => (
-                        <MenuItem key={block.id} value={block.id}>
-                          {String(block.id)}
+                      {this.state.blocks
+                        .filter(
+                          (block) => block.section === this.state.currSection.id
+                        )
+                        .map((block) => (
+                          <MenuItem key={block.id} value={block.id}>
+                            {String(block.id)}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                </div>
+              </Grid>
+              <Grid item xs={6}>
+                <div className="centered">
+                  <FormControl fullWidth>
+                    <InputLabel id="select-section">
+                      Track Controller
+                    </InputLabel>
+                    <Select
+                      labelId="select-section"
+                      id="select-section"
+                      value={this.state.currSection.id}
+                      label="Sections"
+                      onChange={this.handleChangeSection}
+                    >
+                      {this.state.sections.map((section) => (
+                        <MenuItem key={section.id} value={section.id}>
+                          {String(section.id)}
                         </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                 </div>
               </Grid>
-              <Grid item xs={6}>
-                <div className="text-centered"><Button onClick={this.toggleDirection}>Track Controller {this.state.direction ? 'forward' : 'backward'}</Button></div>
-              </Grid>
               <Grid item xs={3}>
-                <div className="text-centered">Track Line: {this.state.trackLine}</div>
+                <div className="text-centered">
+                  Track Line: {this.state.trackLine}
+                </div>
               </Grid>
             </Grid>
 
@@ -622,7 +958,9 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Track Occupency</TableCell>
-                        <TableCell align="right">{String(this.state.currBlock.occupancy)}</TableCell>
+                        <TableCell align="right">
+                          {String(this.state.currBlock.occupancy)}
+                        </TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
@@ -630,7 +968,11 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Direction</TableCell>
-                        <TableCell align="right">bool</TableCell>
+                        <TableCell align="right">
+                          {this.state.currSection.direction
+                            ? 'forward'
+                            : 'backward'}
+                        </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -720,11 +1062,25 @@ class TrackController extends React.Component {
                     type="file"
                     ref={this.inputFileRef}
                     onChange={this.onFileChange}
-                    style={{display:'none'}}
+                    style={{ display: 'none' }}
                   />
-                  <button variant="contained" onClick={this.onBtnClick}>
+                  {/* <button variant="contained" onClick={this.onBtnClick}>
                     Load plc
-                  </button>
+                  </button> */}
+                  <FormControl fullWidth>
+                    <InputLabel id="select-plc">Select PLC</InputLabel>
+                    <Select
+                      labelId="select-plc"
+                      id="select-plc"
+                      value={this.state.selectedPLC}
+                      label="Sections"
+                      onChange={this.handleChangePLC}
+                    >
+                      <MenuItem value="A">File A</MenuItem>
+                      <MenuItem value="B">File B</MenuItem>
+                      <MenuItem value="C">File C</MenuItem>
+                    </Select>
+                  </FormControl>
                 </div>
               </Grid>
             </Grid>
