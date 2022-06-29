@@ -11,8 +11,10 @@ import
   OutlinedInput,
   TextField,
   Select,
-  MenuItem
+  MenuItem,
+  TextareaAutosize
 } from '@mui/material/';
+import TextareaAutosize from '@mui/base/TextareaAutosize';
 import { blue, grey, red, lightGreen } from "@mui/material/colors";
 import { Box, sizing } from "@mui/system";
 import React from "react";
@@ -32,11 +34,47 @@ class TrackModel extends React.Component  {
     this.name = name;
 
     this.state = {
-      //  system variable defaults will go here
-      testMode: false
+      //  system variable defaults will go here -- booleans
+      testMode: false,
+      trackPower: true,
+      railStatus: true,
+      recievingTrackCircuit: true,
+      sendingTrackCircuit: true,
+      // beaconStatus: true,
     };
 
+    //  intialize variables for functions
+    // this.speedLimit = 0;  //  units mph
+    // this.switchPos = 0; //  units integer 1, 2, 3
+    // this.blockLength = 0;   //  units miles
+    // this.directionOfTravel = "forwards";  //  forwards or backwards
+    // this.trainOccupancy = 0;  //  units people integer
+    // this.enviornmentTemp = 70;  //  units degree F
+    // this.personsAtStation = 1;  //  units people
+    // this.distanceFromRailwayCrossing = 1; //  units miles
+    this.elevation = 1; //  units feet
+
+    //  function prototypes
     this.toggle = this.toggle.bind(this);
+    this.failTrackPower = this.failTrackPower.bind(this);
+    this.breakRail = this.breakRail.bind(this);
+    this.changeSendingTrackCircuit = this.changeSendingTrackCircuit.bind(this);
+    this.changeRecievingTrackCircuit = this.changeRecievingTrackCircuit.bind(this);
+    this.changeElevation = this.changeElevation.bind(this);
+    this.changeSwitchPosition = this.changeSwitchPosition.bind(this);
+    this.changeBeacon = this.changeBeacon.bind(this);
+
+    // this.resetPower = this.resetPower.bind(this);
+    // this.resetRail = this.resetRail.bind(this);
+    // this.resetSendingTrackCircuit = this.resetSendingTrackCircuit.bind(this);
+    // this.resetRecievingTrackCircuit = this.resetRecievingTrackCircuit.bind(this);
+    // this.resetElevation = this.resetElevation.bind(this);
+    // this.resetSwitchPosition = this.resetSwitchPosition.bind(this);
+    // this.resetBeacon = this.resetBeacon.bind(this);
+
+    // this.resetAllSettings = this.resetAllSettings.bind(this);
+    // this.loadNewTM = this.loadNewTM.bind(this);
+
   }
 
 
@@ -59,15 +97,64 @@ class TrackModel extends React.Component  {
     Reset Beacon
 
     Reset all setting to default
-
     Load new Track Model
-
     Toggle Function
-
-
   */
 
+  failTrackPower() {
+    this.setState((prevState) => ({
+      trackPower: !prevState.trackPower,
+    }));
+  }
 
+  breakRail()
+  {
+    this.setState((prevState) => ({
+      railStatus: !prevState.railStatus
+    }));
+  }
+
+  changeSendingTrackCircuit()
+  {
+    this.setState((prevState) => ({
+      sendingTrackCircuit: !prevState.sendingTrackCircuit
+    }));
+  }
+
+  changeRecievingTrackCircuit()
+  {
+    this.setState((prevState) => ({
+      recievingTrackCircuit: !prevState.recievingTrackCircuit
+    }));
+  }
+
+  changeElevation()
+  {
+    this.setState()
+  }
+
+  //  should reset elevation to the elevation of the block stat
+  resetElevation()
+  {
+    this.elevation = 0;
+  }
+
+  changeBeacon()
+  {
+    this.setState((prevState) => ({
+      beaconStatus: !prevState.beaconStatus
+    }))
+  }
+
+  // resetAllSettings()
+  // {
+
+  //   //  go through each setting and change it back to the original block
+  // }
+
+  changeSwitchPosition() {
+    //  run some code
+  }
 
   toggle() {
     this.setState((prevState) => ({
@@ -76,14 +163,7 @@ class TrackModel extends React.Component  {
   }
 
 
-
-  // render()
-  // {
-  //   if (this.state.testMode)
-  //     return this.testUI();
-  //   return this.trackModelUI();
-  // }
-
+  //  Test UI Function
   testUI()
   {
     return  (
@@ -94,7 +174,7 @@ class TrackModel extends React.Component  {
           direction="row"
           justifyContent="center">
           <Grid item xs={3} justifyContent="center">
-            <div className="HeaderText"  >Track Model Test UI</div>
+            <div className="HeaderText"  > Test UI</div>
           </Grid>
         </Grid>
         <Grid container spacing={1} direction="row">
@@ -319,6 +399,7 @@ class TrackModel extends React.Component  {
   }
 
   render() {
+    // eslint-disable-next-line react/destructuring-assignment
     if (this.state.testMode) return this.testUI();
     return (
       <Container maxWidth="lg">
@@ -331,12 +412,14 @@ class TrackModel extends React.Component  {
             <div className="HeaderText"  >Track Model</div>
           </Grid>
         </Grid>
-        <Grid container spacing={1} direction="row">
+        <Grid container spacing={1} className="topThreeButtons" direction="row">
           <Grid item xs={4}>
-            <Button className="LoadTrack">Load new Track Model</Button>
+            <Button variant="contained" sx={{ fontSize: 14 }} color="grey" className="LoadTrack">Load new Track Model</Button>
           </Grid>
           <Grid item xs={4}>
-            <></>
+          <Grid item>
+                <Button variant="contained" sx={{ fontSize: 14 }} color="grey" onClick={this.toggle}> Toggle testUI</Button>
+              </Grid>
           </Grid>
           <Grid item xs={4} spacing={1}>
             <Button variant="contained" sx={{ fontSize: 14 }} color="grey" className="RestoreDefaults">Reset to Default Settings</Button>
@@ -461,9 +544,7 @@ class TrackModel extends React.Component  {
             <Grid
               container
               spacing={12} >
-              <Grid item>
-                <Button variant="contained" onClick={this.toggle}> Toggle testUI</Button>
-              </Grid>
+              <></>
 
             </Grid>
           </Grid>
@@ -509,9 +590,22 @@ class TrackModel extends React.Component  {
               </Grid>
 
 
-              <Grid item xs={6} >
-                <TextField id="outlined-basic" size="small" color="error" label="Change Elevation" type="number" variant="outlined" sx={{maxHeight: '40%', width: '15ch' }} />
+              <Grid item xs={6} className="dumbButton" >
+                <TextField
+                  id="filled-basic"
+                  type="number"
+                  multiline
+                  fullWidth
+                  label="Elevation"
+                  variant="filled"
+                  size="normal"
+                    // defaultValue="Elevation"
+                  />
               </Grid>
+
+              {/* <Grid item xs={6} >
+                <TextField id="outlined-basic" size="small" color="error" label="Change Elevation" type="number" variant="outlined" sx={{ height: '50%', width: '15ch' }} />
+              </Grid> */}
 
               <Grid item xs={6}>
                 <Button variant="contained" sx={{ fontSize: 14 }}>Reset Elevation</Button>

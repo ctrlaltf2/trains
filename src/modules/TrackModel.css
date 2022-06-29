@@ -21,3 +21,13 @@
   font-size: medium;
   justify-self: center;
 }
+
+.topThreeButtons{
+  padding: 10px;
+}
+
+.dumbButton{
+  font-size: large;
+  max-width: fit-content;
+  max-height: 250px;
+}
