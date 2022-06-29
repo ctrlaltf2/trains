@@ -114,6 +114,10 @@ class CTCOffice extends React.Component {
     this.initCy();
   }
 
+  componentDidMount() {
+    this.dispatchTrain('blue', 10, false);
+  }
+
   initCy() {
     for(const line in TrackModel.lines) {
       this.cy[line] = cytoscape({
@@ -153,13 +157,12 @@ class CTCOffice extends React.Component {
         console.warn(`Unimplemented line '${line}' for starting block query detected`);
         return 'oops';
     }
-    return `node[node_name = 'Yard']`;
   }
 
   buildCyBlockQuery(block_id) { return `edge[block_id = '${block_id}']`; }
 
   // Major TODO: when a block that's part of another train's route changes occupancy state, recalculate route for that other train and relay that to Track Controller
-  dispatchTrain(line, destination_block_id, do_cicle_back) {
+  dispatchTrain(line, destination_block_id, do_circle_back) {
     // Build route
     // Run A* over the graph complement to route between edges and not nodes
     const routable_graph = this.cy[line];
@@ -212,14 +215,33 @@ class CTCOffice extends React.Component {
       // TODO: just reuse this method lmao, for now it doesn't matter
     }
 
+    // Get speed limit coming out of the yard
+    // This is spaghetti and I don't care
+    const speed_limit = routable_graph.nodes(`node[id = 'y']`)[0].outgoers().edges()[0].data('speed_limit');
+
     const pain = new Train( // constant pain from trains
       this.nextTrainID,
       line,
-      destination_block,
-      50, // TODO: Query the speed limit out of the yard
-      11, // TODO: Settle on a good authority
+      destination_block_id,
+      speed_limit,
+      best_route.length, // TODO: Settle on a good authority
       best_route
     );
+
+    this.trains.push(pain);
+
+    const activeTrainIDs = _.cloneDeep(this.state.activeTrainIDs);
+    activeTrainIDs[line].push(this.nextTrainID);
+    this.setState({
+      activeTrainIDs: activeTrainIDs
+    });
+
+    this.nextTrainID++;
+
+    window.electronAPI.sendTrackControllerMessage({
+      type: 'dispatch train',
+      value: pain
+    });
   }
 
   handleLineSelect(self, ev, elem) {
