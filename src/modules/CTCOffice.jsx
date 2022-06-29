@@ -7,7 +7,9 @@ import {
   TextField,
   Switch,
   FormGroup,
-  FormControlLabel
+  FormControlLabel,
+  Box,
+  Typography
 } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -66,7 +68,8 @@ class CTCOffice extends React.Component {
     });
 
     this.state = {
-      UIMode: UIState.Test,
+      UIMode: UIState.Main,
+      isDispatchModalOpen: true,
       throughput: {
         'red': 0,
         'green': 1,
@@ -88,6 +91,7 @@ class CTCOffice extends React.Component {
         'green': [],
         'blue': [],
       },
+      enteredETA: undefined
     };
 
     this.nextTrainID = 1;
@@ -111,7 +115,7 @@ class CTCOffice extends React.Component {
   }
 
   componentDidMount() {
-    this.dispatchTrain('blue', 10, false);
+    this.dispatchTrain('blue', 10, '20:00', false);
   }
 
   initCy() {
@@ -138,8 +142,6 @@ class CTCOffice extends React.Component {
     this.setState({
       occupancy: occupancy,
     });
-
-    // TODO: Update occupancy in cytoscape graph to impact routing decisions
   }
 
   /**
@@ -148,7 +150,7 @@ class CTCOffice extends React.Component {
   getStartingBlockQuery(line) {
     switch(line) {
       case 'blue':
-        return `y`;
+        return `node[id = 'y']`;
       default:
         console.warn(`Unimplemented line '${line}' for starting block query detected`);
         return 'oops';
@@ -158,7 +160,11 @@ class CTCOffice extends React.Component {
   buildCyBlockQuery(block_id) { return `edge[block_id = '${block_id}']`; }
 
   // Major TODO: when a block that's part of another train's route changes occupancy state, recalculate route for that other train and relay that to Track Controller
-  dispatchTrain(line, destination_block_id, do_circle_back) {
+  dispatchTrain(line, destination_block_id, eta, do_circle_back) {
+    // TODO: Use ETA
+
+    console.log(line, destination_block_id, eta, do_circle_back);
+
     // Build route
     // Run A* over the graph complement to route between edges and not nodes
     const routable_graph = this.cy[line];
@@ -422,49 +428,167 @@ class CTCOffice extends React.Component {
   }
 
   renderMain() {
-    const { occupancy, throughput } = this.state;
+    const { occupancy, throughput, isDispatchModalOpen, enteredETA } = this.state;
+    const { lineSelection, blockSelection } = this.state.testUI;
 
     const redLineThroughput = throughput['red'];
     const greenLineThroughput = throughput['green'];
     const blueLineThroughput = throughput['blue'];
 
     return (
-      <div id="appContainer">
-        <div className="throughputContainer floating">
-          <h4 className="throughputTitle">Throughput Statistics</h4>
-          <div className="throughputGrid">
-            <div className="throughputLabel" id="blueLineLabel">Blue Line Throughput</div>
-            <div className="throughputValue" id="blueLineValue">{blueLineThroughput} trains/hr</div>
-            <div className="throughputLabel" id="redLineLabel">Red Line Throughput</div>
-            <div className="throughputValue" id="redLineValue">{redLineThroughput} trains/hr</div>
-            <div className="throughputLabel" id="greenLineLabel">Green Line Throughput</div>
-            <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
+      <ThemeProvider theme={darkTheme}>
+        <div id="appContainer">
+          <div className="throughputContainer floating">
+            <h4 className="throughputTitle">Throughput Statistics</h4>
+            <div className="throughputGrid">
+              <div className="throughputLabel" id="blueLineLabel">Blue Line Throughput</div>
+              <div className="throughputValue" id="blueLineValue">{blueLineThroughput} trains/hr</div>
+              <div className="throughputLabel" id="redLineLabel">Red Line Throughput</div>
+              <div className="throughputValue" id="redLineValue">{redLineThroughput} trains/hr</div>
+              <div className="throughputLabel" id="greenLineLabel">Green Line Throughput</div>
+              <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
+            </div>
           </div>
-        </div>
-        <Button variant="contained" className="floating" id="testUIButton" onClick={() => {
-          this.setState({UIMode: UIState.Test});
-        }}>
-          Switch to test UI
-        </Button>
-        <div id="bottomRightButtonGroup" className="floating">
-          <Button variant="contained" id="dispatchButton" onClick={() => {
-              this.setState({UIMode: UIState.Dispatching});
+          <Button variant="contained" className="floating" id="testUIButton" onClick={() => {
+            this.setState({UIMode: UIState.Test});
           }}>
-            Manually Dispatch Train
+            Switch to test UI
           </Button>
-          <Button variant="contained" id="systemScheduleButton" onClick={() => {
-              this.setState({UIMode: UIState.Scheduling});
-          }}>
-            Load System Schedule
-          </Button>
+          <div id="bottomRightButtonGroup" className="floating">
+            <Button variant="contained" id="dispatchButton" onClick={() => {
+              this.setState({
+                isDispatchModalOpen: !isDispatchModalOpen
+              });
+            }}>
+              Manually Dispatch Train
+            </Button>
+            <Button variant="contained" id="systemScheduleButton" onClick={() => {
+                this.setState({UIMode: UIState.Scheduling});
+            }}>
+              Load System Schedule
+            </Button>
+          </div>
+          <div id="systemMap">
+            <SystemMap
+              occupancy={occupancy}
+              ref={this.systemMapRef}
+            />
+          </div>
+          <Modal
+            className="modal"
+            open={isDispatchModalOpen}
+            onClose={() => {
+              const testUI = _.cloneDeep(this.state.testUI);
+              testUI.lineSelection = undefined;
+              testUI.blockSelection = undefined;
+
+              this.setState({
+                isDispatchModalOpen: false,
+                testUI: testUI,
+              });
+            }}>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 600,
+                bgcolor: 'var(--background-color)',
+                color: 'var(--color)',
+                border: '2px solid #000',
+                boxShadow: 24,
+                p: 4
+              }}
+            >
+              <div className="dispatchModalContainer">
+                <Typography variant="h6" component="h2">
+                  Dispatch Train
+                </Typography>
+                <div className="dispatchSelectors">
+                  <FormControl className="testUIConfigDropdown">
+                    <InputLabel id="line-select-label">Line</InputLabel>
+                    <Select
+                      labelId="line-select-label"
+                      value={lineSelection}
+                      label="Line"
+                      onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
+                    >
+                      <MenuItem value={'blue'}>Blue</MenuItem>
+                      <MenuItem value={'red'}>Red</MenuItem>
+                      <MenuItem value={'green'}>Green</MenuItem>
+                    </Select>
+                  </FormControl>
+                  {
+                    lineSelection ?
+                      <FormControl className="testUIConfigDropdown">
+                        <InputLabel id="block-select-label">Block</InputLabel>
+                        <Select
+                          labelId="block-select-label"
+                          value={blockSelection}
+                          label="Block"
+                          onChange={(ev, elem) => { this.handleBlockSelect(this, ev, elem)}}
+                        >
+                          {
+                            lineSelection ?
+                              Array.from(this.getBlocks(lineSelection)).map((block_id) => {
+                                return <MenuItem value={block_id}>{block_id}</MenuItem>;
+                              })
+                              :
+                              []
+                          }
+                        </Select>
+                      </FormControl>
+                    :
+                      <FormControl disabled className="testUIConfigDropdown">
+                        <InputLabel id="block-select-label">Block</InputLabel>
+                        <Select
+                          labelId="block-select-label"
+                          label="Block"
+                          onChange={(ev, elem) => { this.handleBlockSelect(this, ev, elem)}}
+                        >
+                          {
+                            lineSelection ?
+                              Array.from(this.getBlocks(lineSelection)).map((block_id) => {
+                                return <MenuItem value={block_id}>{block_id}</MenuItem>;
+                              })
+                              :
+                              []
+                          }
+                        </Select>
+                      </FormControl>
+                  }
+                  {
+                    (lineSelection && blockSelection) ?
+                      <TextField margin="none" size="small" label="ETA" type="time" variant="standard" onChange={(ev) => {
+                        this.setState({
+                          enteredETA: ev.target.value
+                        });
+                      }}/>
+                      :
+                      <TextField disabled margin="none" size="small" label="ETA" type="time" variant="standard"/>
+                  }
+                </div>
+                {
+                  (lineSelection && blockSelection && enteredETA) ?
+                    <Button id="dispatchCommitBtn" variant="contained" onClick={() => {
+                      this.dispatchTrain(lineSelection, blockSelection, enteredETA, false);
+                      this.setState({
+                        isDispatchModalOpen: !isDispatchModalOpen
+                      });
+                    }}>
+                      Commit
+                    </Button>
+                  :
+                    <Button id="dispatchCommitBtn" disabled variant="contained">
+                      Commit
+                    </Button>
+                }
+              </div>
+            </Box>
+          </Modal>
         </div>
-        <div id="systemMap">
-          <SystemMap
-            occupancy={occupancy}
-            ref={this.systemMapRef}
-          />
-        </div>
-      </div>
+      </ThemeProvider>
     );
   }
 

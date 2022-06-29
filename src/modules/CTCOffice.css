@@ -153,3 +153,26 @@
   display: flex;
   flex-direction: row;
 }
+
+.modal {
+  z-index: 2;
+}
+
+.dispatchModalContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.dispatchSelectors {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: center;
+  gap: 1em;
+}
+
+#dispatchCommitBtn {
+  margin-top: 2em;
+  width: fit-content;
+}
