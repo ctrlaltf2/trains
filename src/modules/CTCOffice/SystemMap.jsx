@@ -5,7 +5,7 @@ import CytoscapeComponent from 'react-cytoscapejs';
 import dagre from 'cytoscape-dagre';
 
 import './SystemMap.css';
-import TrackModel from '../../../data/TrackModelV1.json';
+import TrackModel from '../../../data/TrackModel-display.json';
 import Style from './SystemMap.cy.json';
 
 Cytoscape.use(dagre);
@@ -82,6 +82,7 @@ class SystemMap extends React.Component {
 
   render() {
     const layout = {
+      // name: 'dagre',
       name: 'dagre',
       rankDir: 'LR',
       minLen: function(edge) { return 2; }
@@ -95,7 +96,7 @@ class SystemMap extends React.Component {
         elements={CytoscapeComponent.normalizeElements(TrackModel.lines.blue)}
         layout={layout}
         cy={(cy) => { this.cy = cy }}
-        autolock={lockNodes}
+        autolock={false}
         stylesheet={Style['base'].concat(Style['blue_line'])}
       />
     );

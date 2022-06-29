@@ -17,9 +17,8 @@
         "content": "data(block_name)",
         "curve-style": "straight",
         "haystack-radius": 0,
-        "source-arrow-shape": "triangle",
         "target-arrow-shape": "triangle",
-        "arrow-scale": 0.5
+        "arrow-scale": 0.7
       }
     },
     {
@@ -32,7 +31,6 @@
       "selector": ".occupied",
       "style": {
         "line-color": "white",
-        "source-arrow-color": "white",
         "target-arrow-color": "white"
       }
     },
@@ -83,7 +81,6 @@
       "style": {
         "line-color": "#283593",
         "color": "#fff",
-        "source-arrow-color": "#283593",
         "target-arrow-color": "#283593"
       }
     }

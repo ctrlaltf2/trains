@@ -14,13 +14,13 @@ class Train {
   /** Speed the train should move forward at. */
   command_speed: number;
 
-  /** Distance remaining that train can travel */
+  /** Number of blocks that the train can travel */
   authority: number;
 
   /** List of switch positions */
   route: Switch[];
 
-  constructor(id: string, line: string, destination_block: Block, command_speed: number, authority: number, route: Switch[]) {
+  constructor(id: string, line: string, destination_block: Block, command_speed: number, authority: number, route: Block[]) {
     this.id = id;
     this.line = line;
     this.destination_block = destination_block;
