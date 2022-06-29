@@ -120,8 +120,6 @@ class CTCOffice extends React.Component {
         elements: TrackModel.lines[line]
       });
     }
-
-    console.log(this.cy);
   }
 
   getBlocks(line) {
@@ -150,7 +148,7 @@ class CTCOffice extends React.Component {
   getStartingBlockQuery(line) {
     switch(line) {
       case 'blue':
-        return `edge[edge_name = '1::E']`;
+        return `y`;
       default:
         console.warn(`Unimplemented line '${line}' for starting block query detected`);
         return 'oops';
@@ -158,39 +156,69 @@ class CTCOffice extends React.Component {
     return `node[node_name = 'Yard']`;
   }
 
-  buildCyBlockQuery(block_id) { return `edge[id ^= ${block_id}::]`; }
+  buildCyBlockQuery(block_id) { return `edge[block_id = '${block_id}']`; }
 
   // Major TODO: when a block that's part of another train's route changes occupancy state, recalculate route for that other train and relay that to Track Controller
   dispatchTrain(line, destination_block_id, do_cicle_back) {
     // Build route
     // Run A* over the graph complement to route between edges and not nodes
-    const routable_graph = this.cy.elements().not();
+    const routable_graph = this.cy[line];
 
     // First, yard -> destination_block
-    // TODO: Do this A* twice for both station edges probably, take the shorter path of the two
-    // TODO: Make a separate track model that more strongly defines where the train can go. needed for red/green line support
-    const to_dst_route = routable_graph.elements().aStar({
-      root: getStartingBlockQuery(line),
-      goal: buildCyBlockQuery(destination_block_id),
-      weight: (edge) => {
-        return edge.data('length') / edge.data('speed_limit'); // Minimize time in blocks
-      },
-      directed: true
+    // Do it for all the possible ways to face in a block, take the shortest route
+    const goal_edges = routable_graph.filter(this.buildCyBlockQuery(destination_block_id));
+
+    const routes = goal_edges.map( (edge) => {
+      const edge_points_to = edge.targets();
+
+      if(edge_points_to.length > 1) {
+        console.warning('Warning: router goal edge has multiple targets, code isn\'t expecting this.');
+      } else if (edge_points_to.length === 0) {
+        console.error('Error: router goal edge doesn\'t point to anything. Not routing.');
+        return undefined;
+      }
+
+      const goal_node = edge_points_to[0];
+      const goal_node_id = goal_node.data('id');
+      const to_dst_route = routable_graph.elements().aStar({
+        root: this.getStartingBlockQuery(line),
+        goal: `node[id = '${goal_node_id}']`,
+        weight: (edge) => {
+          return edge.data('length') / edge.data('speed_limit'); // Minimize time in blocks
+        },
+        directed: true
+      });
+
+      return to_dst_route;
     });
 
-    cosole.log(to_dst_route);
-
-    if(do_circle_back) {
-
+    // Find minimum cost route
+    let min = Infinity;
+    let i_best_route = -1;
+    for (const i in routes) {
+      if(routes[i].distance < min)
+        i_best_route = i
     }
 
-    const pain = new Train( // This line sums up this whole class
+    const best_route = routes[i_best_route].path
+      .filter( (elem) => {
+        return elem.group() === "edges";
+      })
+      .map( (elem) => {
+        return elem.data('block_id');
+      });
+
+    if(do_circle_back) {
+      // TODO: just reuse this method lmao, for now it doesn't matter
+    }
+
+    const pain = new Train( // constant pain from trains
       this.nextTrainID,
       line,
       destination_block,
       50, // TODO: Query the speed limit out of the yard
       11, // TODO: Settle on a good authority
-      undefined
+      best_route
     );
   }
 
