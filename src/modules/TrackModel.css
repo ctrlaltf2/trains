@@ -31,3 +31,9 @@
   max-width: fit-content;
   max-height: 250px;
 }
+
+.mainWindow{
+  padding-left: 0%;
+  padding-right: 0%;
+  margin: 0%;
+}
