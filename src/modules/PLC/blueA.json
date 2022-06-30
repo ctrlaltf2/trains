@@ -6,7 +6,7 @@
     "false": "11 s,&&,11 o,11"
   },
   {
-    "command": "light",
+    "command": "auth",
     "block": "5",
     "color": "yellow",
     "true": "6 s,&&,6 o,&&,! 11 o"
@@ -28,23 +28,5 @@
     "block": "5",
     "color":"yellow",
     "true": "6 sw,&&,7 o,|| 11 sw,&&,! 12 o"
-  },
-  {
-    "command": "light",
-    "block": "1",
-    "color":"green",
-    "true": "2 o && 3 o"
-  },
-  {
-    "command": "light",
-    "block": "1",
-    "color":"red",
-    "true": "!2 o"
-  },
-  {
-    "command": "light",
-    "block": "1",
-    "color":"yellow",
-    "true": "2 o && ! 3 o"
   }
 ]
