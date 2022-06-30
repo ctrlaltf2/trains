@@ -461,7 +461,7 @@ class TrackController extends React.Component {
     for (let i = 0; i < this.state.blocks.length; i++) {
       this.state.blocks[i].occupancy = false;
       this.state.blocks[i].authority = false;
-      this.state.blocks[i].suggSpeed = false;
+      this.state.blocks[i].suggSpeed = 0;
     }
   }
 
