@@ -535,8 +535,9 @@ class CTCOffice extends React.Component {
                   onChange={(ev) => {
                     console.log(ev);
 
+                    this.dispatchTrain('blue', 10, '21:00', false);
+
                     return;
-                    const reader = new FileReader();
                   }}
                 />
                 <Button variant="contained" component="span">
