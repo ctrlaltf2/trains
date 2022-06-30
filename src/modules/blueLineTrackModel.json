@@ -8,8 +8,11 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
+
   },
   {
     "Line": "Blue",
@@ -20,8 +23,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -32,8 +37,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -44,8 +51,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -56,8 +65,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "11"
+    "Elevation" : "0 ",
+    "switch": "11",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -68,8 +79,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -80,8 +93,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -92,8 +107,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -104,8 +121,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -116,8 +135,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -128,8 +149,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -140,8 +163,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -152,8 +177,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -164,8 +191,10 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "unoccupied",
+    "Enviorment Temp": "75"
   },
   {
     "Line": "Blue",
@@ -176,7 +205,9 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "50",
-    "Elevation" : "0",
-    "switch": "null"
+    "Elevation" : "0 ",
+    "switch": "disengaged",
+    "Block Occupancy" : "occupied",
+    "Enviorment Temp": "75"
   }
 ]

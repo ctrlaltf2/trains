@@ -35,26 +35,25 @@ class TrackModel extends React.Component {
     this.state = {
       //  system variable defaults will go here -- booleans
       testMode: false,
-      trackPower: true,
-      railStatus: true,
-      recievingTrackCircuit: true,
-      sendingTrackCircuit: true,
+      trackPower: 'functional',
+      railStatus: 'functional',
+      recievingTrackCircuit: 'functional',
+      sendingTrackCircuit: 'functional',
+      speedLimit: 0,
+      switchPos: 'disabled',
+      blockIndex: 1,
+      blockLength: 1,
+      elevation: 0,
+      beaconStatus: 'functional',
+      directionOfTravel: 'forwards',
+      trackHeaterStatus: 'disabled',
+      trainOccupancy: 25,
+      personsAtStation: 10,
 
-      // beaconStatus: true,
+      testUISpeedLimit: 30,
+      testUIEnvtemp: 80,
+      testUITrackHeaterStatus: 'enabled',
     };
-
-    //  intialize variables for functions
-    this.speedLimit = 0; //  units mph
-    this.switchPos = false; //  boolean, for blue line, if the switch != 0 then engaged
-    // this.blockLength = 0; //  units miles
-    // this.directionOfTravel = "forwards";  //  forwards or backwards
-    // this.trainOccupancy = 0;  //  units people integer
-    // this.enviornmentTemp = 70;  //  units degree F
-    // this.personsAtStation = 1;  //  units people
-    // this.distanceFromRailwayCrossing = 1; //  units miles
-    this.blockIndex = 1; //  default
-    this.blockLength = useState(0);
-    this.elevation = 0; //  units feet
 
     //  function prototypes
     this.toggle = this.toggle.bind(this);
@@ -64,44 +63,16 @@ class TrackModel extends React.Component {
     this.changeRecievingTrackCircuit =
       this.changeRecievingTrackCircuit.bind(this);
     this.changeElevation = this.changeElevation.bind(this);
-    this.changeSwitchPosition = this.changeSwitchPosition.bind(this);
+    this.handleSwitchChange = this.handleSwitchChange.bind(this);
     this.changeBeacon = this.changeBeacon.bind(this);
     this.loadBlockInfo = this.loadBlockInfo.bind(this);
+    this.resetAllSettings = this.resetAllSettings.bind(this);
 
-    // this.resetPower = this.resetPower.bind(this);
-    // this.resetRail = this.resetRail.bind(this);
-    // this.resetSendingTrackCircuit = this.resetSendingTrackCircuit.bind(this);
-    // this.resetRecievingTrackCircuit = this.resetRecievingTrackCircuit.bind(this);
-    // this.resetElevation = this.resetElevation.bind(this);
-    // this.resetSwitchPosition = this.resetSwitchPosition.bind(this);
-    // this.resetBeacon = this.resetBeacon.bind(this);
-
-    // this.resetAllSettings = this.resetAllSettings.bind(this);
-    // this.loadNewTM = this.loadNewTM.bind(this);
+    this.testUISpeedLimitFun = this.testUISpeedLimitFun.bind(this);
+    this.testUIEnvtempFun = this.testUIEnvtempFun.bind(this);
+    this.testUITrackHeaterStatusFun =
+      this.testUITrackHeaterStatusFun.bind(this);
   }
-
-  //  Create function definitions here
-  /*
-    Fail Track Power
-    Break Rail
-    Stop Sending Track Circuit
-    Stop Recieveing Track Circuit
-    Change Elevation
-    Change Switch Position
-    Stop Beacon
-
-    Reset Power
-    Reset Rail
-    Reset Sending Track Circuit
-    Reset Recieving Track Circuit
-    Reset Elevation
-    Reset Switch Postion
-    Reset Beacon
-
-    Reset all setting to default
-    Load new Track Model
-    Toggle Function
-  */
 
   //  appears to be working so far
   loadBlockInfo = (event) => {
@@ -110,77 +81,131 @@ class TrackModel extends React.Component {
     console.log(blueTrackJson[myValue - 1]);
     const tempObj = blueTrackJson[myValue - 1];
 
-    //  Assign values from JSON
+    //  Assign values from JSON for calculations
     const blockLengthMetric = tempObj['Block Length (m)']; //  convert from meters to miles
     const speedLimitMetric = tempObj['Speed Limit (Km/Hr)']; //   Convert from km/h to mph
 
-    this.state.blockLength = blockLengthMetric * 0.000621371;
-    this.speedLimit = speedLimitMetric * 0.621371;
-    this.switchPos = tempObj.switch;
-    this.blockIndex = tempObj['Block Number'];
-    this.elevation = tempObj.Elevation;
+    this.setState({
+      blockLength: (blockLengthMetric * 0.000621371).toFixed(3),
+    });
+    this.setState({
+      speedLimit: (speedLimitMetric * 0.621371).toFixed(3),
+    });
+    this.setState({
+      switchPos: tempObj.switch,
+    });
+    this.setState({
+      blockIndex: tempObj['Block Number'],
+    });
+    this.setState({
+      elevation: tempObj.Elevation,
+    });
+    this.setState({
+      blockOccupancy: tempObj['Block Occupancy'],
+    });
+    this.setState({
+      enviornmentTemp: tempObj['Enviorment Temp'],
+    });
 
-    console.log(`block len: ${this.blockLength} miles`);
-    console.log(`speed lim: ${this.speedLimit} mph`);
-    console.log(`switch pos: ${this.switchPos}`);
-    console.log(`block index: ${this.blockIndex}`);
-    console.log(`elevation: ${this.elevation} feet`);
+    // console.log(`block len: ${this.state.blockLength} miles`);
+    // console.log(`speed lim: ${this.state.speedLimit} mph`);
+    // console.log(`switch pos: ${this.state.switchPos}`);
+    // console.log(`block index: ${this.state.blockIndex}`);
+    // console.log(`elevation: ${this.state.elevation} feet`);
   };
 
-  failTrackPower() {
-    this.setState((prevState) => ({
-      trackPower: !prevState.trackPower,
-    }));
-  }
+  handleSwitchChange = (event) => {
+    let { myValue } = event.currentTarget.dataset;
+    let index = this.state.blockIndex;
+    console.log(`switch value: ${myValue}`);
+    if (index === '5') {
+      console.log(`reacehed if statement: ${index}`);
+      if (myValue === '0') {
+        //  make engaged
+        this.setState({ switchPos: 'engaged' });
+      } else {
+        //  keep disengaged
+        this.setState({ switchPos: 'disengaged' });
+      }
+    }
+  };
 
-  breakRail() {
-    this.setState((prevState) => ({
-      railStatus: !prevState.railStatus,
-    }));
-  }
+  failTrackPower = (event) => {
+    //check the state of track power and change it
+    if (this.state.trackPower === 'functional') {
+      this.setState({ trackPower: 'broken' });
+    } else {
+      this.setState({ trackPower: 'functional' });
+    }
+  };
 
-  changeSendingTrackCircuit() {
-    this.setState((prevState) => ({
-      sendingTrackCircuit: !prevState.sendingTrackCircuit,
-    }));
-  }
+  breakRail = (event) => {
+    if (this.state.railStatus === 'functional') {
+      this.setState({ railStatus: 'broken' });
+    } else {
+      this.setState({ railStatus: 'functional' });
+    }
+  };
 
-  changeRecievingTrackCircuit() {
-    this.setState((prevState) => ({
-      recievingTrackCircuit: !prevState.recievingTrackCircuit,
-    }));
-  }
+  changeSendingTrackCircuit = (event) => {
+    if (this.state.sendingTrackCircuit === 'functional') {
+      this.setState({ sendingTrackCircuit: 'broken' });
+    } else {
+      this.setState({ sendingTrackCircuit: 'functional' });
+    }
+  };
 
-  changeElevation() {
-    this.setState();
-  }
+  changeRecievingTrackCircuit = (event) => {
+    if (this.state.recievingTrackCircuit === 'functional') {
+      this.setState({ recievingTrackCircuit: 'broken' });
+    } else {
+      this.setState({ recievingTrackCircuit: 'functional' });
+    }
+  };
+
+  changeElevation = (event) => {
+    const myElevation = event.currentTarget.value;
+    this.setState({ elevation: myElevation });
+  };
 
   //  should reset elevation to the elevation of the block stat
-  resetElevation() {
-    this.elevation = 0;
-  }
+  resetElevation = (event) => {
+    this.setState({ elevation: 0 });
+  };
 
-  changeBeacon() {
-    this.setState((prevState) => ({
-      beaconStatus: !prevState.beaconStatus,
-    }));
-  }
+  changeBeacon = (event) => {
+    if (this.state.beaconStatus === 'functional') {
+      this.setState({ beaconStatus: 'broken' });
+    } else {
+      this.setState({ beaconStatus: 'functional' });
+    }
+  };
 
-  //   //  parse the JSON data for the information associated with the block index
-  //   //  const Block = JSON.parse(blueTrackJson);
-  //   const Block = blueTrackJson;
-  //   console.log(Block);
-  // }
+  resetAllSettings = (event) => {
+    this.resetElevation();
+    this.setState({ railStatus: 'functional' });
+    this.setState({ trackPower: 'functional' });
+    this.setState({ recievingTrackCircuit: 'functional' });
+    this.setState({ sendingTrackCircuit: 'functional' });
+    this.setState({ switchPos: 'disengaged' });
+    this.setState({ beaconStatus: 'functional' });
+  };
 
-  // resetAllSettings()
-  // {
+  //  FUNCTIONS FOR TEST UI
+  testUIEnvtempFun = (event) => {
+    const myValue = event.currentTarget.value;
+    this.setState({ testUIEnvtemp: myValue });
+  };
 
-  //   //  go through each setting and change it back to the original block
-  // }
+  testUISpeedLimitFun = (event) => {
+    const myValue = event.currentTarget.value;
+    this.setState({ testUISpeedLimit: myValue });
+  };
 
-  changeSwitchPosition() {
-    //  run some code
-  }
+  testUITrackHeaterStatusFun = (event) => {
+    const myValue = event.currentTarget.value;
+    this.setState({ testUITrackHeaterStatus: myValue });
+  };
 
   toggle() {
     this.setState((prevState) => ({
@@ -227,236 +252,49 @@ class TrackModel extends React.Component {
               sx={{ fontSize: 14 }}
               color="grey"
               className="RestoreDefaults"
+              onClick={this.resetAllSettings}
             >
               Reset to Default Settings
             </Button>
           </Grid>
         </Grid>
 
-        {/* Need three columns, and in the far right column a grid with two columns */}
-        <Grid container spacing={12} direction="row" justifyContent="center">
-          {/* Column 1 */}
+        <Grid container spacing={12} className="A few settings" direction="row">
           <Grid item xs={4}>
-            {/* within grid want two more columns for label and data flowing in */}
-            <Grid container column spacing={1}>
-              <Grid item xs={6}>
-                <div className="label">Rail Status</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 1</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Track Power</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 2</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Track Circuit Recieved</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 3</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Track Circuit Sent</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 4</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Switch Position</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 5</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Speed Limit</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 6</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Block Length</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 7</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Direction of Travel</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 8</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Train Occupancy</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 9</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Block Occupancy</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 10</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Track Heater Status</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 11</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Enviornment Temp</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 12</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Persons at Station</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 13</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Beacon Status</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 14</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Railway Crossing</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 15</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label">Elevation</div>
-              </Grid>
-              <Grid item xs={6}>
-                <div className="label"> Data 16</div>
-              </Grid>
-            </Grid>
+            <div>Speed limit</div>
           </Grid>
-
-          {/* Column 2 */}
           <Grid item xs={4}>
-            <Grid container spacing={12}>
-              <></>
-            </Grid>
+            <div>{this.state.testUISpeedLimit}</div>
           </Grid>
-
-          {/* Column 3 */}
           <Grid item xs={4}>
-            <Grid container spacing={1} direction="row" justifyContent="center">
-              <Grid item xs={6}>
-                <Button variant="contained" color="error" sx={{ fontSize: 12 }}>
-                  Fail Track Power
-                </Button>
-              </Grid>
-
-              {/* <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
-                  Reset Power
-                </Button>
-              </Grid> */}
-
-              <Grid item xs={6}>
-                <Button variant="contained" color="error" sx={{ fontSize: 14 }}>
-                  Break Rail
-                </Button>
-              </Grid>
-
-              {/* <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
-                  Reset Rail
-                </Button>
-              </Grid> */}
-
-              <Grid item xs={6}>
-                <Button variant="contained" color="error" sx={{ fontSize: 14 }}>
-                  Stop Sending Track Circuit
-                </Button>
-              </Grid>
-
-              {/* <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
-                  Reset Sending Track Circuit
-                </Button>
-              </Grid> */}
-
-              <Grid item xs={6}>
-                <Button variant="contained" color="error" sx={{ fontSize: 14 }}>
-                  Stop Recieving Track Circuit
-                </Button>
-              </Grid>
-
-              {/* <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
-                  Reset Recieving Track Cicuit
-                </Button>
-              </Grid> */}
-
-              <Grid item xs={6} className="dumbButton">
-                <TextField
-                  id="filled-basic"
-                  type="number"
-                  multiline
-                  fullWidth
-                  label="Elevation"
-                  variant="filled"
-                  size="normal"
-                  // defaultValue="Elevation"
-                />
-              </Grid>
-
-              {/* <Grid item xs={6} >
-            <TextField id="outlined-basic" size="small" color="error" label="Change Elevation" type="number" variant="outlined" sx={{ height: '50%', width: '15ch' }} />
-          </Grid> */}
-
-              <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
-                  Reset Elevation
-                </Button>
-              </Grid>
-
-              <Grid item xs={6}>
-                <FormControl fullWidth="true" size="small">
-                  <InputLabel id="switch-position-select-label">
-                    Switch Position
-                  </InputLabel>
-                  <Select
-                    sx={{ fontSize: 8 }}
-                    variant="filled"
-                    id="switch-position-select-label"
-                    value={switchPos}
-                    label="Switch Position"
-                    onChange={handleChange}
-                  >
-                    <MenuItem value={1}>One</MenuItem>
-                    <MenuItem value={2}>Two</MenuItem>
-                    <MenuItem value={3}>Three</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
-                  Reset Switch
-                </Button>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Button variant="contained" color="error" sx={{ fontSize: 14 }}>
-                  Stop Beacon
-                </Button>
-              </Grid>
-
-              {/* <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
-                  Reset Beacon
-                </Button>
-              </Grid> */}
-            </Grid>
+            <TextField
+              value={this.state.testUISpeedLimit}
+              onChange={this.testUISpeedLimitFun}
+            />
+          </Grid>
+          <Grid item xs={4}>
+            <div>Enviornment Temp</div>
+          </Grid>
+          <Grid item xs={4}>
+            <div>{this.state.testUIEnvtemp}</div>
+          </Grid>
+          <Grid item xs={4}>
+            <TextField
+              value={this.state.testUIEnvtemp}
+              onChange={this.testUIEnvtempFun}
+            />
+          </Grid>
+          <Grid item xs={4}>
+            <div>Track Heater Status</div>
+          </Grid>
+          <Grid item xs={4}>
+            <div>{this.state.testUITrackHeaterStatus}</div>
+          </Grid>
+          <Grid item xs={4}>
+            <TextField
+              value={this.state.testUITrackHeaterStatus}
+              onChange={this.testUITrackHeaterStatusFun}
+            />
           </Grid>
         </Grid>
       </Container>
@@ -505,6 +343,7 @@ class TrackModel extends React.Component {
               sx={{ fontSize: 14 }}
               color="grey"
               className="RestoreDefaults"
+              onClick={this.resetAllSettings}
             >
               Reset to Default Settings
             </Button>
@@ -521,97 +360,97 @@ class TrackModel extends React.Component {
                 <div className="label">Rail Status</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.railStatus}</div>
+                <div className="label"> {this.state.railStatus}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Track Power</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.trackPower}</div>
+                <div className="label"> {this.state.trackPower}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Track Circuit Recieved</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.recievingTrackCircuit}</div>
+                <div className="label"> {this.state.recievingTrackCircuit}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Track Circuit Sent</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.sendingTrackCircuit}</div>
+                <div className="label"> {this.state.sendingTrackCircuit}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Switch Position</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.switchPos}</div>
+                <div className="label"> {this.state.switchPos}</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">Speed Limit</div>
+                <div className="label">Speed Limit (mph)</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.speedLimit}</div>
+                <div className="label"> {this.state.speedLimit}</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">Block Length</div>
+                <div className="label">Block Length (mi)</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.blockLength}</div>
+                <div className="label"> {this.state.blockLength}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Direction of Travel</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.directionOfTravel}</div>
+                <div className="label"> {this.state.directionOfTravel}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Train Occupancy</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.trainOccupancy}</div>
+                <div className="label"> {this.state.trainOccupancy}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Block Occupancy</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.blockOccupancy}</div>
+                <div className="label"> {this.state.blockOccupancy}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Track Heater Status</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label"> {this.trackHeaterStatus}</div>
+                <div className="label"> {this.state.trackHeaterStatus}</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">Enviornment Temp</div>
+                <div className="label">Enviornment Temp (F)</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">{this.enviornmentTemp}</div>
+                <div className="label">{this.state.enviornmentTemp}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Persons at Station</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">{this.personsAtStation}</div>
+                <div className="label">{this.state.personsAtStation}</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">Beacon Status</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">{this.beaconStatus}</div>
+                <div className="label">{this.state.beaconStatus}</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">Railway Crossing</div>
+                <div className="label">Railway Crossing (mi)</div>
               </Grid>
               <Grid item xs={6}>
                 <div className="label">0 miles</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">Elevation</div>
+                <div className="label">Elevation (feet)</div>
               </Grid>
               <Grid item xs={6}>
-                <div className="label">{this.elevation}</div>
+                <div className="label">{this.state.elevation}</div>
               </Grid>
             </Grid>
           </Grid>
@@ -693,6 +532,11 @@ class TrackModel extends React.Component {
                   </Select>
                 </formControl>
               </Grid>
+              <Grid item id="BlockIndexID">
+                <div id="blockIndexDiv">
+                  Block index: {this.state.blockIndex}
+                </div>
+              </Grid>
             </Grid>
           </Grid>
 
@@ -700,7 +544,12 @@ class TrackModel extends React.Component {
           <Grid item xs={4}>
             <Grid container spacing={1} direction="row" justifyContent="center">
               <Grid item xs={12}>
-                <Button variant="contained" color="error" sx={{ fontSize: 16 }}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={this.failTrackPower}
+                  sx={{ fontSize: 16 }}
+                >
                   Fail Track Power
                 </Button>
               </Grid>
@@ -712,7 +561,12 @@ class TrackModel extends React.Component {
               </Grid> */}
 
               <Grid item xs={12}>
-                <Button variant="contained" color="error" sx={{ fontSize: 16 }}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={this.breakRail}
+                  sx={{ fontSize: 16 }}
+                >
                   Break Rail
                 </Button>
               </Grid>
@@ -724,7 +578,12 @@ class TrackModel extends React.Component {
               </Grid> */}
 
               <Grid item xs={12}>
-                <Button variant="contained" color="error" sx={{ fontSize: 16 }}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={this.changeSendingTrackCircuit}
+                  sx={{ fontSize: 16 }}
+                >
                   Stop Sending Track Circuit
                 </Button>
               </Grid>
@@ -736,7 +595,12 @@ class TrackModel extends React.Component {
               </Grid> */}
 
               <Grid item xs={12}>
-                <Button variant="contained" color="error" sx={{ fontSize: 16 }}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={this.changeRecievingTrackCircuit}
+                  sx={{ fontSize: 16 }}
+                >
                   Stop Recieving Track Circuit
                 </Button>
               </Grid>
@@ -756,6 +620,8 @@ class TrackModel extends React.Component {
                   label="Elevation"
                   variant="filled"
                   size="normal"
+                  value={this.state.elevation}
+                  onChange={this.changeElevation}
                   // defaultValue="Elevation"
                 />
               </Grid>
@@ -765,12 +631,16 @@ class TrackModel extends React.Component {
               </Grid> */}
 
               <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
+                <Button
+                  variant="contained"
+                  onClick={this.resetElevation}
+                  sx={{ fontSize: 14 }}
+                >
                   Reset Elevation
                 </Button>
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid item xs={12}>
                 <FormControl fullWidth="true" size="small">
                   <InputLabel id="switch-position-select-label">
                     Switch Position
@@ -781,23 +651,36 @@ class TrackModel extends React.Component {
                     id="switch-position-select-label"
                     value={switchPos}
                     label="Switch Position"
-                    onChange={handleChange}
                   >
-                    <MenuItem value={1}>One</MenuItem>
-                    <MenuItem value={2}>Two</MenuItem>
-                    <MenuItem value={3}>Three</MenuItem>
+                    <MenuItem
+                      data-my-value={0}
+                      onClick={this.handleSwitchChange}
+                    >
+                      Engaged
+                    </MenuItem>
+                    <MenuItem
+                      data-my-value={1}
+                      onClick={this.handleSwitchChange}
+                    >
+                      Disengaged
+                    </MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
 
-              <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
+              {/* <Grid item xs={6}>
+                <Button variant="contained" sx={{ fontSize: 14 }} onClick={this.resetSwitch}>
                   Reset Switch
                 </Button>
-              </Grid>
+              </Grid> */}
 
               <Grid item xs={12}>
-                <Button variant="contained" color="error" sx={{ fontSize: 16 }}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={this.changeBeacon}
+                  sx={{ fontSize: 16 }}
+                >
                   Stop Beacon
                 </Button>
               </Grid>
