@@ -26,6 +26,9 @@ class SystemMap extends React.Component {
   componentDidMount() {
     this.cy.on('tap', 'node', (evt) => {
       const node = evt.target;
+      if(!this.props.manualMode)
+        return;
+
       if(node.data('switch') === true) {
         // Get connected blocks
         const all_connected_edges = Array.from(new Set(node

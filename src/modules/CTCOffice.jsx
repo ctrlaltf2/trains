@@ -76,7 +76,7 @@ class CTCOffice extends React.Component {
 
     this.state = {
       UIMode: UIState.Main,
-      isDispatchModalOpen: true,
+      isDispatchModalOpen: false,
       throughput: {
         'red': 0,
         'green': 1,
@@ -116,6 +116,7 @@ class CTCOffice extends React.Component {
       blockModalOpen: false,
       editingSwitch: undefined,
       editingBlock: undefined,
+      switchGoingToPosition: undefined,
     };
 
     this.nextTrainID = 1;
@@ -473,7 +474,9 @@ class CTCOffice extends React.Component {
       switchModalOpen,
       editingSwitch,
       editingBlock,
+      switches,
       closures,
+      switchGoingToPosition,
     } = this.state;
 
     const { lineSelection, blockSelection } = this.state.testUI;
@@ -700,6 +703,30 @@ class CTCOffice extends React.Component {
                 <Typography variant="h6" component="h2">
                   Editing Switch {editingSwitch}
                 </Typography>
+                {
+                  editingSwitch ?
+                    <p>Coming from block {switches['blue'][editingSwitch].coming_from}</p>
+                  :
+                    []
+                }
+                <FormControl id="switchPositionCombobox">
+                  <InputLabel id="switch-to-label">Set Going To</InputLabel>
+                  <Select
+                    labelId="block-select-label"
+                    value={switchGoingToPosition}
+                    label="Set Going To"
+                    onChange={(ev, elem) => {}}
+                  >
+                    {
+                      editingSwitch ?
+                        switches['blue'][editingSwitch].going_to_options.map( (sw) => {
+                          return <MenuItem value={sw}>{sw}</MenuItem>;
+                        })
+                        :
+                        []
+                    }
+                  </Select>
+                </FormControl>
               </div>
             </Box>
           </Modal>
