@@ -195,3 +195,7 @@
   left: 0;
   z-index: 0;
 }
+
+#switchPositionCombobox {
+  width: 20ch;
+}
