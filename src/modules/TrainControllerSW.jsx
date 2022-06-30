@@ -44,25 +44,35 @@ class TrainControllerSW extends React.Component {
       brakeFailureDisplay: false,
       engineFailureDisplay: false,
       signalPickupFailureDisplay: false,
+      automaticMode: true,
+      speed: 0,
+      commandedSpeed: 0,
+      cabinTemperature: 70,
     };
 
     // Initializing all needed variables to 0 or empty
-    this.speed = 0;
-    this.commandedSpeed = 0;
     this.authority = 0;
     this.power = 0;
     this.stationName = "";
 
+    // Toggling buttons
     this.toggle = this.toggle.bind(this);
+    this.toggleAutomatic = this.toggleAutomatic.bind(this);
     this.emergencyBrake = this.emergencyBrake.bind(this);
+
+    // Failures
     this.brakeFailure = this.brakeFailure.bind(this);
     this.engineFailure = this.engineFailure.bind(this);
     this.signalPickupFailure = this.signalPickupFailure.bind(this);
+
+    // Handling Changes
     this.handleSpeedChange = this.handleSpeedChange.bind(this);
     this.handleCommandedSpeedChange = this.handleCommandedSpeedChange.bind(this);
     this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
     this.handleTemperatureChange = this.handleTemperatureChange.bind(this);
     this.handlePowerChange = this.handlePowerChange.bind(this);
+
+    // Hanlding Submits
     this.handleSpeedSubmit = this.handleSpeedSubmit.bind(this);
     this.handleCommandedSpeedSubmit = this.handleCommandedSpeedSubmit.bind(this);
     this.handleAuthoritySubmit = this.handleAuthoritySubmit.bind(this);
@@ -70,6 +80,14 @@ class TrainControllerSW extends React.Component {
     this.handlePowerSubmit = this.handlePowerSubmit.bind(this);
   };
 
+  componentDidMount(){
+    const interval = setInterval(() => {
+      if(this.state.automaticMode){
+        this.setState({speed: this.state.commandedSpeed});
+        this.setState({cabinTemperature : 70});
+      }
+    },1000);
+  }
   handleSpeedChange(event) {
     this.setState({speed: event.target.value});
   }
@@ -83,7 +101,7 @@ class TrainControllerSW extends React.Component {
   }
 
   handleTemperatureChange(event) {
-    this.setState({temperature: event.target.value});
+    this.setState({cabinTemperature: event.target.value});
   }
 
   handlePowerChange(event) {
@@ -106,13 +124,19 @@ class TrainControllerSW extends React.Component {
   }
 
   handleTemperatureSubmit(event) {
-    alert('Temperature is set: ' + this.state.temperature + ' degrees F');
+    alert('Temperature is set: ' + this.state.cabinTemperature + ' degrees F');
     event.preventDefault();
   }
 
   handlePowerSubmit(event) {
     alert('Power is set: ' + this.state.power + ' Watts');
     event.preventDefault();
+  }
+
+  toggleAutomatic(){ // Toggles between automatic mode and manual mode
+    this.setState((prevState) => ({
+      automaticMode: !prevState.automaticMode,
+    }));
   }
 
   toggle() { // Toggles between regular UI and Test UI
@@ -145,6 +169,7 @@ class TrainControllerSW extends React.Component {
     }));
   }
 
+
   testUI() {
 
     return (
@@ -165,7 +190,8 @@ class TrainControllerSW extends React.Component {
               <FormGroup>
                 <FormControlLabel
                   control={<Switch defaultChecked />}
-                  label="Automatic/Manual Mode"
+                  onClick={this.toggleAutomatic}
+                  label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
                 />
               </FormGroup>
             </Item>
@@ -196,7 +222,7 @@ class TrainControllerSW extends React.Component {
             <form onSubmit={this.handleTemperatureSubmit}>
               <label>
                 Cabin Temperature:
-                <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
+                <input type="number" value={this.state.cabinTemperature} onChange={this.handleTemperatureChange} />
               </label>
                 <input type="submit" value="Submit" />
             </form>
@@ -227,18 +253,6 @@ class TrainControllerSW extends React.Component {
               </label>
                 <input type="submit" value="Submit" />
             </form>
-          </Grid>
-          <Grid item xs={5} md={2}>
-            <Box
-              component="form"
-              sx={{
-                '& > :not(style)': { m: 1, width: '25ch' },
-              }}
-              noValidate
-              autoComplete="off"
-            >
-              <TextField id="outlined-basic" label="Next Stop" variant="outlined" />
-            </Box>
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
             {this.state.brakeFailureDisplay ? (
