@@ -9,13 +9,15 @@ import {
   FormGroup,
   FormControlLabel,
   Box,
-  Typography
+  Typography,
 } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
+import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import cytoscape from 'cytoscape';
+const df = require('data-forge'); // TODO: make this not use require
 
 import _ from 'lodash';
 
@@ -32,6 +34,10 @@ const darkTheme = createTheme({
   },
 });
 
+const Input = styled('input')({
+  display: 'none',
+});
+
 // Enum-like structure for all UI states
 const UIState = {
   Main:         'Main',
@@ -43,6 +49,7 @@ const UIState = {
 
 class CTCOffice extends React.Component {
   constructor(props) {
+  console.log(df);
     super(props);
 
     window.electronAPI.subscribeCTCMessage( (_event, payload) => {
@@ -86,22 +93,33 @@ class CTCOffice extends React.Component {
         'green': {},
         'blue': {},
       },
+      switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
+        'red': {},
+        'green': {},
+        'blue': {
+          '5-6-11': new TrackSwitch(undefined, '5', ['6', '11'])
+        },
+      },
+      closures: { // closures[line][block_id] = is_closed;
+        'red': {},
+        'green': {},
+        'blue': {},
+      },
       activeTrainIDs: {
         'red': [],
         'green': [],
         'blue': [],
       },
       enteredETA: undefined,
-      manualMode: false
+      manualMode: false,
+      switchModalOpen: false,
+      blockModalOpen: false,
+      editingSwitch: undefined,
+      editingBlock: undefined,
     };
 
     this.nextTrainID = 1;
     this.trains = [];
-    this.switches = {
-      'blue': [
-        new TrackSwitch(undefined, '5', ['6', '11'])
-      ]
-    };
     this.systemMapRef = React.createRef();
 
     // Off-screen cytoscape element for routing algos and other shenanigans
@@ -134,12 +152,30 @@ class CTCOffice extends React.Component {
       return new Set([]);
   }
 
+  /**
+   * Get a standardized identifier for a switch given its connected blocks
+   */
+  getSwitchIdentifier(connected_blocks) {
+    // Remove dupes, sort, join all things by -
+    return Array.from(new Set(connected_blocks))
+            .sort((a, b) => a - b)
+            .join('-');
+  }
+
   updateBlockOccupancy(line, block_id, is_occupied) {
     const occupancy = _.cloneDeep(this.state.occupancy);
     occupancy[line][block_id] = !!is_occupied;
 
     this.setState({
       occupancy: occupancy,
+    });
+  }
+
+  updateSwitchPosition(line, switch_identifier, new_direction) {
+    const switches = _.cloneDeep(this.state.switches);
+    switches[line][switch_identifier].point_to(new_direction);
+    this.setState({
+      switches: switches
     });
   }
 
@@ -427,7 +463,19 @@ class CTCOffice extends React.Component {
   }
 
   renderMain() {
-    const { occupancy, throughput, isDispatchModalOpen, enteredETA, manualMode } = this.state;
+    const {
+      occupancy,
+      throughput,
+      isDispatchModalOpen,
+      enteredETA,
+      manualMode,
+      blockModalOpen,
+      switchModalOpen,
+      editingSwitch,
+      editingBlock,
+      closures,
+    } = this.state;
+
     const { lineSelection, blockSelection } = this.state.testUI;
 
     const redLineThroughput = throughput['red'];
@@ -477,15 +525,38 @@ class CTCOffice extends React.Component {
             Switch to test UI
           </Button>
           <div id="bottomRightButtonGroup" className="floating">
-            <Button variant="contained" id="systemScheduleButton" onClick={() => {
-                this.setState({UIMode: UIState.Scheduling});
-            }}>
-              Load System Schedule
-            </Button>
+            <label htmlFor="systemScheduleButton">
+              <label htmlFor="systemScheduleButton">
+                <Input
+                  accept="text/csv"
+                  id="systemScheduleButton"
+                  multiple
+                  type="file"
+                  onChange={(ev) => {
+                    console.log(ev);
+
+                    return;
+                    const reader = new FileReader();
+                  }}
+                />
+                <Button variant="contained" component="span">
+                  Upload
+                </Button>
+              </label>
+            </label>
           </div>
           <div id="systemMap" className="floating">
             <SystemMap
               occupancy={occupancy}
+              manualMode={manualMode}
+              onSwitchEdit={(switch_connections) => this.setState({
+                switchModalOpen: true,
+                editingSwitch: this.getSwitchIdentifier(switch_connections)
+              })}
+              onBlockEdit={(block_id) => this.setState({
+                blockModalOpen: true,
+                editingBlock: block_id,
+              })}
               ref={this.systemMapRef}
             />
           </div>
@@ -599,6 +670,81 @@ class CTCOffice extends React.Component {
                       Commit
                     </Button>
                 }
+              </div>
+            </Box>
+          </Modal>
+          <Modal
+            className="modal"
+            open={switchModalOpen}
+            onClose={() => {
+              this.setState({
+                switchModalOpen: false,
+              });
+            }}>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 600,
+                bgcolor: 'var(--background-color)',
+                color: 'var(--color)',
+                  border: '2px solid #000',
+                  boxShadow: 24,
+                  p: 4
+                }}
+              >
+              <div className="dispatchModalContainer">
+                <Typography variant="h6" component="h2">
+                  Editing Switch {editingSwitch}
+                </Typography>
+              </div>
+            </Box>
+          </Modal>
+          <Modal
+            className="modal"
+            open={blockModalOpen}
+            onClose={() => {
+              this.setState({
+                blockModalOpen: false,
+              });
+            }}>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 600,
+                bgcolor: 'var(--background-color)',
+                color: 'var(--color)',
+                  border: '2px solid #000',
+                  boxShadow: 24,
+                  p: 4
+                }}
+              >
+              <div className="dispatchModalContainer">
+                <Typography variant="h6" component="h2">
+                  Editing Block {editingBlock}
+                </Typography>
+                <FormControlLabel
+                  checked={closures['blue'][editingBlock]}
+                  control={<Switch onChange={(ev) => {
+                    const closures_ = _.cloneDeep(closures);
+                    closures_['blue'][editingBlock] = !!ev.target.checked;
+
+                    this.setState({
+                      closures: closures_,
+                    });
+                    this.systemMapRef.current.updateBlockClosure(editingBlock, ev.target.checked);
+
+                    window.electronAPI.sendTrackControllerMessage({
+                      'type': 'closure',
+                      'block_id': editingBlock,
+                      'is_closed': ev.target.checked
+                    });
+                }}/>} label="Close for maintenance"/>
               </div>
             </Box>
           </Modal>

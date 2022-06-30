@@ -10,26 +10,41 @@ import Style from './SystemMap.cy.json';
 
 Cytoscape.use(dagre);
 
+// TODO: Decide if SystemMap is per-line basis- probably easier if so.
+
 class SystemMap extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       lockNodes: false,
     };
+
+    // TODO: Propogate this upwards
+    this.block_closures = {}; // indexed by block_id
   }
 
   componentDidMount() {
-    console.log('Mounted', this.cy);
-    this.cy.on('tap', 'node', function(evt) {
-      var node = evt.target;
-      console.log( 'tapped ' + node.id() );
-      // TODO: Pull up a switch dialogue for changing positions (mmode only)
+    this.cy.on('tap', 'node', (evt) => {
+      const node = evt.target;
+      if(node.data('switch') === true) {
+        // Get connected blocks
+        const all_connected_edges = Array.from(new Set(node
+                                      .connectedEdges()
+                                      .map( (edge) => edge.data('block_id') )));
+
+        console.log(`Opening switch edit modal with all_connected_edges=${all_connected_edges}`);
+        console.log(all_connected_edges)
+        this.props.onSwitchEdit(all_connected_edges);
+      }
     });
 
-    this.cy.on('tap', 'edge', function(evt) {
-      var node = evt.target;
-      console.log( 'tapped ' + node.id() );
-      // TODO: Pull out block_name from this?
+    this.cy.on('tap', 'edge', (evt) => {
+      const block = evt.target;
+      const block_id = block.data('block_id');
+      if(block_id && this.props.manualMode) {
+        console.log(`Opening block edit modal with block_id=${block_id}`);
+        this.props.onBlockEdit(block_id);
+      }
     });
 
     // Lock nodes after the layout engine does its thing
@@ -48,8 +63,17 @@ class SystemMap extends React.Component {
     // Future prop changes here (e.g. signal states)
   }
 
-  updateBlockOccupancyUI(oldOccupancy, newOccupancy) {
+  updateBlockClosure(block_id, is_closed) {
+    console.log('Updating block closure style...');
 
+    if(is_closed)
+      this.cy.$(`[block_id = '${block_id}']`).style('opacity', 0.25);
+    else
+      this.cy.$(`[block_id = '${block_id}']`).removeStyle('opacity');
+    // this.forceRender();
+  }
+
+  updateBlockOccupancyUI(oldOccupancy, newOccupancy) {
     // Detect changes and call cy functions accordingly
     for (const line in newOccupancy) {
       if(line !== 'blue') // TODO: Configure system map to be able to select lines
@@ -80,6 +104,9 @@ class SystemMap extends React.Component {
     }
   }
 
+  // TODO: propogate closure states upwards
+  updateBlockClosedUI() { }
+
   render() {
     const layout = {
       // name: 'dagre',
@@ -98,13 +125,20 @@ class SystemMap extends React.Component {
         cy={(cy) => { this.cy = cy }}
         autolock={false}
         stylesheet={Style['base'].concat(Style['blue_line'])}
+        motionBlur={true}
       />
     );
   }
 };
 
 SystemMap.propTypes = {
-  occupancy: PropTypes.object.isRequired,
-}
+  occupancy:    PropTypes.object.isRequired,
+  onSwitchEdit: PropTypes.func.isRequired,
+  // switches: PropTypes.object.isRequired,
+  onBlockEdit:  PropTypes.func.isRequired,
+  // blockClosures: PropTypes.object.isRequired,
+  // onSwitchChange: PropTypes.func.isRequired,
+  manualMode:   PropTypes.bool.isRequired,
+};
 
 export default SystemMap;
