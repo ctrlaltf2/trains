@@ -61,9 +61,13 @@ class TrainControllerSW extends React.Component {
     this.handleSpeedChange = this.handleSpeedChange.bind(this);
     this.handleCommandedSpeedChange = this.handleCommandedSpeedChange.bind(this);
     this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
+    this.handleTemperatureChange = this.handleTemperatureChange.bind(this);
+    this.handlePowerChange = this.handlePowerChange.bind(this);
     this.handleSpeedSubmit = this.handleSpeedSubmit.bind(this);
     this.handleCommandedSpeedSubmit = this.handleCommandedSpeedSubmit.bind(this);
     this.handleAuthoritySubmit = this.handleAuthoritySubmit.bind(this);
+    this.handleTemperatureSubmit = this.handleTemperatureSubmit.bind(this);
+    this.handlePowerSubmit = this.handlePowerSubmit.bind(this);
   };
 
   handleSpeedChange(event) {
@@ -78,6 +82,14 @@ class TrainControllerSW extends React.Component {
     this.setState({authority: event.target.value});
   }
 
+  handleTemperatureChange(event) {
+    this.setState({temperature: event.target.value});
+  }
+
+  handlePowerChange(event) {
+    this.setState({power: event.target.value});
+  }
+
   handleSpeedSubmit(event) {
     alert('Speed is set: ' + this.state.speed + ' MPH');
     event.preventDefault();
@@ -90,6 +102,16 @@ class TrainControllerSW extends React.Component {
 
   handleAuthoritySubmit(event) {
     alert('Authority is set: ' + this.state.authority + ' Miles');
+    event.preventDefault();
+  }
+
+  handleTemperatureSubmit(event) {
+    alert('Temperature is set: ' + this.state.temperature + ' degrees F');
+    event.preventDefault();
+  }
+
+  handlePowerSubmit(event) {
+    alert('Power is set: ' + this.state.power + ' Watts');
     event.preventDefault();
   }
 
@@ -138,46 +160,6 @@ class TrainControllerSW extends React.Component {
           </AppBar>
         </Box>
         <Grid container spacing={4}>
-          <Grid item xs={3} md={8}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Left Train Doors"
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={3} md={4}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Right Train Doors"
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={3} md={4}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Cabin Lights"
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={3} md={8}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Train Lights"
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
           <Grid item xs={5} md={8}>
             <Item>
               <FormGroup>
@@ -202,28 +184,22 @@ class TrainControllerSW extends React.Component {
             </Item>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Box
-                component="form"
-                sx={{
-                  '& > :not(style)': { m: 1, width: '25ch' },
-                }}
-                noValidate
-                autoComplete="off"
-              >
-                <TextField id="outlined-basic" label="Power" type="number" variant="outlined" />
-              </Box>
+            <form onSubmit={this.handlePowerSubmit}>
+              <label>
+                Power:
+                <input type="number" value={this.state.power} onChange={this.handlePowerChange} />
+              </label>
+                <input type="submit" value="Submit" />
+            </form>
           </Grid>
           <Grid item xs={6} md={8}>
-            <Box
-              component="form"
-              sx={{
-                '& > :not(style)': { m: 1, width: '25ch' },
-              }}
-              noValidate
-              autoComplete="off"
-            >
-              <TextField id="outlined-basic" label="Cabin Temperature" type="number" variant="outlined" />
-            </Box>
+            <form onSubmit={this.handleTemperatureSubmit}>
+              <label>
+                Cabin Temperature:
+                <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
+              </label>
+                <input type="submit" value="Submit" />
+            </form>
           </Grid>
           <Grid item xs={4} md={2}>
             <form onSubmit={this.handleSpeedSubmit}>
@@ -242,21 +218,6 @@ class TrainControllerSW extends React.Component {
               </label>
                 <input type="submit" value="Submit" />
             </form>
-              {/* <Box
-                  component="form"
-                  sx={{
-                    '& > :not(style)': { m: 1, width: '25ch' },
-                  }}
-                  noValidate
-                  autoComplete="off"
-                >
-                  <TextField
-                    id="outlined-basic"
-                    label="Commanded Speed"
-                    type="number"
-                    variant="outlined"
-                  />
-              </Box> */}
           </Grid>
           <Grid item xs={4} md={2}>
             <form onSubmit={this.handleAuthoritySubmit}>
