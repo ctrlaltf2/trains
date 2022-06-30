@@ -249,12 +249,12 @@ class TrackController extends React.Component {
         );
 
         this.state.blocks[file[key].block - 1].SWTrue = {
-          block: block,
-          arg1: arg1,
-          logical: logical,
-          block2: block2,
-          arg2: arg2,
-          dest: dest,
+          block,
+          arg1,
+          logical,
+          block2,
+          arg2,
+          dest,
         };
 
         // set when switch is true (does to low number)
@@ -283,12 +283,12 @@ class TrackController extends React.Component {
           `Block ${block} ${arg1} ${logical} block ${block2} ${arg2}`
         );
         this.state.blocks[file[key].block - 1].SWFalse = {
-          block: block,
-          arg1: arg1,
-          logical: logical,
-          block2: block2,
-          arg2: arg2,
-          dest: dest,
+          block,
+          arg1,
+          logical,
+          block2,
+          arg2,
+          dest,
         };
 
         console.log(this.state.blocks[file[key].block]);
@@ -317,7 +317,7 @@ class TrackController extends React.Component {
         ) {
           // Condition to swt switch to true (low num)
           console.log(this.state.blocks[i].switchPosition);
-          let curr = this.state.blocks[i];
+          const curr = this.state.blocks[i];
           if (
             this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1] &&
             !this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]
@@ -336,8 +336,8 @@ class TrackController extends React.Component {
             // this.state.blocks[curr.SWTrue.dest].switchPosition = false;
           }
 
-          //Set light for switch too
-          let sw = this.state.blocks[i].switchPosition;
+          // Set light for switch too
+          const sw = this.state.blocks[i].switchPosition;
           if (this.state.blocks[sw - 1].occupancy === true) {
             this.state.blocks[i].transitLight = 'red';
           } else if (this.state.blocks[sw].occupancy === true) {
@@ -412,7 +412,7 @@ class TrackController extends React.Component {
    *
    */
   setLight() {
-    //Light 1
+    // Light 1
     for (let i = 0; i < this.state.blocks.length - 2; i++) {
       if (this.state.blocks[i].occupancy === true) {
         this.state.blocks[i].transitLight = 'red';
