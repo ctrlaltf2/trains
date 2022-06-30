@@ -45,20 +45,25 @@ class TrainControllerSW extends React.Component {
       engineFailureDisplay: false,
       signalPickupFailureDisplay: false,
       automaticMode: true,
+      brakeStatus: false,
       speed: 0,
       commandedSpeed: 0,
+      speedLimit: 0,
       cabinTemperature: 70,
+      authority: 10,
     };
 
     // Initializing all needed variables to 0 or empty
     this.authority = 0;
     this.power = 0;
     this.stationName = "";
+    this.speedLimit = 40;
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
     this.toggleAutomatic = this.toggleAutomatic.bind(this);
     this.emergencyBrake = this.emergencyBrake.bind(this);
+    this.toggleServiceBrake = this.toggleServiceBrake.bind(this);
 
     // Failures
     this.brakeFailure = this.brakeFailure.bind(this);
@@ -71,6 +76,7 @@ class TrainControllerSW extends React.Component {
     this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
     this.handleTemperatureChange = this.handleTemperatureChange.bind(this);
     this.handlePowerChange = this.handlePowerChange.bind(this);
+    this.handleSpeedLimitChange = this.handleSpeedLimitChange.bind(this);
 
     // Hanlding Submits
     this.handleSpeedSubmit = this.handleSpeedSubmit.bind(this);
@@ -83,25 +89,101 @@ class TrainControllerSW extends React.Component {
   componentDidMount(){
     const interval = setInterval(() => {
       if(this.state.automaticMode){
-        this.setState({speed: this.state.commandedSpeed});
-        this.setState({cabinTemperature : 70});
+        if (this.state.brakeFailureDisplay && this.state.speed !=0){
+          this.setState((prevState) => ({
+              speed: prevState.speed - 1,
+            }));
+        }
+        else if (this.state.engineFailureDisplay && this.state.speed !=0){
+          this.setState((prevState) => ({
+            speed: prevState.speed - 1,
+          }));
+        }
+        else{
+          if(!this.state.brakeFailureDisplay){
+            this.setState({speed: this.state.commandedSpeed});
+          }
+          this.setState({cabinTemperature : 70});
+          this.setState({authority: 10});
+          this.setState({power: 1200});
+        }
+      }
+      else{
+        if(this.state.brakeStatus && this.state.speed != 0){
+          this.setState((prevState) => ({
+            speed: prevState.speed - 1,
+          }));
+        }
+        else if(this.state.emergencyButton && (this.state.speed != 0)){
+          this.setState((prevState) => ({
+            speed: prevState.speed - 1,
+          }));
+        }
       }
     },1000);
   }
   handleSpeedChange(event) {
-    this.setState({speed: event.target.value});
+    if(event.target.value > 43)
+    {
+      this.setState({speed: 43})
+    }
+    else if (event.target.value < 0)
+    {
+      this.setState({speed: 0})
+    }
+    else{
+      this.setState({speed: event.target.value});
+    }
   }
 
   handleCommandedSpeedChange(event) {
-    this.setState({commandedSpeed: event.target.value});
+    if(event.target.value > 43)
+    {
+      this.setState({speed: 43})
+    }
+    else if (event.target.value < 0)
+    {
+      this.setState({speed: 0})
+    }
+    else{
+      this.setState({commandedSpeed: event.target.value});
+    }
+  }
+
+  handleSpeedLimitChange(event){
+    if(event.target.value > 43)
+    {
+      this.setState({speedLimit: 43})
+    }
+    else if (event.target.value < 0)
+    {
+      this.setState({speedLimit: 0})
+    }
+    else{
+      this.setState({speedLimit: event.target.value});
+    }
   }
 
   handleAuthorityChange(event) {
-    this.setState({authority: event.target.value});
+    if(event.target.value < 0)
+    {
+      this.setState({authority: 0});
+    }
+    else{
+      this.setState({authority: event.target.value});
+    }
   }
 
   handleTemperatureChange(event) {
-    this.setState({cabinTemperature: event.target.value});
+    if(event.target.value < 60){
+      this.setState({cabinTemperature: 60});
+    }
+    else if (event.target.value > 77){
+      this.setState({cabinTemperature: 77});
+    }
+    else{
+      this.setState({cabinTemperature: event.target.value});
+    }
   }
 
   handlePowerChange(event) {
@@ -129,13 +211,19 @@ class TrainControllerSW extends React.Component {
   }
 
   handlePowerSubmit(event) {
-    alert('Power is set: ' + this.state.power + ' Watts');
+    alert('Power is set: ' + this.state.power + ' Kilowatts');
     event.preventDefault();
   }
 
   toggleAutomatic(){ // Toggles between automatic mode and manual mode
     this.setState((prevState) => ({
       automaticMode: !prevState.automaticMode,
+    }));
+  }
+
+  toggleServiceBrake(){ // Turns the service brake on/off
+    this.setState((prevState) => ({
+      brakeStatus: !prevState.brakeStatus,
     }));
   }
 
@@ -185,7 +273,7 @@ class TrainControllerSW extends React.Component {
           </AppBar>
         </Box>
         <Grid container spacing={4}>
-          <Grid item xs={5} md={8}>
+          <Grid item xs={5} md={5}>
             <Item>
               <FormGroup>
                 <FormControlLabel
@@ -196,7 +284,20 @@ class TrainControllerSW extends React.Component {
               </FormGroup>
             </Item>
           </Grid>
-          <Grid item xs={6} md={8}>
+          <Grid item xs={5} md={5}>
+            <Item>
+              {this.state.brakeStatus ? (
+              <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
+                Service Brake Activated
+              </Button>
+              ) : (
+              <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
+                Service Brake Deactivated
+              </Button>
+              )}
+            </Item>
+          </Grid>
+          <Grid item xs={6} md={4}>
             <Item>
               {this.state.emergencyButton ? (
               <Button variant="contained" color="error" onClick={this.emergencyBrake}>
@@ -218,7 +319,7 @@ class TrainControllerSW extends React.Component {
                 <input type="submit" value="Submit" />
             </form>
           </Grid>
-          <Grid item xs={6} md={8}>
+          <Grid item xs={3} md={3}>
             <form onSubmit={this.handleTemperatureSubmit}>
               <label>
                 Cabin Temperature:
@@ -236,7 +337,7 @@ class TrainControllerSW extends React.Component {
                 <input type="submit" value="Submit" />
             </form>
           </Grid>
-          <Grid item xs={4} md={2}>
+          <Grid item xs={4} md={4}>
             <form onSubmit={this.handleCommandedSpeedSubmit}>
               <label>
                 Commanded Speed:
@@ -253,6 +354,12 @@ class TrainControllerSW extends React.Component {
               </label>
                 <input type="submit" value="Submit" />
             </form>
+          </Grid>
+          <Grid item xs={4} md={2}>
+              <label>
+                Speed Limit:
+                <input type="number" value={this.state.speedLimit} onChange={this.handleSpeedLimitChange} />
+              </label>
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
             {this.state.brakeFailureDisplay ? (
