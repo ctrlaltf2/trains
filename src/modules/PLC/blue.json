@@ -7,7 +7,7 @@
     "previous":"null",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -18,7 +18,7 @@
     "previous":"2",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -29,7 +29,7 @@
     "previous":"2",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -40,7 +40,7 @@
     "previous":"3",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -51,7 +51,7 @@
     "previous":"4",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "11"
   },
   {
@@ -62,7 +62,7 @@
     "previous":"5",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -73,7 +73,7 @@
     "previous":"6",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -84,7 +84,7 @@
     "previous":"7",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -95,7 +95,7 @@
     "previous":"8",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -106,7 +106,7 @@
     "previous":"9",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -117,7 +117,7 @@
     "previous":"5",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -128,7 +128,7 @@
     "previous":"11",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -139,7 +139,7 @@
     "previous":"12",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -150,7 +150,7 @@
     "previous":"13",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   },
   {
@@ -161,7 +161,7 @@
     "previous":"14",
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
-    "Speed Limit (Km/Hr)": "50",
+    "SpeedLimit": "50",
     "switch": "null"
   }
 ]
