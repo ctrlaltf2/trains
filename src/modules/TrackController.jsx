@@ -19,6 +19,9 @@ import {
   TableContainer,
   TableBody,
   TextField,
+  AppBar,
+  Toolbar,
+  Typography,
 } from '@mui/material';
 
 import blueLine from './PLC/blue.json';
@@ -96,6 +99,8 @@ class TrackController extends React.Component {
         section: blueLine[key].Section,
         transitLight: 'green',
         transitLight2: 'green',
+        suggSpeed: 0,
+        speedLimit: blueLine[key].SpeedLimit,
         authority: false,
         crossing: false,
         // direction: true, // true is forward, false backward
@@ -176,7 +181,9 @@ class TrackController extends React.Component {
     this.mmMode = this.mmMode.bind(this);
     this.toggleSection = this.toggleSection.bind(this);
     this.occupancy = this.occupancy.bind(this);
+    this.suggSpeed = this.suggSpeed.bind(this);
     this.schedule = this.schedule.bind(this);
+    this.setSwitch = this.setSwitch.bind(this);
     this.blockDirection = this.blockDirection.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeSection = this.handleChangeSection.bind(this);
@@ -388,16 +395,19 @@ class TrackController extends React.Component {
       }
 
       /*
-      *
-      * Set auth
-      *
-      */
-     for (let i = 0; i < this.state.blocks.length ; i++ ) {
-
-      if (this.state.blocks[i].schedule &&( this.state.blocks[i].transitLight === 'green' || this.state.blocks[i].transitLight === 'yellow') ) {
-        this.state.blocks[i].authority = true;
+       *
+       * Set auth
+       *
+       */
+      for (let i = 0; i < this.state.blocks.length; i++) {
+        if (
+          this.state.blocks[i].schedule &&
+          (this.state.blocks[i].transitLight === 'green' ||
+            this.state.blocks[i].transitLight === 'yellow')
+        ) {
+          this.state.blocks[i].authority = true;
+        }
       }
-     }
 
       this.setState((prevState) => ({
         appSate: !prevState.appState,
@@ -451,6 +461,7 @@ class TrackController extends React.Component {
     for (let i = 0; i < this.state.blocks.length; i++) {
       this.state.blocks[i].occupancy = false;
       this.state.blocks[i].authority = false;
+      this.state.blocks[i].suggSpeed = false;
     }
   }
 
@@ -463,7 +474,7 @@ class TrackController extends React.Component {
 
         // reset state for all
         for (let i = 0; i < this.state.blocks.length; i++) {
-          this.state.blocks[i].schedule = false
+          this.state.blocks[i].schedule = false;
           this.state.blocks[i].authority = false;
         }
 
@@ -481,8 +492,30 @@ class TrackController extends React.Component {
         }
       }
     }
+  }
 
+  suggSpeed(e) {
+    if (!isNaN(e.target.value)) {
+      this.state.currBlock.suggSpeed = e.target.value;
 
+      this.setState((prevState) => ({
+        appSate: !prevState.appState,
+      }));
+    }
+  }
+
+  setSwitch() {
+    if (this.state.currBlock.switchPosition != 'null') {
+      if (this.state.currBlock.switchPosition === '11') {
+        this.state.currBlock.switchPosition = '6';
+      } else {
+        this.state.currBlock.switchPosition = '11';
+      }
+    }
+
+    this.setState((prevState) => ({
+      appState: !prevState.appState,
+    }));
   }
 
   occupancy() {
@@ -622,6 +655,15 @@ class TrackController extends React.Component {
       <div>
         <ThemeProvider theme={darkTheme}>
           <Box sx={{ flexGrow: 1 }}>
+            <AppBar position="static">
+              <Toolbar variant="dense">
+                <Typography variant="h6" color="white" component="div">
+                  Track Controller Test Panel
+                </Typography>
+              </Toolbar>
+            </AppBar>
+          </Box>
+          <Box sx={{ flexGrow: 1 }}>
             <Grid container spacing={12}>
               <Grid item xs={3}>
                 <div className="left">
@@ -650,7 +692,9 @@ class TrackController extends React.Component {
               <Grid item xs={6}>
                 <div className="centered">
                   <FormControl fullWidth>
-                    <InputLabel id="select-section">TEST</InputLabel>
+                    <InputLabel id="select-section">
+                      Track Controller
+                    </InputLabel>
                     <Select
                       labelId="select-section"
                       id="select-section"
@@ -677,15 +721,29 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  <Chip
-                    label={`Switch Position: ${this.state.currBlock.switchPosition}`}
-                    color={
-                      this.state.currBlock.switchPosition === 'null'
-                        ? 'default'
-                        : 'success'
-                    }
-                    variant="outlined"
-                  />
+                  {this.state.currBlock.switchPosition != null &&
+                  this.state.maintenanceMode ? (
+                    <Chip
+                      onClick={this.setSwitch}
+                      label={`Switch Position: ${this.state.currBlock.switchPosition}`}
+                      color={
+                        this.state.currBlock.switchPosition === 'null'
+                          ? 'default'
+                          : 'success'
+                      }
+                      variant="outlined"
+                    />
+                  ) : (
+                    <Chip
+                      label={`Switch Position: ${this.state.currBlock.switchPosition}`}
+                      color={
+                        this.state.currBlock.switchPosition === 'null'
+                          ? 'default'
+                          : 'success'
+                      }
+                      variant="outlined"
+                    />
+                  )}
                 </div>
               </Grid>
               <Grid item xs="auto">
@@ -758,8 +816,17 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th">Suggested Velocity</TableCell>
-                        <TableCell align="right">mph</TableCell>
+                        <TableCell component="th">Suggested Speed</TableCell>
+                        <TableCell align="right">
+                          <TextField
+                            value={this.state.currBlock.suggSpeed}
+                            onChange={this.suggSpeed}
+                            id="standard-basic"
+                            label="Speed"
+                            variant="standard"
+                            size="small"
+                          />
+                        </TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
@@ -767,7 +834,9 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Authority</TableCell>
-                        <TableCell align="right"> <Chip
+                        <TableCell align="right">
+                          {' '}
+                          <Chip
                             label={String(this.state.currBlock.authority)}
                             color={
                               this.state.currBlock.authority === false
@@ -777,7 +846,8 @@ class TrackController extends React.Component {
                                 : 'default'
                             }
                             variant="filled"
-                          /></TableCell>
+                          />
+                        </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -879,7 +949,7 @@ class TrackController extends React.Component {
                 </TableContainer>
               </Grid>
               <Grid item xs="auto">
-                <TableContainer>
+                {/* <TableContainer>
                   <Table
                     sx={{ minWidth: 'auto' }}
                     size="small"
@@ -964,7 +1034,7 @@ class TrackController extends React.Component {
                       </TableRow>
                     </TableBody>
                   </Table>
-                </TableContainer>
+                </TableContainer> */}
               </Grid>
               <Grid item xs>
                 <div className="centered">
@@ -1000,6 +1070,15 @@ class TrackController extends React.Component {
     return (
       <div>
         <ThemeProvider theme={darkTheme}>
+          <Box sx={{ flexGrow: 1 }}>
+            <AppBar position="static">
+              <Toolbar variant="dense">
+                <Typography variant="h6" color="white" component="div">
+                  Track Controller
+                </Typography>
+              </Toolbar>
+            </AppBar>
+          </Box>
           <Box sx={{ flexGrow: 1 }}>
             <Grid container spacing={12}>
               <Grid item xs={3}>
@@ -1058,15 +1137,29 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  <Chip
-                    label={`Switch Position: ${this.state.currBlock.switchPosition}`}
-                    color={
-                      this.state.currBlock.switchPosition === 'null'
-                        ? 'default'
-                        : 'success'
-                    }
-                    variant="outlined"
-                  />
+                  {this.state.currBlock.switchPosition != null &&
+                  this.state.maintenanceMode ? (
+                    <Chip
+                      onClick={this.setSwitch}
+                      label={`Switch Position: ${this.state.currBlock.switchPosition}`}
+                      color={
+                        this.state.currBlock.switchPosition === 'null'
+                          ? 'default'
+                          : 'success'
+                      }
+                      variant="outlined"
+                    />
+                  ) : (
+                    <Chip
+                      label={`Switch Position: ${this.state.currBlock.switchPosition}`}
+                      color={
+                        this.state.currBlock.switchPosition === 'null'
+                          ? 'default'
+                          : 'success'
+                      }
+                      variant="outlined"
+                    />
+                  )}
                 </div>
               </Grid>
               <Grid item xs="auto">
@@ -1137,8 +1230,10 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th">Suggested Velocity</TableCell>
-                        <TableCell align="right">mph</TableCell>
+                        <TableCell component="th">Suggested Speed</TableCell>
+                        <TableCell align="right">
+                          {this.state.currBlock.suggSpeed}
+                        </TableCell>
                       </TableRow>
                       <TableRow
                         sx={{
@@ -1146,7 +1241,8 @@ class TrackController extends React.Component {
                         }}
                       >
                         <TableCell component="th">Authority</TableCell>
-                        <TableCell align="right"><Chip
+                        <TableCell align="right">
+                          <Chip
                             label={String(this.state.currBlock.authority)}
                             color={
                               this.state.currBlock.authority === false
@@ -1156,7 +1252,8 @@ class TrackController extends React.Component {
                                 : 'default'
                             }
                             variant="filled"
-                          /></TableCell>
+                          />
+                        </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
