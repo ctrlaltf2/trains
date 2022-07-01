@@ -36,8 +36,8 @@
     },
     {
       "name": "Chris Garrison",
-      "email": "@pitt.edu",
-      "url": "https://github.com/"
+      "email": "csg44@pitt.edu",
+      "url": "https://github.com/chrisg564"
     },
     {
       "name": "",
@@ -180,6 +180,7 @@
     "eslint": "^8.15.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-erb": "^4.0.3",
+    "eslint-formatter-pretty": "^4.1.0",
     "eslint-import-resolver-typescript": "^2.7.1",
     "eslint-import-resolver-webpack": "^0.13.2",
     "eslint-plugin-compat": "^4.0.2",
