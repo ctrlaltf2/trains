@@ -54,7 +54,7 @@ const installExtensions = async () => {
 };
 
 const activeModules = [
-  // 'CTCOffice',
+  'CTCOffice',
   'TrackController',
   // 'TrackModel',
   // 'TrainModel',
