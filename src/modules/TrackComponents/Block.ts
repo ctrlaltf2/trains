@@ -4,7 +4,7 @@ export class Block {
   // Failures (default to false)
   public brokenRailFailure: boolean;
   public signalFailure: boolean;
-  public engienFailure: boolean;
+  public engineFailure: boolean;
 
   // Fields set by setter functions
   public switch?: Switch;
@@ -47,7 +47,7 @@ export class Block {
     // Failures
     this.brokenRailFailure = false;
     this.signalFailure = false;
-    this.engienFailure = false;
+    this.engineFailure = false;
   }
 
   createSwitch(swBlock: number, outBlockLow: number, outBlockHigh: number) {
