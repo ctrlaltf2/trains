@@ -32,8 +32,6 @@ import blueA from './PLC/blueA.json';
 import blueB from './PLC/blueB.json';
 import blueC from './PLC/blueC.json';
 
-
-
 import './TrackController.css';
 import { JoinLeft } from '@mui/icons-material';
 import { isNullOrUndefined } from 'util';
@@ -49,35 +47,6 @@ const darkTheme = createTheme({
 window.electronAPI.subscribeTrackControllerMessage((_event, payload) => {
   console.log('IPC:TrackController: ', payload);
 });
-
-// class Block {
-//   constructor(id, position) {
-//     this.state = {
-//       id,
-//       transitLight: null,
-//       occupancy: null,
-//       switchPosition: position,
-//       engineFailure: false,
-//       lightFailure: false,
-//       // brakeFailure: true,
-//       signalFailure: false,
-//       // railFailure: true,
-//     };
-
-//     let railFailure = false;
-//     let brakeFailure = true;
-
-//     this.brakeFail = this.brakeFail.bind(this);
-//   }
-
-//   brakeFail() {
-//     this.railFailure = !this.brakeFailure;
-//   }
-
-//   getBrakeFailure() {
-//     return this.brakeFailure;
-//   }
-// }
 
 class TrackController extends React.Component {
   constructor(props, name) {
