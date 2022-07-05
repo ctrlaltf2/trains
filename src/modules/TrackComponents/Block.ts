@@ -26,8 +26,9 @@ export class Block {
     public grade: number,
     public spdLimit: number,
     public elevation: string,
-    public direction: boolean,
     public cumElevation: number,
+    public infrastructure: string = '',
+    public direction: boolean = false,
     public underground: boolean = false,
     public crossing: boolean = false
   ) {
