@@ -1,4 +1,4 @@
-import { Switch } from "./Switch";
+import { Switch } from './Switch';
 
 export class Block {
   // Failures (default to false)
@@ -9,7 +9,6 @@ export class Block {
   // Fields set by setter functions
   public switch?: Switch;
   public occupied: boolean;
-
 
   /*
    * TODO: other classes? beacon  and station
@@ -51,7 +50,7 @@ export class Block {
     this.engienFailure = false;
   }
 
-  createSwitch(swBlock: number, outBlockLow: number, outBlockHigh: number){
+  createSwitch(swBlock: number, outBlockLow: number, outBlockHigh: number) {
     this.switch = new Switch(swBlock, outBlockLow, outBlockHigh);
   }
 }
