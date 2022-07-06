@@ -24,6 +24,8 @@ import {
   Typography,
 } from '@mui/material';
 
+import { JoinLeft } from '@mui/icons-material';
+import { isNullOrUndefined } from 'util';
 import { Track } from './TrackComponents/Track';
 import blueJSON from './TrackComponents/TrackJSON/blue.json';
 
@@ -33,8 +35,6 @@ import blueB from './PLC/blueB.json';
 import blueC from './PLC/blueC.json';
 
 import './TrackController.css';
-import { JoinLeft } from '@mui/icons-material';
-import { isNullOrUndefined } from 'util';
 
 console.log(blueA);
 

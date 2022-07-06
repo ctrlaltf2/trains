@@ -115,7 +115,7 @@ class SystemMap extends React.Component {
       // name: 'dagre',
       name: 'dagre',
       rankDir: 'LR',
-      minLen: function(edge) { return 2; }
+      minLen(edge) { return 2; }
     };
 
     const { lockNodes } = this.state
@@ -127,8 +127,8 @@ class SystemMap extends React.Component {
         layout={layout}
         cy={(cy) => { this.cy = cy }}
         autolock={false}
-        stylesheet={Style['base'].concat(Style['blue_line'])}
-        motionBlur={true}
+        stylesheet={Style.base.concat(Style.blue_line)}
+        motionBlur
       />
     );
   }

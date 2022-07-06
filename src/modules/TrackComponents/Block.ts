@@ -3,11 +3,14 @@ import { Switch } from './Switch';
 export class Block {
   // Failures (default to false)
   public brokenRailFailure: boolean;
+
   public signalFailure: boolean;
+
   public engineFailure: boolean;
 
   // Fields set by setter functions
   public switch?: Switch;
+
   public occupied: boolean;
 
   /*

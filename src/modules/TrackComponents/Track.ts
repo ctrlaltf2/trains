@@ -12,14 +12,14 @@ export class Track {
       this.blocks.push(
         new Block(
           file[key]['Block Number'],
-          file[key]['Section'],
-          file[key]['Line'],
+          file[key].Section,
+          file[key].Line,
           file[key]['Block Length (m)'],
           file[key]['Block Grade (%)'],
           file[key]['Speed Limit (Km/Hr)'],
           file[key]['ELEVATION (M)'],
           file[key]['CUMALTIVE ELEVATION(M)'],
-          file[key]['Infrastructure']
+          file[key].Infrastructure
         )
       );
     }
@@ -33,10 +33,10 @@ export class Track {
     for (let i = 0; i < this.blocks.length; i++) {
       if (this.blocks[i].infrastructure.includes('Switch')) {
         // low and high switch positions
-        let low = parseInt(
+        const low = parseInt(
           this.blocks[i].infrastructure.split('=')[1].split(',')[0]
         );
-        let high = parseInt(
+        const high = parseInt(
           this.blocks[i].infrastructure.split('=')[1].split(',')[1]
         );
 
