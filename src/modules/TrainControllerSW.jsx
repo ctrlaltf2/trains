@@ -88,19 +88,53 @@ class TrainControllerSW extends React.Component {
 
   componentDidMount(){
     const interval = setInterval(() => {
+
+      // Automatic Mode
       if(this.state.automaticMode){
-        if (this.state.brakeFailureDisplay && this.state.speed !=0){
+
+        // If there's a brake failure, decrease the speed and stop
+        if (this.state.brakeFailureDisplay){
+          if(this.state.speed == 0){
+            this.setState({speed: 0});
+          }
+          else{
           this.setState((prevState) => ({
               speed: prevState.speed - 1,
             }));
+          }
         }
-        else if (this.state.engineFailureDisplay && this.state.speed !=0){
+
+        // If there's an engine failure, decrease the speed and stop
+        else if (this.state.engineFailureDisplay){
+          if(this.state.speed == 0){
+            this.setState({speed: 0});
+          }
+          else{
           this.setState((prevState) => ({
             speed: prevState.speed - 1,
-          }));
+            }));
+          }
+        }
+
+        // If there's a signal pickup failure, decrease the speed and stop
+        else if (this.state.signalPickupFailureDisplay){
+          if(this.state.speed == 0){
+            this.setState({speed: 0});
+          }
+          else{
+          this.setState((prevState) => ({
+            speed: prevState.speed - 1,
+            }));
+          }
         }
         else{
           if(!this.state.brakeFailureDisplay){
+            this.setState({speed: this.state.commandedSpeed});
+          }
+          if(!this.state.engineFailureDisplay){
+            this.setState({speed: this.state.commandedSpeed});
+          }
+          if(!this.state.signalPickupFailureDisplay){
             this.setState({speed: this.state.commandedSpeed});
           }
           this.setState({cabinTemperature : 70});
@@ -108,6 +142,8 @@ class TrainControllerSW extends React.Component {
           this.setState({power: 1200});
         }
       }
+
+      // Manual Mode
       else{
         if(this.state.brakeStatus && this.state.speed != 0){
           this.setState((prevState) => ({
@@ -478,34 +514,6 @@ class TrainControllerSW extends React.Component {
           <Grid item xs={6} md={8}>
             <Item>Cabin Temperature</Item>
           </Grid>
-          <Box sx={{ height: 300 }}>
-            <Slider
-              sx={{
-                '& input[type="range"]': {
-                  WebkitAppearance: 'slider-vertical',
-                },
-              }}
-              orientation="vertical"
-              defaultValue={30}
-              aria-label="Temperature"
-              valueLabelDisplay="auto"
-              onKeyDown={preventHorizontalKeyboardNavigation}
-            />
-          </Box>
-          <Box sx={{ height: 300 }}>
-            <Slider
-              sx={{
-                '& input[type="range"]': {
-                  WebkitAppearance: 'slider-vertical',
-                },
-              }}
-              orientation="vertical"
-              defaultValue={30}
-              aria-label="Temperature"
-              valueLabelDisplay="auto"
-              onKeyDown={preventHorizontalKeyboardNavigation}
-            />
-          </Box>
           <Grid item xs={4} md={2}>
             <Item>SPEED: _ MPH</Item>
           </Grid>
