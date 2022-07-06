@@ -24,6 +24,9 @@ import {
   Typography,
 } from '@mui/material';
 
+import { Track } from './TrackComponents/Track';
+import blueJSON from './TrackComponents/TrackJSON/blue.json';
+
 import blueLine from './PLC/blue.json';
 import blueA from './PLC/blueA.json';
 import blueB from './PLC/blueB.json';
@@ -45,39 +48,16 @@ window.electronAPI.subscribeTrackControllerMessage((_event, payload) => {
   console.log('IPC:TrackController: ', payload);
 });
 
-// class Block {
-//   constructor(id, position) {
-//     this.state = {
-//       id,
-//       transitLight: null,
-//       occupancy: null,
-//       switchPosition: position,
-//       engineFailure: false,
-//       lightFailure: false,
-//       // brakeFailure: true,
-//       signalFailure: false,
-//       // railFailure: true,
-//     };
-
-//     let railFailure = false;
-//     let brakeFailure = true;
-
-//     this.brakeFail = this.brakeFail.bind(this);
-//   }
-
-//   brakeFail() {
-//     this.railFailure = !this.brakeFailure;
-//   }
-
-//   getBrakeFailure() {
-//     return this.brakeFailure;
-//   }
-// }
-
 class TrackController extends React.Component {
   constructor(props, name) {
     super(props);
     this.name = name;
+
+    this.track = new Track('blue');
+    this.track.loadTrack(blueJSON);
+    this.track.setInfrastructure();
+    const res = this.track.blocks;
+    console.log(res);
 
     // Bad practice, should be seperate block class --- will rework later
     const blocks = [];
