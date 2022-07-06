@@ -26,7 +26,7 @@ export default class AppUpdater {
 }
 
 // Dict[ModuleName: string, moduleWindow: BrowserWindow]
-const moduleWindows = {}
+const moduleWindows = {};
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -55,11 +55,17 @@ const installExtensions = async () => {
 
 const activeModules = [
   //  'CTCOffice',
- // 'TrackController',
+  // 'TrackController',
   'TrackModel',
   //  'TrainModel',
   //  'TrainControllerHW',
   //  'TrainControllerSW',
+  'CTCOffice',
+  'TrackController',
+  // 'TrackModel',
+  // 'TrainModel',
+  // 'TrainControllerHW',
+  // 'TrainControllerSW',
 ];
 
 const createWindow = async (moduleName: string) => {
@@ -134,7 +140,7 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    activeModules.forEach(mod => createWindow(mod));
+    activeModules.forEach((mod) => createWindow(mod));
     /*
     for(const activeModule of activeModules)
       createWindow(activeModule); */
@@ -142,9 +148,8 @@ app
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      activeModules.forEach(mod => {
-        if(moduleWindows[mod] === undefined)
-          createWindow(mod);
+      activeModules.forEach((mod) => {
+        if (moduleWindows[mod] === undefined) createWindow(mod);
       });
     });
 
@@ -159,7 +164,7 @@ app
       3. Pattern 2: finish up async call and send data back
     */
 
-    Object.values(Modules.ALL_MODULES).forEach(moduleName => {
+    Object.values(Modules.ALL_MODULES).forEach((moduleName) => {
       ipcMain.on(moduleName, (_event, payload) => {
         moduleWindows[moduleName].webContents.send(moduleName, payload);
       });

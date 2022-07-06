@@ -1,0 +1,519 @@
+{
+  "lines": {
+    "blue": {
+      "nodes": [
+        {
+          "data": {
+            "id": "y"
+          }
+        },
+        {
+          "data": {
+            "id": "b_cap"
+          }
+        },
+        {
+          "data": {
+            "id": "c_cap"
+          }
+        },
+        {
+          "data": {
+            "id": "1-2::W"
+          }
+        },
+        {
+          "data": {
+            "id": "1-2::E"
+          }
+        },
+        {
+          "data": {
+            "id": "2-3::W"
+          }
+        },
+        {
+          "data": {
+            "id": "2-3::E"
+          }
+        },
+        {
+          "data": {
+            "id": "3-4::W"
+          }
+        },
+        {
+          "data": {
+            "id": "3-4::E"
+          }
+        },
+        {
+          "data": {
+            "id": "4-5::W"
+          }
+        },
+        {
+          "data": {
+            "id": "4-5::E"
+          }
+        },
+        {
+          "data": {
+            "id": "5-6::W"
+          }
+        },
+        {
+          "data": {
+            "id": "5-6::E"
+          }
+        },
+        {
+          "data": {
+            "id": "6-7::W"
+          }
+        },
+        {
+          "data": {
+            "id": "6-7::E"
+          }
+        },
+        {
+          "data": {
+            "id": "7-8::W"
+          }
+        },
+        {
+          "data": {
+            "id": "7-8::E"
+          }
+        },
+        {
+          "data": {
+            "id": "8-9::W"
+          }
+        },
+        {
+          "data": {
+            "id": "8-9::E"
+          }
+        },
+        {
+          "data": {
+            "id": "9-10::W"
+          }
+        },
+        {
+          "data": {
+            "id": "9-10::E"
+          }
+        },
+        {
+          "data": {
+            "id": "11-12::W"
+          }
+        },
+        {
+          "data": {
+            "id": "11-12::E"
+          }
+        },
+        {
+          "data": {
+            "id": "12-13::W"
+          }
+        },
+        {
+          "data": {
+            "id": "12-13::E"
+          }
+        },
+        {
+          "data": {
+            "id": "13-14::W"
+          }
+        },
+        {
+          "data": {
+            "id": "13-14::E"
+          }
+        },
+        {
+          "data": {
+            "id": "14-15::W"
+          }
+        },
+        {
+          "data": {
+            "id": "14-15::E"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "data": {
+            "id": "1::W",
+            "source": "1-2::W",
+            "target": "y",
+            "section": "A",
+            "block_id": "1",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "1::E",
+            "source": "y",
+            "target": "1-2::E",
+            "section": "A",
+            "block_id": "1",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "2::W",
+            "source": "2-3::W",
+            "target": "1-2::W",
+            "section": "A",
+            "block_id": "2",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "2::E",
+            "source": "1-2::E",
+            "target": "2-3::E",
+            "section": "A",
+            "block_id": "2",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "3::W",
+            "source": "3-4::W",
+            "target": "2-3::W",
+            "section": "A",
+            "block_id": "3",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "3::E",
+            "source": "2-3::E",
+            "target": "3-4::E",
+            "section": "A",
+            "block_id": "3",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "4::W",
+            "source": "4-5::W",
+            "target": "3-4::W",
+            "section": "A",
+            "block_id": "4",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "4::E",
+            "source": "3-4::E",
+            "target": "4-5::E",
+            "section": "A",
+            "block_id": "4",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "5::W",
+            "source": "5-6::W",
+            "target": "4-5::W",
+            "section": "A",
+            "block_id": "5",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "5::E",
+            "source": "4-5::E",
+            "target": "5-6::E",
+            "section": "A",
+            "block_id": "5",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "6::W",
+            "source": "6-7::W",
+            "target": "5-6::W",
+            "section": "B",
+            "block_id": "6",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "6::E",
+            "source": "5-6::E",
+            "target": "6-7::E",
+            "section": "B",
+            "block_id": "6",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "7::W",
+            "source": "7-8::W",
+            "target": "6-7::W",
+            "section": "B",
+            "block_id": "7",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "7::E",
+            "source": "6-7::E",
+            "target": "7-8::E",
+            "section": "B",
+            "block_id": "7",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "8::W",
+            "source": "8-9::W",
+            "target": "7-8::W",
+            "section": "B",
+            "block_id": "8",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "8::E",
+            "source": "7-8::E",
+            "target": "8-9::E",
+            "section": "B",
+            "block_id": "8",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "9::W",
+            "source": "9-10::W",
+            "target": "8-9::W",
+            "section": "B",
+            "block_id": "9",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "9::E",
+            "source": "8-9::E",
+            "target": "9-10::E",
+            "section": "B",
+            "block_id": "9",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "10::W",
+            "source": "b_cap",
+            "target": "9-10::W",
+            "section": "B",
+            "block_id": "10",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0,
+            "station_name": "Station B"
+          }
+        },
+        {
+          "data": {
+            "id": "10::E",
+            "source": "9-10::E",
+            "target": "b_cap",
+            "section": "B",
+            "block_id": "10",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0,
+            "station_name": "Station B"
+          }
+        },
+        {
+          "data": {
+            "id": "11::W",
+            "source": "11-12::W",
+            "target": "5-6::W",
+            "section": "C",
+            "block_id": "11",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "11::E",
+            "source": "5-6::E",
+            "target": "11-12::E",
+            "section": "C",
+            "block_id": "11",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "12::W",
+            "source": "12-13::W",
+            "target": "11-12::W",
+            "section": "C",
+            "block_id": "12",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "12::E",
+            "source": "11-12::E",
+            "target": "12-13::E",
+            "section": "C",
+            "block_id": "12",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "13::W",
+            "source": "13-14::W",
+            "target": "12-13::W",
+            "section": "C",
+            "block_id": "13",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "13::E",
+            "source": "12-13::E",
+            "target": "13-14::E",
+            "section": "C",
+            "block_id": "13",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "14::W",
+            "source": "14-15::W",
+            "target": "13-14::W",
+            "section": "C",
+            "block_id": "14",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "14::E",
+            "source": "13-14::E",
+            "target": "14-15::E",
+            "section": "C",
+            "block_id": "14",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0
+          }
+        },
+        {
+          "data": {
+            "id": "15::W",
+            "source": "c_cap",
+            "target": "14-15::W",
+            "section": "C",
+            "block_id": "15",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0,
+            "station_name": "Station C"
+          }
+        },
+        {
+          "data": {
+            "id": "15::E",
+            "source": "14-15::E",
+            "target": "c_cap",
+            "section": "C",
+            "block_id": "15",
+            "speed_limit": 50,
+            "length": 50,
+            "grade": 0.0,
+            "station_name": "Station C"
+          }
+        }
+      ]
+    }
+  }
+}
