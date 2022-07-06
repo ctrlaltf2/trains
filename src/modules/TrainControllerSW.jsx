@@ -51,13 +51,32 @@ class TrainControllerSW extends React.Component {
       speedLimit: 0,
       cabinTemperature: 70,
       authority: 10,
+
+      //Power & Velocity Variables
+      power: 0,
+      powerCMD: 0, // Power command
+      maxPower: 120, // Max power of the train is 120 kilowatts
+      force: 0,
+      acceleration: 0,
+      velocity: 0,
+      friction: 0,
+      totalMass: 0,
+      trainMass: 0,
+      passengerMass: 0,
+      graivty: -9.8,
+      blockSlope: 0,
+      u_k: 0,
+      k_p: 10000, // Proportional Gain
+      k_i: 0, // Integral Gain
+      T: 0, // Represents the sample period of the train model
+      setSpeed: 0, // Speed set by the driver
+      currentSpeed: 0, // The current speed of the train
     };
 
     // Initializing all needed variables to 0 or empty
     this.authority = 0;
     this.power = 0;
     this.stationName = "";
-    this.speedLimit = 40;
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
@@ -159,27 +178,45 @@ class TrainControllerSW extends React.Component {
     },1000);
   }
   handleSpeedChange(event) {
-    if(event.target.value > 43)
-    {
-      this.setState({speed: 43})
-    }
-    else if (event.target.value < 0)
-    {
-      this.setState({speed: 0})
+    if(this.state.velocity == 0){
+      this.setState({force: 0});
     }
     else{
-      this.setState({speed: event.target.value});
+       // Calculate force of the train
+      this.setState({force: (this.state.power / this.state.velocity)});
+
+      //Calculate force in the opposite direction based on slope of the track
+      this.setState((prevState) => ({
+        force: prevState.force - (this.state.friction*this.state.mass*this.state.gravity*Math.sin(this.state.blockSlope)),
+      }));
+
+      this.setState((prevState) => ({
+        force: prevState.force - (0.01*this.state.mass*this.state.gravity),
+      }));
     }
+
+    // if(event.target.value > this.state.speedLimit)
+    // {
+    //   this.setState({speed: this.state.speedLimit});
+    // }
+    // else if (event.target.value < 0)
+    // {
+    //   this.setState({speed: 0});
+    // }
+    // else{
+    //   this.setState({speed: event.target.value});
+    // }
   }
 
   handleCommandedSpeedChange(event) {
+    // 43 represents top speed of train in MPH
     if(event.target.value > 43)
     {
-      this.setState({speed: 43})
+      this.setState({speed: 43});
     }
     else if (event.target.value < 0)
     {
-      this.setState({speed: 0})
+      this.setState({speed: 0});
     }
     else{
       this.setState({commandedSpeed: event.target.value});
@@ -189,11 +226,11 @@ class TrainControllerSW extends React.Component {
   handleSpeedLimitChange(event){
     if(event.target.value > 43)
     {
-      this.setState({speedLimit: 43})
+      this.setState({speedLimit: 43});
     }
     else if (event.target.value < 0)
     {
-      this.setState({speedLimit: 0})
+      this.setState({speedLimit: 0});
     }
     else{
       this.setState({speedLimit: event.target.value});
@@ -237,7 +274,7 @@ class TrainControllerSW extends React.Component {
   }
 
   handleAuthoritySubmit(event) {
-    alert('Authority is set: ' + this.state.authority + ' Miles');
+    alert('Authority is set: ' + this.state.authority + ' Blocks');
     event.preventDefault();
   }
 
@@ -291,6 +328,26 @@ class TrainControllerSW extends React.Component {
     this.setState((prevState) => ({
       signalPickupFailureDisplay: !prevState.signalPickupFailureDisplay,
     }));
+  }
+
+  calculatePower(){ // Function that calculates the current power of the train
+
+    // If P_cmd < P_max, use this equation
+    if (this.state.powerCMD < this.state.maxPower){
+      this.setState((prevState) => ({
+        power: (prevState.power + (this.state.T/2000)*(this.state.setSpeed + this.state.currentSpeed)),
+      }));
+    }
+
+    // If P_cmd >= P_max, use this equation
+    else if (this.state.powerCMD >= this.state.maxPower){
+      this.setState((prevState) => ({
+        power: prevState.power,
+      }));
+    }
+
+    // Final Power Calculation
+    this.setState({powerCMD: ((this.state.k_p*this.state.setSpeed)+(this.state.k_i*this.state.u_k))})
   }
 
 
@@ -503,9 +560,28 @@ class TrainControllerSW extends React.Component {
           </Grid>
           <Grid item xs={6} md={8}>
             <Item>
-              <Button variant="outlined" color="error">
-                Emergency Brake
+              {this.state.emergencyButton ? (
+              <Button variant="contained" color="error" onClick={this.emergencyBrake}>
+                Emergency Brake Activated
               </Button>
+              ) : (
+              <Button variant="outlined" color="error" onClick={this.emergencyBrake}>
+                Emergency Brake Deactivated
+              </Button>
+              )}
+            </Item>
+          </Grid>
+          <Grid item xs={6} md={8}>
+            <Item>
+              {this.state.brakeStatus ? (
+              <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
+                Service Brake Activated
+              </Button>
+              ) : (
+              <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
+                Service Brake Deactivated
+              </Button>
+              )}
             </Item>
           </Grid>
           <Grid item xs={4} md={2}>
@@ -527,9 +603,33 @@ class TrainControllerSW extends React.Component {
             <Item>Next Stop: _</Item>
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
-            <Item>Engine Failure</Item>
-            <Item>Brake Failure</Item>
-            <Item>Signal Pickup Failure</Item>
+            {this.state.brakeFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.brakeFailure}>
+                Brake Status: Failing
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.brakeFailure}>
+                Brake Status: Working
+              </Button>
+              )}
+            {this.state.engineFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.engineFailure}>
+                Engine Status: Failing
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.engineFailure}>
+                Engine Status: Working
+              </Button>
+              )}
+            {this.state.signalPickupFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.signalPickupFailure}>
+                Signal Pickup Status: Broken
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.signalPickupFailure}>
+                Signal Pickup Status: Connected
+              </Button>
+              )}
           </Stack>
           <Stack spacing={2} direction="row">
             <Button variant="contained" onClick={this.toggle}>
