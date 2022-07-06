@@ -9,6 +9,9 @@ module.exports = {
     'prettier/prettier': 0,
     'import/prefer-default-export': 1,
     '@typescript-eslint/no-non-null-assertion': 0,
+    'spaced-comment': 1, // downgrade to warning
+    'react/prop-types': 1,
+    'react/forbid-prop-types': 0,
   },
   parserOptions: {
     ecmaVersion: 2020,
