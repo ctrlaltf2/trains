@@ -40,6 +40,7 @@ class TrainControllerSW extends React.Component {
 
     this.state = {
       testMode: false,
+      engineerMode: false,
       emergencyButton: false,
       brakeFailureDisplay: false,
       engineFailureDisplay: false,
@@ -48,38 +49,42 @@ class TrainControllerSW extends React.Component {
       brakeStatus: false,
       speed: 0,
       commandedSpeed: 0,
-      speedLimit: 0,
-      cabinTemperature: 70,
+      suggestedSpeed: 0,
+      temperature: 70,
       authority: 10,
 
       //Power & Velocity Variables
-      power: 0,
+      power: 120, // power is in kilowatts
       powerCMD: 0, // Power command
       maxPower: 120, // Max power of the train is 120 kilowatts
       force: 0,
       acceleration: 0,
+      prevAcceleration: 0, // previous acceleration of the train
       velocity: 0,
+      calVelocity: 0, // the calculated velocity in m/s
       friction: 0,
       totalMass: 0,
       trainMass: 0,
       passengerMass: 0,
-      graivty: -9.8,
+      passengers: 0,
       blockSlope: 0,
       u_k: 0,
       k_p: 10000, // Proportional Gain
       k_i: 0, // Integral Gain
       T: 0, // Represents the sample period of the train model
-      setSpeed: 0, // Speed set by the driver
+      setSpeed: 0, // Speed set by the driver: the speech you want to approach
       currentSpeed: 0, // The current speed of the train
     };
 
-    // Initializing all needed variables to 0 or empty
-    this.authority = 0;
-    this.power = 0;
-    this.stationName = "";
+    // Initializing constant variables
+    this.accelerationLim = 0.5; // medium acceleration of the train
+    this.decelerationEBrake = -2.73; // deceleration of the emergency brake
+    this.decelerationSBrake = -1.2; // deceleration of the service brake
+    this.gravity = -9.8;
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
+    this.toggleEngineer = this.toggleEngineer.bind(this);
     this.toggleAutomatic = this.toggleAutomatic.bind(this);
     this.emergencyBrake = this.emergencyBrake.bind(this);
     this.toggleServiceBrake = this.toggleServiceBrake.bind(this);
@@ -95,14 +100,9 @@ class TrainControllerSW extends React.Component {
     this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
     this.handleTemperatureChange = this.handleTemperatureChange.bind(this);
     this.handlePowerChange = this.handlePowerChange.bind(this);
-    this.handleSpeedLimitChange = this.handleSpeedLimitChange.bind(this);
-
-    // Hanlding Submits
-    this.handleSpeedSubmit = this.handleSpeedSubmit.bind(this);
-    this.handleCommandedSpeedSubmit = this.handleCommandedSpeedSubmit.bind(this);
-    this.handleAuthoritySubmit = this.handleAuthoritySubmit.bind(this);
-    this.handleTemperatureSubmit = this.handleTemperatureSubmit.bind(this);
-    this.handlePowerSubmit = this.handlePowerSubmit.bind(this);
+    this.handleSuggestedSpeedChange = this.handleSuggestedSpeedChange.bind(this);
+    this.setKp = this.setKp.bind(this);
+    this.setKi = this.setKi.bind(this);
   };
 
   componentDidMount(){
@@ -117,9 +117,7 @@ class TrainControllerSW extends React.Component {
             this.setState({speed: 0});
           }
           else{
-          this.setState((prevState) => ({
-              speed: prevState.speed - 1,
-            }));
+            // TODO
           }
         }
 
@@ -129,9 +127,7 @@ class TrainControllerSW extends React.Component {
             this.setState({speed: 0});
           }
           else{
-          this.setState((prevState) => ({
-            speed: prevState.speed - 1,
-            }));
+            // TODO
           }
         }
 
@@ -141,9 +137,7 @@ class TrainControllerSW extends React.Component {
             this.setState({speed: 0});
           }
           else{
-          this.setState((prevState) => ({
-            speed: prevState.speed - 1,
-            }));
+            // TODO
           }
         }
         else{
@@ -156,28 +150,23 @@ class TrainControllerSW extends React.Component {
           if(!this.state.signalPickupFailureDisplay){
             this.setState({speed: this.state.commandedSpeed});
           }
-          this.setState({cabinTemperature : 70});
-          this.setState({authority: 10});
-          this.setState({power: 1200});
         }
       }
 
       // Manual Mode
       else{
         if(this.state.brakeStatus && this.state.speed != 0){
-          this.setState((prevState) => ({
-            speed: prevState.speed - 1,
-          }));
+          // TODO
         }
         else if(this.state.emergencyButton && (this.state.speed != 0)){
-          this.setState((prevState) => ({
-            speed: prevState.speed - 1,
-          }));
+          // TODO
         }
       }
     },1000);
   }
   handleSpeedChange(event) {
+    // event.target.value represents the inputted speed
+    this.setState({velocity: event.target.value});
     if(this.state.velocity == 0){
       this.setState({force: 0});
     }
@@ -187,25 +176,52 @@ class TrainControllerSW extends React.Component {
 
       //Calculate force in the opposite direction based on slope of the track
       this.setState((prevState) => ({
-        force: prevState.force - (this.state.friction*this.state.mass*this.state.gravity*Math.sin(this.state.blockSlope)),
+        force: prevState.force - (this.state.friction*this.state.totalMass*this.gravity*Math.sin(this.state.blockSlope)),
       }));
 
       this.setState((prevState) => ({
-        force: prevState.force - (0.01*this.state.mass*this.state.gravity),
+        force: prevState.force - (0.01*this.state.mass*gravity),
       }));
     }
 
-    // if(event.target.value > this.state.speedLimit)
-    // {
-    //   this.setState({speed: this.state.speedLimit});
-    // }
-    // else if (event.target.value < 0)
-    // {
-    //   this.setState({speed: 0});
-    // }
-    // else{
-    //   this.setState({speed: event.target.value});
-    // }
+    // Calculate acceleration of the train
+    this.setState({prevAcceleration: this.state.acceleration});
+    this.setState({acceleration: this.state.force/this.state.totalMass});
+    if(this.state.acceleration > accelerationLim){
+      this.setState({acceleration: accelerationLim});
+    }
+
+    // If the emergency brake is activated and there isn't a
+    // brake failure, set the deceleration rate to -2.73
+    else if(this.state.emergencyButton && !this.state.brakeFailureDisplay){
+      this.setState({acceleration: this.state.decelerationEBrake});
+    }
+
+    // If the service brake is activated and there isn't a
+    // brake failure, set the deceleration rate to -1.2
+    else if(this.state.brakeStatus && !this.state.brakeFailureDisplay){
+      this.setState({acceleration: this.state.decelerationSBrake});
+    }
+
+    console.log(this.state.acceleration);
+
+    // Calculate Velocity in meters per sec
+    this.setState({calVelocity: this.state.velocity + (this.state.T/2)*(this.state.acceleration+this.state.prevAcceleration)})
+
+    // Check if speed is higher than speed limit, then set speed to speed limit
+    if(this.state.calVelocity > this.state.commandedSpeed){
+      this.setState({velocity: this.state.commandedSpeed});
+    }
+    else{
+      this.setState({velocity: this.state.calVelocity});
+    }
+
+    if(this.state.velocity < 0){
+      this.setState({velocity: 0});
+    }
+    if(this.state.velocity == 0 && this.state.acceleration < 0){
+      this.setState({acceleration: 0});
+    }
   }
 
   handleCommandedSpeedChange(event) {
@@ -223,17 +239,17 @@ class TrainControllerSW extends React.Component {
     }
   }
 
-  handleSpeedLimitChange(event){
+  handleSuggestedSpeedChange(event){
     if(event.target.value > 43)
     {
-      this.setState({speedLimit: 43});
+      this.setState({suggestedSpeed: 43});
     }
     else if (event.target.value < 0)
     {
-      this.setState({speedLimit: 0});
+      this.setState({suggestedSpeed: 0});
     }
     else{
-      this.setState({speedLimit: event.target.value});
+      this.setState({suggestedSpeed: event.target.value});
     }
   }
 
@@ -249,13 +265,13 @@ class TrainControllerSW extends React.Component {
 
   handleTemperatureChange(event) {
     if(event.target.value < 60){
-      this.setState({cabinTemperature: 60});
+      this.setState({temperature: 60});
     }
-    else if (event.target.value > 77){
-      this.setState({cabinTemperature: 77});
+    else if (event.target.value > 80){
+      this.setState({temperature: 80});
     }
     else{
-      this.setState({cabinTemperature: event.target.value});
+      this.setState({temperature: event.target.value});
     }
   }
 
@@ -263,29 +279,13 @@ class TrainControllerSW extends React.Component {
     this.setState({power: event.target.value});
   }
 
-  handleSpeedSubmit(event) {
-    alert('Speed is set: ' + this.state.speed + ' MPH');
-    event.preventDefault();
+  // Engineer Functions
+  setKp(event){
+    this.setState({k_p: event.target.value});
   }
 
-  handleCommandedSpeedSubmit(event) {
-    alert('Commanded Speed is set: ' + this.state.commandedSpeed + ' MPH');
-    event.preventDefault();
-  }
-
-  handleAuthoritySubmit(event) {
-    alert('Authority is set: ' + this.state.authority + ' Blocks');
-    event.preventDefault();
-  }
-
-  handleTemperatureSubmit(event) {
-    alert('Temperature is set: ' + this.state.cabinTemperature + ' degrees F');
-    event.preventDefault();
-  }
-
-  handlePowerSubmit(event) {
-    alert('Power is set: ' + this.state.power + ' Kilowatts');
-    event.preventDefault();
+  setKi(event){
+    this.setState({k_i: event.target.value});
   }
 
   toggleAutomatic(){ // Toggles between automatic mode and manual mode
@@ -303,6 +303,12 @@ class TrainControllerSW extends React.Component {
   toggle() { // Toggles between regular UI and Test UI
     this.setState((prevState) => ({
       testMode: !prevState.testMode,
+    }));
+  }
+
+  toggleEngineer(){ // Toggles between UI/Test UI and Engineer UI
+    this.setState((prevState) => ({
+      engineerMode: !prevState.engineerMode,
     }));
   }
 
@@ -347,11 +353,40 @@ class TrainControllerSW extends React.Component {
     }
 
     // Final Power Calculation
-    this.setState({powerCMD: ((this.state.k_p*this.state.setSpeed)+(this.state.k_i*this.state.u_k))})
+    this.setState({power: ((this.state.k_p*this.state.setSpeed)+(this.state.k_i*this.state.u_k))})
   }
 
+  engineerPanel(){
+    return (
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="static">
+          <Toolbar variant="dense">
+            <Typography variant="h6" color="white" component="div">
+              Engineer Panel
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Grid item xs={4} md={2}>
+          <label>
+            Kp:
+          <input type="number" value={this.state.k_p} onChange={this.setKp} />
+          </label>
+        </Grid>
+        <Grid item xs={3} md={3}>
+          <label>
+            Ki:
+          <input type="number" value={this.state.k_i} onChange={this.setKi} />
+          </label>
+        </Grid>
+        <Button variant="contained" onClick={this.toggleEngineer}>
+          Toggle Engineer Panel
+        </Button>
+      </Box>
+    );
+  }
 
   testUI() {
+    if (this.state.engineerMode) return this.engineerPanel();
 
     return (
 
@@ -404,54 +439,39 @@ class TrainControllerSW extends React.Component {
             </Item>
           </Grid>
           <Grid item xs={4} md={2}>
-            <form onSubmit={this.handlePowerSubmit}>
               <label>
                 Power:
                 <input type="number" value={this.state.power} onChange={this.handlePowerChange} />
               </label>
-                <input type="submit" value="Submit" />
-            </form>
           </Grid>
           <Grid item xs={3} md={3}>
-            <form onSubmit={this.handleTemperatureSubmit}>
               <label>
-                Cabin Temperature:
-                <input type="number" value={this.state.cabinTemperature} onChange={this.handleTemperatureChange} />
+                Temperature:
+                <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
               </label>
-                <input type="submit" value="Submit" />
-            </form>
           </Grid>
           <Grid item xs={4} md={2}>
-            <form onSubmit={this.handleSpeedSubmit}>
               <label>
                 Speed:
                 <input type="number" value={this.state.speed} onChange={this.handleSpeedChange} />
               </label>
-                <input type="submit" value="Submit" />
-            </form>
           </Grid>
           <Grid item xs={4} md={4}>
-            <form onSubmit={this.handleCommandedSpeedSubmit}>
               <label>
                 Commanded Speed:
                 <input type="number" value={this.state.commandedSpeed} onChange={this.handleCommandedSpeedChange} />
               </label>
-                <input type="submit" value="Submit" />
-            </form>
           </Grid>
           <Grid item xs={4} md={2}>
-            <form onSubmit={this.handleAuthoritySubmit}>
               <label>
                 Authority:
                 <input type="number" value={this.state.authority} onChange={this.handleAuthorityChange} />
               </label>
-                <input type="submit" value="Submit" />
-            </form>
           </Grid>
           <Grid item xs={4} md={2}>
               <label>
-                Speed Limit:
-                <input type="number" value={this.state.speedLimit} onChange={this.handleSpeedLimitChange} />
+                Suggested Speed:
+                <input type="number" value={this.state.suggestedSpeed} onChange={this.handleSuggestedSpeedChange} />
               </label>
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
@@ -487,6 +507,9 @@ class TrainControllerSW extends React.Component {
             <Button variant="contained" onClick={this.toggle}>
               Toggle Test UI
             </Button>
+            <Button variant="contained" onClick={this.toggleEngineer}>
+              Toggle Engineer Panel
+            </Button>
           </Stack>
         </Grid>
       </Box>
@@ -495,6 +518,7 @@ class TrainControllerSW extends React.Component {
 
   render() {
     if (this.state.testMode) return this.testUI();
+    if (this.state.engineerMode) return this.engineerPanel();
 
     return (
       <Box sx={{ flexGrow: 1 }}>
@@ -548,12 +572,13 @@ class TrainControllerSW extends React.Component {
               </FormGroup>
             </Item>
           </Grid>
-          <Grid item xs={5} md={8}>
+          <Grid item xs={5} md={5}>
             <Item>
               <FormGroup>
                 <FormControlLabel
                   control={<Switch defaultChecked />}
-                  label="Automatic/Manual Mode"
+                  onClick={this.toggleAutomatic}
+                  label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
                 />
               </FormGroup>
             </Item>
@@ -588,13 +613,16 @@ class TrainControllerSW extends React.Component {
             <Item>Power: _ Watts</Item>
           </Grid>
           <Grid item xs={6} md={8}>
-            <Item>Cabin Temperature</Item>
+            <Item>Temperature</Item>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>SPEED: _ MPH</Item>
+            <Item>Current Speed: _ MPH</Item>
           </Grid>
           <Grid item xs={4} md={2}>
             <Item>Commanded Speed: _ MPH</Item>
+          </Grid>
+          <Grid item xs={4} md={2}>
+            <Item>Suggested Speed: _ MPH</Item>
           </Grid>
           <Grid item xs={4} md={2}>
             <Item>Authority: _ Miles</Item>
@@ -634,6 +662,9 @@ class TrainControllerSW extends React.Component {
           <Stack spacing={2} direction="row">
             <Button variant="contained" onClick={this.toggle}>
               Toggle Test UI
+            </Button>
+            <Button variant="contained" onClick={this.toggleEngineer}>
+              Toggle Engineer Panel
             </Button>
           </Stack>
         </Grid>
