@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
+  styled,
   Box,
-  Item,
+  Paper,
   Grid,
   FormGroup,
   FormControlLabel,
@@ -13,18 +14,22 @@ import {
   Typography,
   Toolbar,
   TextField,
-  ThemeProvider,
-  createTheme,
 } from '@mui/material';
 import { type } from 'os';
 
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
-
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: 'center',
+  color: theme.palette.text.secondary,
+}));
+function preventHorizontalKeyboardNavigation(event) {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault();
+  }
+}
 // max train speed: 70 km/h ~= 43 MPH
 // service brake deceleration 1.2m/s^2
 // emergency brake deceleration 2.73 m/s^2
@@ -59,7 +64,9 @@ class TrainControllerSW extends React.Component {
       calVelocity: 0, // the calculated velocity in m/s
       friction: 0,
       totalMass: 0,
-      passengers: 10,
+      trainMass: 0,
+      passengerMass: 0,
+      passengers: 0,
       blockSlope: 0,
       u_k: 0,
       k_p: 10000, // Proportional Gain
@@ -74,8 +81,6 @@ class TrainControllerSW extends React.Component {
     this.decelerationEBrake = -2.73; // deceleration of the emergency brake
     this.decelerationSBrake = -1.2; // deceleration of the service brake
     this.gravity = -9.8;
-    this.trainMass = 40900; // mass of the train in kilograms (40.9 tons)
-    this.passengerMass = 80; // mass of the passengers in kilograms (per Dr. Profeta's words)
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
@@ -94,6 +99,7 @@ class TrainControllerSW extends React.Component {
     this.handleCommandedSpeedChange = this.handleCommandedSpeedChange.bind(this);
     this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
     this.handleTemperatureChange = this.handleTemperatureChange.bind(this);
+    this.handlePowerChange = this.handlePowerChange.bind(this);
     this.handleSuggestedSpeedChange = this.handleSuggestedSpeedChange.bind(this);
     this.setKp = this.setKp.bind(this);
     this.setKi = this.setKi.bind(this);
@@ -161,11 +167,6 @@ class TrainControllerSW extends React.Component {
   handleSpeedChange(event) {
     // event.target.value represents the inputted speed
     this.setState({velocity: event.target.value});
-
-    // Calculate total mass
-    this.setState({totalMass: this.trainMass + (this.state.passengers*this.passengerMass)})
-
-
     if(this.state.velocity == 0){
       this.setState({force: 0});
     }
@@ -179,7 +180,7 @@ class TrainControllerSW extends React.Component {
       }));
 
       this.setState((prevState) => ({
-        force: prevState.force - (0.01*this.state.totalMass*gravity),
+        force: prevState.force - (0.01*this.state.mass*gravity),
       }));
     }
 
@@ -273,6 +274,11 @@ class TrainControllerSW extends React.Component {
       this.setState({temperature: event.target.value});
     }
   }
+
+  handlePowerChange(event) {
+    this.setState({power: event.target.value});
+  }
+
   // Engineer Functions
   setKp(event){
     this.setState({k_p: event.target.value});
@@ -352,32 +358,30 @@ class TrainControllerSW extends React.Component {
 
   engineerPanel(){
     return (
-      <ThemeProvider theme={darkTheme}>
-        <Box sx={{ flexGrow: 1 }}>
-          <AppBar position="static">
-            <Toolbar variant="dense">
-              <Typography variant="h6" color="white" component="div">
-                Engineer Panel
-              </Typography>
-            </Toolbar>
-          </AppBar>
-          <Grid item xs={4} md={2}>
-            <label>
-              Kp:
-            <input type="number" value={this.state.k_p} onChange={this.setKp} />
-            </label>
-          </Grid>
-          <Grid item xs={3} md={3}>
-            <label>
-              Ki:
-            <input type="number" value={this.state.k_i} onChange={this.setKi} />
-            </label>
-          </Grid>
-          <Button variant="contained" onClick={this.toggleEngineer}>
-            Toggle Engineer Panel
-          </Button>
-        </Box>
-      </ThemeProvider>
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="static">
+          <Toolbar variant="dense">
+            <Typography variant="h6" color="white" component="div">
+              Engineer Panel
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <Grid item xs={4} md={2}>
+          <label>
+            Kp:
+          <input type="number" value={this.state.k_p} onChange={this.setKp} />
+          </label>
+        </Grid>
+        <Grid item xs={3} md={3}>
+          <label>
+            Ki:
+          <input type="number" value={this.state.k_i} onChange={this.setKi} />
+          </label>
+        </Grid>
+        <Button variant="contained" onClick={this.toggleEngineer}>
+          Toggle Engineer Panel
+        </Button>
+      </Box>
     );
   }
 
@@ -385,128 +389,130 @@ class TrainControllerSW extends React.Component {
     if (this.state.engineerMode) return this.engineerPanel();
 
     return (
-      <ThemeProvider theme={darkTheme}>
+
+      <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ flexGrow: 1 }}>
-          <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
-              <Toolbar variant="dense">
-                <Typography variant="h6" color="white" component="div">
-                  Train Controller Test UI
-                </Typography>
-              </Toolbar>
-            </AppBar>
-          </Box>
-          <Grid container spacing={4}>
-            <Grid item xs={5} md={5}>
-              <Item>
-                <FormGroup>
-                  <FormControlLabel
-                    control={<Switch defaultChecked />}
-                    onClick={this.toggleAutomatic}
-                    label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
-                  />
-                </FormGroup>
-              </Item>
-            </Grid>
-            <Grid item xs={5} md={5}>
-              <Item>
-                {this.state.brakeStatus ? (
-                <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
-                  Service Brake Activated
-                </Button>
-                ) : (
-                <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
-                  Service Brake Deactivated
-                </Button>
-                )}
-              </Item>
-            </Grid>
-            <Grid item xs={6} md={4}>
-              <Item>
-                {this.state.emergencyButton ? (
-                <Button variant="contained" color="error" onClick={this.emergencyBrake}>
-                  Emergency Brake Activated
-                </Button>
-                ) : (
-                <Button variant="outlined" color="error" onClick={this.emergencyBrake}>
-                  Emergency Brake Deactivated
-                </Button>
-                )}
-              </Item>
-            </Grid>
-            <Grid item xs={4} md={2}>
-              <Item>Power: {this.state.power} kilowatts</Item>
-            </Grid>
-            <Grid item xs={3} md={3}>
-                <label>
-                  Temperature:
-                  <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
-                </label>
-            </Grid>
-            <Grid item xs={4} md={2}>
-                <label>
-                  Speed:
-                  <input type="number" value={this.state.speed} onChange={this.handleSpeedChange} />
-                </label>
-            </Grid>
-            <Grid item xs={4} md={4}>
-                <label>
-                  Commanded Speed:
-                  <input type="number" value={this.state.commandedSpeed} onChange={this.handleCommandedSpeedChange} />
-                </label>
-            </Grid>
-            <Grid item xs={4} md={2}>
-                <label>
-                  Authority:
-                  <input type="number" value={this.state.authority} onChange={this.handleAuthorityChange} />
-                </label>
-            </Grid>
-            <Grid item xs={4} md={2}>
-                <label>
-                  Suggested Speed:
-                  <input type="number" value={this.state.suggestedSpeed} onChange={this.handleSuggestedSpeedChange} />
-                </label>
-            </Grid>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
-              {this.state.brakeFailureDisplay ? (
-                <Button variant="contained" color="error" onClick={this.brakeFailure}>
-                  Brake Status: Failing
-                </Button>
-                ) : (
-                <Button variant="contained" color="success" onClick={this.brakeFailure}>
-                  Brake Status: Working
-                </Button>
-                )}
-              {this.state.engineFailureDisplay ? (
-                <Button variant="contained" color="error" onClick={this.engineFailure}>
-                  Engine Status: Failing
-                </Button>
-                ) : (
-                <Button variant="contained" color="success" onClick={this.engineFailure}>
-                  Engine Status: Working
-                </Button>
-                )}
-              {this.state.signalPickupFailureDisplay ? (
-                <Button variant="contained" color="error" onClick={this.signalPickupFailure}>
-                  Signal Pickup Status: Broken
-                </Button>
-                ) : (
-                <Button variant="contained" color="success" onClick={this.signalPickupFailure}>
-                  Signal Pickup Status: Connected
-                </Button>
-                )}
-            </Stack>
-            <Stack spacing={2} direction="row">
-              <Button variant="contained" onClick={this.toggle}>
-                Toggle Test UI
-              </Button>
-              <Button variant="contained" onClick={this.toggleEngineer}>
-                Toggle Engineer Panel
-              </Button>
-            </Stack>
-          </Grid>
+          <AppBar position="static">
+            <Toolbar variant="dense">
+              <Typography variant="h6" color="white" component="div">
+                Train Controller Test UI
+              </Typography>
+            </Toolbar>
+          </AppBar>
         </Box>
-      </ThemeProvider>
+        <Grid container spacing={4}>
+          <Grid item xs={5} md={5}>
+            <Item>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  onClick={this.toggleAutomatic}
+                  label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
+                />
+              </FormGroup>
+            </Item>
+          </Grid>
+          <Grid item xs={5} md={5}>
+            <Item>
+              {this.state.brakeStatus ? (
+              <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
+                Service Brake Activated
+              </Button>
+              ) : (
+              <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
+                Service Brake Deactivated
+              </Button>
+              )}
+            </Item>
+          </Grid>
+          <Grid item xs={6} md={4}>
+            <Item>
+              {this.state.emergencyButton ? (
+              <Button variant="contained" color="error" onClick={this.emergencyBrake}>
+                Emergency Brake Activated
+              </Button>
+              ) : (
+              <Button variant="outlined" color="error" onClick={this.emergencyBrake}>
+                Emergency Brake Deactivated
+              </Button>
+              )}
+            </Item>
+          </Grid>
+          <Grid item xs={4} md={2}>
+              <label>
+                Power:
+                <input type="number" value={this.state.power} onChange={this.handlePowerChange} />
+              </label>
+          </Grid>
+          <Grid item xs={3} md={3}>
+              <label>
+                Temperature:
+                <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
+              </label>
+          </Grid>
+          <Grid item xs={4} md={2}>
+              <label>
+                Speed:
+                <input type="number" value={this.state.speed} onChange={this.handleSpeedChange} />
+              </label>
+          </Grid>
+          <Grid item xs={4} md={4}>
+              <label>
+                Commanded Speed:
+                <input type="number" value={this.state.commandedSpeed} onChange={this.handleCommandedSpeedChange} />
+              </label>
+          </Grid>
+          <Grid item xs={4} md={2}>
+              <label>
+                Authority:
+                <input type="number" value={this.state.authority} onChange={this.handleAuthorityChange} />
+              </label>
+          </Grid>
+          <Grid item xs={4} md={2}>
+              <label>
+                Suggested Speed:
+                <input type="number" value={this.state.suggestedSpeed} onChange={this.handleSuggestedSpeedChange} />
+              </label>
+          </Grid>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
+            {this.state.brakeFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.brakeFailure}>
+                Brake Status: Failing
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.brakeFailure}>
+                Brake Status: Working
+              </Button>
+              )}
+            {this.state.engineFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.engineFailure}>
+                Engine Status: Failing
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.engineFailure}>
+                Engine Status: Working
+              </Button>
+              )}
+            {this.state.signalPickupFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.signalPickupFailure}>
+                Signal Pickup Status: Broken
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.signalPickupFailure}>
+                Signal Pickup Status: Connected
+              </Button>
+              )}
+          </Stack>
+          <Stack spacing={2} direction="row">
+            <Button variant="contained" onClick={this.toggle}>
+              Toggle Test UI
+            </Button>
+            <Button variant="contained" onClick={this.toggleEngineer}>
+              Toggle Engineer Panel
+            </Button>
+          </Stack>
+        </Grid>
+      </Box>
     );
   }
 
@@ -515,156 +521,154 @@ class TrainControllerSW extends React.Component {
     if (this.state.engineerMode) return this.engineerPanel();
 
     return (
-      <ThemeProvider theme={darkTheme}>
+      <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ flexGrow: 1 }}>
-          <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
-              <Toolbar variant="dense">
-                <Typography variant="h6" color="inherit" component="div">
-                  Train Controller UI
-                </Typography>
-              </Toolbar>
-            </AppBar>
-          </Box>
-          <Grid container spacing={4}>
-            <Grid item xs={3} md={8}>
-              <Item>
-                <FormGroup>
-                  <FormControlLabel
-                    control={<Switch defaultChecked />}
-                    label="Left Train Doors"
-                  />
-                </FormGroup>
-              </Item>
-            </Grid>
-            <Grid item xs={3} md={4}>
-              <Item>
-                <FormGroup>
-                  <FormControlLabel
-                    control={<Switch defaultChecked />}
-                    label="Right Train Doors"
-                  />
-                </FormGroup>
-              </Item>
-            </Grid>
-            <Grid item xs={3} md={4}>
-              <Item>
-                <FormGroup>
-                  <FormControlLabel
-                    control={<Switch defaultChecked />}
-                    label="Cabin Lights"
-                  />
-                </FormGroup>
-              </Item>
-            </Grid>
-            <Grid item xs={3} md={8}>
-              <Item>
-                <FormGroup>
-                  <FormControlLabel
-                    control={<Switch defaultChecked />}
-                    label="Train Lights"
-                  />
-                </FormGroup>
-              </Item>
-            </Grid>
-            <Grid item xs={5} md={5}>
-              <Item>
-                <FormGroup>
-                  <FormControlLabel
-                    control={<Switch defaultChecked />}
-                    onClick={this.toggleAutomatic}
-                    label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
-                  />
-                </FormGroup>
-              </Item>
-            </Grid>
-            <Grid item xs={6} md={8}>
-              <Item>
-                {this.state.emergencyButton ? (
-                <Button variant="contained" color="error" onClick={this.emergencyBrake}>
-                  Emergency Brake Activated
-                </Button>
-                ) : (
-                <Button variant="outlined" color="error" onClick={this.emergencyBrake}>
-                  Emergency Brake Deactivated
-                </Button>
-                )}
-              </Item>
-            </Grid>
-            <Grid item xs={6} md={8}>
-              <Item>
-                {this.state.brakeStatus ? (
-                <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
-                  Service Brake Activated
-                </Button>
-                ) : (
-                <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
-                  Service Brake Deactivated
-                </Button>
-                )}
-              </Item>
-            </Grid>
-            <Grid item xs={4} md={2}>
-              <Item>Power: _ Watts</Item>
-            </Grid>
-            <Grid item xs={6} md={8}>
-              <Item>Temperature</Item>
-            </Grid>
-            <Grid item xs={4} md={2}>
-              <Item>Current Speed: _ MPH</Item>
-            </Grid>
-            <Grid item xs={4} md={2}>
-              <Item>Commanded Speed: _ MPH</Item>
-            </Grid>
-            <Grid item xs={4} md={2}>
-              <Item>Suggested Speed: _ MPH</Item>
-            </Grid>
-            <Grid item xs={4} md={2}>
-              <Item>Authority: _ Miles</Item>
-            </Grid>
-            <Grid item xs={5} md={2}>
-              <Item>Next Stop: _</Item>
-            </Grid>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
-              {this.state.brakeFailureDisplay ? (
-                <Button variant="contained" color="error" onClick={this.brakeFailure}>
-                  Brake Status: Failing
-                </Button>
-                ) : (
-                <Button variant="contained" color="success" onClick={this.brakeFailure}>
-                  Brake Status: Working
-                </Button>
-                )}
-              {this.state.engineFailureDisplay ? (
-                <Button variant="contained" color="error" onClick={this.engineFailure}>
-                  Engine Status: Failing
-                </Button>
-                ) : (
-                <Button variant="contained" color="success" onClick={this.engineFailure}>
-                  Engine Status: Working
-                </Button>
-                )}
-              {this.state.signalPickupFailureDisplay ? (
-                <Button variant="contained" color="error" onClick={this.signalPickupFailure}>
-                  Signal Pickup Status: Broken
-                </Button>
-                ) : (
-                <Button variant="contained" color="success" onClick={this.signalPickupFailure}>
-                  Signal Pickup Status: Connected
-                </Button>
-                )}
-            </Stack>
-            <Stack spacing={2} direction="row">
-              <Button variant="contained" onClick={this.toggle}>
-                Toggle Test UI
-              </Button>
-              <Button variant="contained" onClick={this.toggleEngineer}>
-                Toggle Engineer Panel
-              </Button>
-            </Stack>
-          </Grid>
+          <AppBar position="static">
+            <Toolbar variant="dense">
+              <Typography variant="h6" color="inherit" component="div">
+                Train Controller UI
+              </Typography>
+            </Toolbar>
+          </AppBar>
         </Box>
-      </ThemeProvider>
+        <Grid container spacing={4}>
+          <Grid item xs={3} md={8}>
+            <Item>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Left Train Doors"
+                />
+              </FormGroup>
+            </Item>
+          </Grid>
+          <Grid item xs={3} md={4}>
+            <Item>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Right Train Doors"
+                />
+              </FormGroup>
+            </Item>
+          </Grid>
+          <Grid item xs={3} md={4}>
+            <Item>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Cabin Lights"
+                />
+              </FormGroup>
+            </Item>
+          </Grid>
+          <Grid item xs={3} md={8}>
+            <Item>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  label="Train Lights"
+                />
+              </FormGroup>
+            </Item>
+          </Grid>
+          <Grid item xs={5} md={5}>
+            <Item>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Switch defaultChecked />}
+                  onClick={this.toggleAutomatic}
+                  label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
+                />
+              </FormGroup>
+            </Item>
+          </Grid>
+          <Grid item xs={6} md={8}>
+            <Item>
+              {this.state.emergencyButton ? (
+              <Button variant="contained" color="error" onClick={this.emergencyBrake}>
+                Emergency Brake Activated
+              </Button>
+              ) : (
+              <Button variant="outlined" color="error" onClick={this.emergencyBrake}>
+                Emergency Brake Deactivated
+              </Button>
+              )}
+            </Item>
+          </Grid>
+          <Grid item xs={6} md={8}>
+            <Item>
+              {this.state.brakeStatus ? (
+              <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
+                Service Brake Activated
+              </Button>
+              ) : (
+              <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
+                Service Brake Deactivated
+              </Button>
+              )}
+            </Item>
+          </Grid>
+          <Grid item xs={4} md={2}>
+            <Item>Power: _ Watts</Item>
+          </Grid>
+          <Grid item xs={6} md={8}>
+            <Item>Temperature</Item>
+          </Grid>
+          <Grid item xs={4} md={2}>
+            <Item>Current Speed: _ MPH</Item>
+          </Grid>
+          <Grid item xs={4} md={2}>
+            <Item>Commanded Speed: _ MPH</Item>
+          </Grid>
+          <Grid item xs={4} md={2}>
+            <Item>Suggested Speed: _ MPH</Item>
+          </Grid>
+          <Grid item xs={4} md={2}>
+            <Item>Authority: _ Miles</Item>
+          </Grid>
+          <Grid item xs={5} md={2}>
+            <Item>Next Stop: _</Item>
+          </Grid>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
+            {this.state.brakeFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.brakeFailure}>
+                Brake Status: Failing
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.brakeFailure}>
+                Brake Status: Working
+              </Button>
+              )}
+            {this.state.engineFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.engineFailure}>
+                Engine Status: Failing
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.engineFailure}>
+                Engine Status: Working
+              </Button>
+              )}
+            {this.state.signalPickupFailureDisplay ? (
+              <Button variant="contained" color="error" onClick={this.signalPickupFailure}>
+                Signal Pickup Status: Broken
+              </Button>
+              ) : (
+              <Button variant="contained" color="success" onClick={this.signalPickupFailure}>
+                Signal Pickup Status: Connected
+              </Button>
+              )}
+          </Stack>
+          <Stack spacing={2} direction="row">
+            <Button variant="contained" onClick={this.toggle}>
+              Toggle Test UI
+            </Button>
+            <Button variant="contained" onClick={this.toggleEngineer}>
+              Toggle Engineer Panel
+            </Button>
+          </Stack>
+        </Grid>
+      </Box>
     );
   }
 }
