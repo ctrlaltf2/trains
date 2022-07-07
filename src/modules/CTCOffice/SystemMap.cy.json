@@ -1,0 +1,88 @@
+{
+  "base": [
+    {
+      "selector": "node",
+      "style": {
+        "background-color": "white",
+        "color": "#fff",
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "selector": "edge",
+      "style": {
+        "width": 10,
+        "font-size": 12,
+        "content": "data(block_name)",
+        "curve-style": "straight",
+        "haystack-radius": 0,
+        "target-arrow-shape": "triangle",
+        "arrow-scale": 0.7
+      }
+    },
+    {
+      "selector": "node[node_name]",
+      "style": {
+        "content": "data(node_name)"
+      }
+    },
+    {
+      "selector": ".occupied",
+      "style": {
+        "line-color": "white",
+        "target-arrow-color": "white"
+      }
+    },
+    {
+      "selector": "edge.not-path",
+      "style": {
+        "z-index": 0,
+        "opacity": 0.1
+      }
+    },
+    {
+      "selector": "node.not-path",
+      "style": {
+        "z-index": 0,
+        "opacity": 0.333
+      }
+    },
+    {
+      "selector": "edge.path",
+      "style": {
+        "z-index": 0,
+        "opacity": 0.666
+      }
+    },
+    {
+      "selector": "core",
+      "style": {
+        "active-bg-color": "#fff",
+        "active-bg-opacity": 0.333
+      }
+    },
+    {
+      "selector": "node[?switch]",
+      "style": {
+        "shape": "triangle"
+      }
+    },
+    {
+      "selector": "node[node_name = 'Yard']",
+      "style": {
+        "shape": "rectangle"
+      }
+    }
+  ],
+  "blue_line": [
+    {
+      "selector": "edge[^.occupied]",
+      "style": {
+        "line-color": "#283593",
+        "color": "#fff",
+        "target-arrow-color": "#283593"
+      }
+    }
+  ]
+}
