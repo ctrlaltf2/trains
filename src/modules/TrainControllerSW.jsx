@@ -14,10 +14,16 @@ import {
   Typography,
   Toolbar,
   TextField,
+  createTheme,
+  ThemeProvider,
 } from '@mui/material';
 import { type } from 'os';
 
-
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
   ...theme.typography.body2,
@@ -25,11 +31,7 @@ const Item = styled(Paper)(({ theme }) => ({
   textAlign: 'center',
   color: theme.palette.text.secondary,
 }));
-function preventHorizontalKeyboardNavigation(event) {
-  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-    event.preventDefault();
-  }
-}
+
 // max train speed: 70 km/h ~= 43 MPH
 // service brake deceleration 1.2m/s^2
 // emergency brake deceleration 2.73 m/s^2
@@ -99,7 +101,6 @@ class TrainControllerSW extends React.Component {
     this.handleCommandedSpeedChange = this.handleCommandedSpeedChange.bind(this);
     this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
     this.handleTemperatureChange = this.handleTemperatureChange.bind(this);
-    this.handlePowerChange = this.handlePowerChange.bind(this);
     this.handleSuggestedSpeedChange = this.handleSuggestedSpeedChange.bind(this);
     this.setKp = this.setKp.bind(this);
     this.setKi = this.setKi.bind(this);
@@ -203,8 +204,6 @@ class TrainControllerSW extends React.Component {
       this.setState({acceleration: this.state.decelerationSBrake});
     }
 
-    console.log(this.state.acceleration);
-
     // Calculate Velocity in meters per sec
     this.setState({calVelocity: this.state.velocity + (this.state.T/2)*(this.state.acceleration+this.state.prevAcceleration)})
 
@@ -275,17 +274,23 @@ class TrainControllerSW extends React.Component {
     }
   }
 
-  handlePowerChange(event) {
-    this.setState({power: event.target.value});
-  }
-
   // Engineer Functions
   setKp(event){
-    this.setState({k_p: event.target.value});
+    if(event.target.value < 0){
+      this.setState({k_p: 0});
+    }
+    else{
+      this.setState({k_p: event.target.value});
+    }
   }
 
   setKi(event){
-    this.setState({k_i: event.target.value});
+    if(event.target.value < 0){
+      this.setState({k_i: 0});
+    }
+    else{
+      this.setState({k_i: event.target.value});
+    }
   }
 
   toggleAutomatic(){ // Toggles between automatic mode and manual mode
@@ -339,16 +344,16 @@ class TrainControllerSW extends React.Component {
   calculatePower(){ // Function that calculates the current power of the train
 
     // If P_cmd < P_max, use this equation
-    if (this.state.powerCMD < this.state.maxPower){
+    if (this.state.power < this.state.maxPower){
       this.setState((prevState) => ({
-        power: (prevState.power + (this.state.T/2000)*(this.state.setSpeed + this.state.currentSpeed)),
+        u_k: (prevState.u_k + (this.state.T/2000)*(this.state.setSpeed + this.state.currentSpeed)),
       }));
     }
 
     // If P_cmd >= P_max, use this equation
-    else if (this.state.powerCMD >= this.state.maxPower){
+    else if (this.state.power >= this.state.maxPower){
       this.setState((prevState) => ({
-        power: prevState.power,
+        u_k: prevState.u_k,
       }));
     }
 
@@ -358,6 +363,7 @@ class TrainControllerSW extends React.Component {
 
   engineerPanel(){
     return (
+      <ThemeProvider theme={darkTheme}>
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static">
           <Toolbar variant="dense">
@@ -382,6 +388,7 @@ class TrainControllerSW extends React.Component {
           Toggle Engineer Panel
         </Button>
       </Box>
+      </ThemeProvider>
     );
   }
 
@@ -389,7 +396,7 @@ class TrainControllerSW extends React.Component {
     if (this.state.engineerMode) return this.engineerPanel();
 
     return (
-
+      <ThemeProvider theme={darkTheme}>
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ flexGrow: 1 }}>
           <AppBar position="static">
@@ -439,10 +446,7 @@ class TrainControllerSW extends React.Component {
             </Item>
           </Grid>
           <Grid item xs={4} md={2}>
-              <label>
-                Power:
-                <input type="number" value={this.state.power} onChange={this.handlePowerChange} />
-              </label>
+            <Item>Power: {this.state.power} kilowatts</Item>
           </Grid>
           <Grid item xs={3} md={3}>
               <label>
@@ -513,6 +517,7 @@ class TrainControllerSW extends React.Component {
           </Stack>
         </Grid>
       </Box>
+      </ThemeProvider>
     );
   }
 
@@ -521,6 +526,7 @@ class TrainControllerSW extends React.Component {
     if (this.state.engineerMode) return this.engineerPanel();
 
     return (
+      <ThemeProvider theme={darkTheme}>
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ flexGrow: 1 }}>
           <AppBar position="static">
@@ -669,6 +675,7 @@ class TrainControllerSW extends React.Component {
           </Stack>
         </Grid>
       </Box>
+      </ThemeProvider>
     );
   }
 }
