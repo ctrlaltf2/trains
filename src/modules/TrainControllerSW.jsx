@@ -41,14 +41,24 @@ class TrainControllerSW extends React.Component {
     this.name = name;
 
     this.state = {
+      // UIs
       testMode: false,
       engineerMode: false,
+
+      // Doors and Lights
+      leftDoors: true,
+      rightDoors: true,
+      trainLights: true,
+      cabinLights: true,
+
+      // Service Brake, Emergency Brake, and failure toggles
       emergencyButton: false,
       brakeFailureDisplay: false,
       engineFailureDisplay: false,
       signalPickupFailureDisplay: false,
       automaticMode: true,
       brakeStatus: false,
+
       commandedSpeed: 0,
       suggestedSpeed: 0,
       temperature: 70,
@@ -87,6 +97,10 @@ class TrainControllerSW extends React.Component {
     this.toggleAutomatic = this.toggleAutomatic.bind(this);
     this.emergencyBrake = this.emergencyBrake.bind(this);
     this.toggleServiceBrake = this.toggleServiceBrake.bind(this);
+    this.openLeftDoors = this.openLeftDoors.bind(this);
+    this.openRightDoors = this.openRightDoors.bind(this);
+    this.trainLightsOnOff = this.trainLightsOnOff.bind(this);
+    this.cabinLightsOnOff = this.cabinLightsOnOff.bind(this);
 
     // Failures
     this.brakeFailure = this.brakeFailure.bind(this);
@@ -323,6 +337,30 @@ class TrainControllerSW extends React.Component {
     }));
   }
 
+  openLeftDoors(){ // Toggles the left doors
+    this.setState((prevState) => ({
+      leftDoors: !prevState.leftDoors,
+    }));
+  }
+
+  openRightDoors(){ // Toggles the right doors
+    this.setState((prevState) => ({
+      rightDoors: !prevState.rightDoors,
+    }));
+  }
+
+  trainLightsOnOff(){ // Toggles the exterior train lights on/off
+    this.setState((prevState) => ({
+      trainLights: !prevState.trainLights,
+    }));
+  }
+
+  cabinLightsOnOff(){ // Toggles the interior train lights on/off
+    this.setState((prevState) => ({
+      cabinLights: !prevState.cabinLights,
+    }));
+  }
+
   emergencyBrake(){ // Toggles the emergency brake in the Test UI
     this.setState((prevState) => ({
       emergencyButton: !prevState.emergencyButton,
@@ -549,7 +587,8 @@ class TrainControllerSW extends React.Component {
               <FormGroup>
                 <FormControlLabel
                   control={<Switch defaultChecked />}
-                  label="Left Train Doors"
+                  onClick={this.openLeftDoors}
+                  label={this.state.leftDoors ? "Left Doors: Closed" : "Left Doors: Open"}
                 />
               </FormGroup>
             </Item>
@@ -559,7 +598,8 @@ class TrainControllerSW extends React.Component {
               <FormGroup>
                 <FormControlLabel
                   control={<Switch defaultChecked />}
-                  label="Right Train Doors"
+                  onClick={this.openRightDoors}
+                  label={this.state.rightDoors ? "Right Doors: Closed" : "Right Doors: Open"}
                 />
               </FormGroup>
             </Item>
@@ -569,7 +609,8 @@ class TrainControllerSW extends React.Component {
               <FormGroup>
                 <FormControlLabel
                   control={<Switch defaultChecked />}
-                  label="Cabin Lights"
+                  onClick={this.trainLightsOnOff}
+                  label={this.state.trainLights ? "Train Lights: On" : "Train Lights: Off"}
                 />
               </FormGroup>
             </Item>
@@ -579,7 +620,8 @@ class TrainControllerSW extends React.Component {
               <FormGroup>
                 <FormControlLabel
                   control={<Switch defaultChecked />}
-                  label="Train Lights"
+                  onClick={this.cabinLightsOnOff}
+                  label={this.state.cabinLights ? "Cabin Lights: On" : "Cabin Lights: Off"}
                 />
               </FormGroup>
             </Item>
