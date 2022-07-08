@@ -69,7 +69,7 @@ class TrainControllerSW extends React.Component {
       k_p: 10000, // Proportional Gain
       k_i: 0, // Integral Gain
       T: 0, // Represents the sample period of the train model
-      setSpeed: 30, // Speed set by the driver: the speech you want to approach
+      setSpeed: 0, // Speed set by the driver: the speech you want to approach
       currentSpeed: 0, // The current speed of the train, also known as currentVelocity
     };
 
@@ -230,11 +230,11 @@ class TrainControllerSW extends React.Component {
     // 43 represents top speed of train in MPH
     if(event.target.value > 43)
     {
-      this.setState({currentSpeed: 43});
+      this.setState({commandedSpeed: 43});
     }
     else if (event.target.value < 0)
     {
-      this.setState({currentSpeed: 0});
+      this.setState({commandedSpeed: 0});
     }
     else{
       this.setState({commandedSpeed: event.target.value});
@@ -249,6 +249,9 @@ class TrainControllerSW extends React.Component {
     else if (event.target.value < 0)
     {
       this.setState({suggestedSpeed: 0});
+    }
+    else if (event.target.value > this.state.commandedSpeed){
+      this.setState({suggestedSpeed: this.state.commandedSpeed});
     }
     else{
       this.setState({suggestedSpeed: event.target.value});
