@@ -49,33 +49,28 @@ class TrainControllerSW extends React.Component {
       signalPickupFailureDisplay: false,
       automaticMode: true,
       brakeStatus: false,
-      speed: 0,
       commandedSpeed: 0,
       suggestedSpeed: 0,
       temperature: 70,
       authority: 10,
 
       //Power & Velocity Variables
-      power: 120, // power is in kilowatts
-      powerCMD: 0, // Power command
+      power: 70, // power is in kilowatts
       maxPower: 120, // Max power of the train is 120 kilowatts
       force: 0,
       acceleration: 0,
       prevAcceleration: 0, // previous acceleration of the train
-      velocity: 0,
-      calVelocity: 0, // the calculated velocity in m/s
+      //calVelocity: 0, // the calculated velocity in m/s
       friction: 0,
       totalMass: 0,
-      trainMass: 0,
-      passengerMass: 0,
-      passengers: 0,
+      passengers: 8,
       blockSlope: 0,
       u_k: 0,
       k_p: 10000, // Proportional Gain
       k_i: 0, // Integral Gain
       T: 0, // Represents the sample period of the train model
-      setSpeed: 0, // Speed set by the driver: the speech you want to approach
-      currentSpeed: 0, // The current speed of the train
+      setSpeed: 30, // Speed set by the driver: the speech you want to approach
+      currentSpeed: 0, // The current speed of the train, also known as currentVelocity
     };
 
     // Initializing constant variables
@@ -83,6 +78,8 @@ class TrainControllerSW extends React.Component {
     this.decelerationEBrake = -2.73; // deceleration of the emergency brake
     this.decelerationSBrake = -1.2; // deceleration of the service brake
     this.gravity = -9.8;
+    this.trainMass = 40900; // mass of train in kilograms (40.9 tons)
+    this.passengerMass = 80; // mass of 1 passenger in kilograms (per Profeta's words)
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
@@ -114,28 +111,30 @@ class TrainControllerSW extends React.Component {
 
         // If there's a brake failure, decrease the speed and stop
         if (this.state.brakeFailureDisplay){
-          if(this.state.speed == 0){
-            this.setState({speed: 0});
+          if(this.state.currentSpeed == 0){
+            this.setState({currentSpeed: 0});
           }
           else{
-            // TODO
+          //  this.handleSpeedChange(this.state.currentSpeed);
+          //  this.calculatePower();
           }
         }
 
         // If there's an engine failure, decrease the speed and stop
         else if (this.state.engineFailureDisplay){
-          if(this.state.speed == 0){
-            this.setState({speed: 0});
+          if(this.state.currentSpeed == 0){
+            this.setState({currentSpeed: 0});
           }
           else{
-            // TODO
+           // this.handleSpeedChange(this.state.currentSpeed);
+          //  this.calculatePower();
           }
         }
 
         // If there's a signal pickup failure, decrease the speed and stop
         else if (this.state.signalPickupFailureDisplay){
-          if(this.state.speed == 0){
-            this.setState({speed: 0});
+          if(this.state.currentSpeed == 0){
+            this.setState({currentSpeed: 0});
           }
           else{
             // TODO
@@ -143,23 +142,23 @@ class TrainControllerSW extends React.Component {
         }
         else{
           if(!this.state.brakeFailureDisplay){
-            this.setState({speed: this.state.commandedSpeed});
+            this.setState({currentSpeed: this.state.commandedSpeed});
           }
           if(!this.state.engineFailureDisplay){
-            this.setState({speed: this.state.commandedSpeed});
+            this.setState({currentSpeed: this.state.commandedSpeed});
           }
           if(!this.state.signalPickupFailureDisplay){
-            this.setState({speed: this.state.commandedSpeed});
+            this.setState({currentSpeed: this.state.commandedSpeed});
           }
         }
       }
 
       // Manual Mode
       else{
-        if(this.state.brakeStatus && this.state.speed != 0){
+        if(this.state.brakeStatus && this.state.currentSpeed != 0){
           // TODO
         }
-        else if(this.state.emergencyButton && (this.state.speed != 0)){
+        else if(this.state.emergencyButton && (this.state.currentSpeed != 0)){
           // TODO
         }
       }
@@ -167,13 +166,17 @@ class TrainControllerSW extends React.Component {
   }
   handleSpeedChange(event) {
     // event.target.value represents the inputted speed
-    this.setState({velocity: event.target.value});
-    if(this.state.velocity == 0){
+    this.setState({currentSpeed: event.target.value});
+
+    // Calculate mass
+    this.setState({totalMass: this.trainMass + (this.passengerMass*this.state.passengers)});
+
+    if(this.state.currentSpeed == 0){
       this.setState({force: 0});
     }
     else{
        // Calculate force of the train
-      this.setState({force: (this.state.power / this.state.velocity)});
+      this.setState({force: (this.state.power / this.state.currentSpeed)});
 
       //Calculate force in the opposite direction based on slope of the track
       this.setState((prevState) => ({
@@ -181,15 +184,15 @@ class TrainControllerSW extends React.Component {
       }));
 
       this.setState((prevState) => ({
-        force: prevState.force - (0.01*this.state.mass*gravity),
+        force: prevState.force - (0.01*this.state.totalMass*this.gravity),
       }));
     }
 
     // Calculate acceleration of the train
     this.setState({prevAcceleration: this.state.acceleration});
     this.setState({acceleration: this.state.force/this.state.totalMass});
-    if(this.state.acceleration > accelerationLim){
-      this.setState({acceleration: accelerationLim});
+    if(this.state.acceleration > this.accelerationLim){
+      this.setState({acceleration: this.accelerationLim});
     }
 
     // If the emergency brake is activated and there isn't a
@@ -205,20 +208,20 @@ class TrainControllerSW extends React.Component {
     }
 
     // Calculate Velocity in meters per sec
-    this.setState({calVelocity: this.state.velocity + (this.state.T/2)*(this.state.acceleration+this.state.prevAcceleration)})
+    this.setState({setSpeed: this.state.currentSpeed + (this.state.T/2000)*(this.state.acceleration+this.state.prevAcceleration)})
 
     // Check if speed is higher than speed limit, then set speed to speed limit
-    if(this.state.calVelocity > this.state.commandedSpeed){
-      this.setState({velocity: this.state.commandedSpeed});
+    if(this.state.setSpeed > this.state.commandedSpeed){
+      this.setState({currentSpeed: this.state.commandedSpeed});
     }
     else{
-      this.setState({velocity: this.state.calVelocity});
+      this.setState({currentSpeed: this.state.setSpeed});
     }
 
-    if(this.state.velocity < 0){
-      this.setState({velocity: 0});
+    if(this.state.currentSpeed < 0){
+      this.setState({currentSpeed: 0});
     }
-    if(this.state.velocity == 0 && this.state.acceleration < 0){
+    if(this.state.currentSpeed == 0 && this.state.acceleration < 0){
       this.setState({acceleration: 0});
     }
   }
@@ -227,11 +230,11 @@ class TrainControllerSW extends React.Component {
     // 43 represents top speed of train in MPH
     if(event.target.value > 43)
     {
-      this.setState({speed: 43});
+      this.setState({currentSpeed: 43});
     }
     else if (event.target.value < 0)
     {
-      this.setState({speed: 0});
+      this.setState({currentSpeed: 0});
     }
     else{
       this.setState({commandedSpeed: event.target.value});
@@ -358,7 +361,7 @@ class TrainControllerSW extends React.Component {
     }
 
     // Final Power Calculation
-    this.setState({power: ((this.state.k_p*this.state.setSpeed)+(this.state.k_i*this.state.u_k))})
+    this.setState({power: ((this.state.k_p*this.state.setSpeed)+(this.state.k_i*this.state.u_k))});
   }
 
   engineerPanel(){
@@ -456,8 +459,8 @@ class TrainControllerSW extends React.Component {
           </Grid>
           <Grid item xs={4} md={2}>
               <label>
-                Speed:
-                <input type="number" value={this.state.speed} onChange={this.handleSpeedChange} />
+                Current Speed:
+                <input type="number" value={this.state.currentSpeed} onChange={this.handleSpeedChange} />
               </label>
           </Grid>
           <Grid item xs={4} md={4}>
