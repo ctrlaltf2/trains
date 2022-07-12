@@ -62,24 +62,25 @@ class TrackController extends React.Component {
     const res = this.track.blocks;
     console.log(res);
 
-    this.PLCReader = new PLCReader(ba, 'green')
+    this.PLCReader = new PLCReader(ba, 'green');
+    this.PLCReader.parse();
 
     // const sections = [];
 
 
     //   });
-    }
+
 
     this.state = {
       testMode: false,
-      blocks,
+      blocks: this.track.blocks,
       maintenanceMode: false,
-      currBlock: blocks[0],
+      currBlock: this.track.blocks[0],
       appState: false,
       direction: true,
       trackLine: 'blue',
-      currSection: sections[0],
-      sections,
+      currSection: this.track.blocks[0].section,
+      sections: ['A', 'B', 'C'],
       selectedPLC: '',
       schedule: parseInt(0),
       // inputFile: useRef(null),
