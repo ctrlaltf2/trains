@@ -55,7 +55,7 @@ class TrainControllerSW extends React.Component {
       temperature: 70,
       authority: 10,
 
-      //Power & Velocity Variables
+      // Power & Velocity Variables
       power: 120, // power is in kilowatts
       powerCMD: 0, // Power command
       maxPower: 120, // Max power of the train is 120 kilowatts
@@ -155,16 +155,15 @@ class TrainControllerSW extends React.Component {
       }
 
       // Manual Mode
-      else{
-        if(this.state.brakeStatus && this.state.speed != 0){
+      else if(this.state.brakeStatus && this.state.speed != 0){
           // TODO
         }
         else if(this.state.emergencyButton && (this.state.speed != 0)){
           // TODO
         }
-      }
     },1000);
   }
+
   handleSpeedChange(event) {
     // event.target.value represents the inputted speed
     this.setState({velocity: event.target.value});
@@ -175,7 +174,7 @@ class TrainControllerSW extends React.Component {
        // Calculate force of the train
       this.setState({force: (this.state.power / this.state.velocity)});
 
-      //Calculate force in the opposite direction based on slope of the track
+      // Calculate force in the opposite direction based on slope of the track
       this.setState((prevState) => ({
         force: prevState.force - (this.state.friction*this.state.totalMass*this.gravity*Math.sin(this.state.blockSlope)),
       }));

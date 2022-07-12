@@ -23,6 +23,8 @@ export class Track {
         )
       );
     }
+
+    this.setInfrastructure();
   }
 
   /*
@@ -31,13 +33,13 @@ export class Track {
    */
   setInfrastructure() {
     for (let i = 0; i < this.blocks.length; i++) {
-      if (this.blocks[i].infrastructure.includes('Switch')) {
+      if (this.blocks[i].infrastructure.includes('SWITCH')) {
         // low and high switch positions
         const low = parseInt(
-          this.blocks[i].infrastructure.split('=')[1].split(',')[0]
+          this.blocks[i].infrastructure.split('(')[1].split(';')[0].split('-')[1]
         );
         const high = parseInt(
-          this.blocks[i].infrastructure.split('=')[1].split(',')[1]
+          this.blocks[i].infrastructure.split('(')[1].split(';')[1].split('-')[1]
         );
 
         // Set block to switch block
