@@ -45,11 +45,14 @@ class TrainControllerSW extends React.Component {
       testMode: false,
       engineerMode: false,
 
-      // Doors and Lights
+      // Doors and Lights, as well as environment variables affecting them
       leftDoors: true,
       rightDoors: true,
       trainLights: true,
       cabinLights: true,
+      under: false, // Variable for if the train is underground
+      rightPlatform: false, // Used to check if right doors should open
+      leftPlatform: false, // Used to check if left doors should open
 
       // Service Brake, Emergency Brake, and failure toggles
       emergencyButton: false,
@@ -75,12 +78,15 @@ class TrainControllerSW extends React.Component {
       totalMass: 0,
       passengers: 8,
       blockSlope: 0,
-      u_k: 0,
+      cumulative_err: 0, // also known as u_k
+      error_k: 0,
+      error_kprev: 0,
       k_p: 10000, // Proportional Gain
       k_i: 0, // Integral Gain
       T: 0, // Represents the sample period of the train model
       setSpeed: 0, // Speed set by the driver: the speech you want to approach
       currentSpeed: 0, // The current speed of the train, also known as currentVelocity
+
     };
 
     // Initializing constant variables
@@ -102,6 +108,10 @@ class TrainControllerSW extends React.Component {
     this.trainLightsOnOff = this.trainLightsOnOff.bind(this);
     this.cabinLightsOnOff = this.cabinLightsOnOff.bind(this);
 
+    // Environment funcitons
+    this.underground = this.underground.bind(this);
+    this.platformSide = this.platformSide.bind(this);
+
     // Failures
     this.brakeFailure = this.brakeFailure.bind(this);
     this.engineFailure = this.engineFailure.bind(this);
@@ -115,9 +125,13 @@ class TrainControllerSW extends React.Component {
     this.handleSuggestedSpeedChange = this.handleSuggestedSpeedChange.bind(this);
     this.setKp = this.setKp.bind(this);
     this.setKi = this.setKi.bind(this);
+
+    //  Conversion functions
+    this.meters_to_miles = this.meters_to_miles.bind(this);
+    this.miles_to_meters = this.miles_to_meters.bind(this);
   };
 
-  componentDidMount(){
+  componentDidMount(){ // This acts as the Main program - where the functions are called
     const interval = setInterval(() => {
 
       // Automatic Mode
@@ -197,9 +211,9 @@ class TrainControllerSW extends React.Component {
         force: prevState.force - (this.state.friction*this.state.totalMass*this.gravity*Math.sin(this.state.blockSlope)),
       }));
 
-      this.setState((prevState) => ({
-        force: prevState.force - (0.01*this.state.totalMass*this.gravity),
-      }));
+      // this.setState((prevState) => ({
+      //   force: prevState.force - (0.01*this.state.totalMass*this.gravity),
+      // }));
     }
 
     // Calculate acceleration of the train
@@ -313,6 +327,37 @@ class TrainControllerSW extends React.Component {
     }
   }
 
+  // Conversion functions
+  // Speed comes from Train Model calculation
+
+  meters_to_miles(speed){ // 1 m/s = approx. 2.2369 mph
+    return (speed * 2.2369)
+  }
+
+  miles_to_meters(speed){
+    return (speed / 2.2369)
+  }
+
+  underground(){ // Checks if the train is underground, activates lights accordingly
+    if(this.under && this.automaticMode){
+      this.setState({trainLights: true});
+    }
+    else{
+      this.setState({trainLights: false});
+    }
+  }
+
+  platformSide(){ // Checks which side the station is on and opens the respective doors
+    if(this.automaticMode == true && this.currentSpeed == 0 && this.rightPlatform == true){
+      this.setState({rightDoors: true});
+      this.setState({leftDoors: false});
+    }
+    else if (this.automaticMode = true && this.currentSpeed == 0 && this.leftPlatform == true){
+      this.setState({leftDoors: true});
+      this.setState({rightDoors: false});
+    }
+  }
+
   toggleAutomatic(){ // Toggles between automatic mode and manual mode
     this.setState((prevState) => ({
       automaticMode: !prevState.automaticMode,
@@ -390,19 +435,19 @@ class TrainControllerSW extends React.Component {
     // If P_cmd < P_max, use this equation
     if (this.state.power < this.state.maxPower){
       this.setState((prevState) => ({
-        u_k: (prevState.u_k + (this.state.T/2000)*(this.state.setSpeed + this.state.currentSpeed)),
+        cumulative_err: (prevState.cumulative_err + (this.state.T/2000)*(this.state.error_k + this.state.error_kprev)),
       }));
     }
 
     // If P_cmd >= P_max, use this equation
     else if (this.state.power >= this.state.maxPower){
       this.setState((prevState) => ({
-        u_k: prevState.u_k,
+        cumulative_err: prevState.cumulative_err,
       }));
     }
 
     // Final Power Calculation
-    this.setState({power: ((this.state.k_p*this.state.setSpeed)+(this.state.k_i*this.state.u_k))});
+    this.setState({power: ((this.state.k_p*this.state.error_k)+(this.state.k_i*this.state.cumulative_err))});
   }
 
   engineerPanel(){
@@ -666,8 +711,11 @@ class TrainControllerSW extends React.Component {
           <Grid item xs={4} md={2}>
             <Item>Power: _ Watts</Item>
           </Grid>
-          <Grid item xs={6} md={8}>
-            <Item>Temperature</Item>
+          <Grid item xs={3} md={3}>
+              <label>
+                Temperature:
+                <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
+              </label>
           </Grid>
           <Grid item xs={4} md={2}>
             <Item>Current Speed: _ MPH</Item>
