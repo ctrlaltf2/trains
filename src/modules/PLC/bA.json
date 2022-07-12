@@ -7,20 +7,22 @@
   },
   {
     "command": "cross",
-    "currO": "true"
+    "arg1": "currO"
   },
   {
     "command": "red",
-    "nextO": "true"
+    "arg1": "nextO"
   },
   {
     "command": "yellow",
-    "nextnextO": "true",
-    "nextO": "false"
+    "arg1": "nextnextO",
+    "op1": "&&",
+    "arg2": "!nextO"
   },
   {
     "command": "green",
-    "nextnextO": "false",
-    "nextO": "false"
+    "arg1": "!nextnextO",
+    "op1": "&&",
+    "arg2": "!nextO"
   }
 ]
