@@ -1,11 +1,11 @@
 export class PLCReader {
   public file: JSON;
-  public switchLogic: [];
-  public crossingLogic: [];
-  public redLogic: [];
-  public yellowLogic: [];
-  public greenLogic: [];
-  public authorityLogic: [];
+  public switchLogic= [];
+  public crossingLogic= [];
+  public redLogic = [];
+  public yellowLogic = [];
+  public greenLogic= [];
+  public authorityLogic= [];
   public line: string;
 
   constructor(file: JSON, line: string) {
@@ -27,6 +27,7 @@ export class PLCReader {
         let arg = `arg${String(i)}`;
         let op = `op${String(i)}`;
         while (true) {
+
           if (this.file[key].hasOwnProperty(arg)) {
             this.switchLogic.push(this.file[key][arg]);
           }
@@ -39,8 +40,6 @@ export class PLCReader {
           op = `op${String(i)}`;
           arg = `arg${String(i)}`;
         }
-
-        console.log('logic' + switchLogic);
       }
       /*
        *  crossing logic
