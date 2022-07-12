@@ -27,12 +27,14 @@ import {
 import { JoinLeft } from '@mui/icons-material';
 import { isNullOrUndefined } from 'util';
 import { Track } from './TrackComponents/Track';
+import { PLCReader } from './PLCReader';
 import blueJSON from './TrackComponents/TrackJSON/blue.json';
 
-import blueLine from './PLC/blue.json';
+import blueLine from './TrackComponents/TrackJSON/blue.json';
 import blueA from './PLC/blueA.json';
 import blueB from './PLC/blueB.json';
 import blueC from './PLC/blueC.json';
+import ba from './PLC/bA.json';
 
 import './TrackController.css';
 
@@ -53,86 +55,19 @@ class TrackController extends React.Component {
     super(props);
     this.name = name;
 
+    // Testing sub classes
     this.track = new Track('blue');
     this.track.loadTrack(blueJSON);
     this.track.setInfrastructure();
     const res = this.track.blocks;
     console.log(res);
 
-    // Bad practice, should be seperate block class --- will rework later
-    const blocks = [];
-    const sections = [];
+    this.PLCReader = new PLCReader(ba, 'green')
 
-    for (const key in blueLine) {
-      if (
-        sections.filter((section) => section.id === blueLine[key].Section)
-          .length === 0
-      ) {
-        sections.push({
-          id: blueLine[key].Section,
-          direction: true,
-          plc: false,
-        });
-      }
-      blocks.push({
-        id: blueLine[key]['Block Number'],
-        section: blueLine[key].Section,
-        transitLight: 'green',
-        transitLight2: 'green',
-        suggSpeed: 0,
-        speedLimit: blueLine[key].SpeedLimit,
-        authority: false,
-        crossing: false,
-        // direction: true, // true is forward, false backward
-        occupancy: false,
-        nextOccupancy: false,
-        schedule: false,
-        switchPosition: blueLine[key].switch,
-        SWTrue: {
-          block: null,
-          arg1: null,
-          logical: null,
-          block2: null,
-          arg2: null,
-          dest: null,
-        },
-        SWFalse: {
-          block: null,
-          arg1: null,
-          logical: null,
-          block2: null,
-          arg2: null,
-          dest: null,
-        },
-        lightRule: {
-          switch: null,
-          block: null,
-          arg1: null,
-          logical: null,
-          block2: null,
-          arg2: null,
-        },
-        lightRuleY: {
-          block: null,
-          arg1: null,
-          logical: null,
-          block2: null,
-          arg2: null,
-        },
-        lightRuleR: {
-          block: null,
-          arg1: null,
-          logical: null,
-          block2: null,
-          arg2: null,
-        },
+    // const sections = [];
 
-        engineFailure: false,
-        lightFailure: false,
-        brakeFailure: false,
-        signalFailure: false,
-        railFailure: false,
-      });
+
+    //   });
     }
 
     this.state = {
@@ -394,47 +329,6 @@ class TrackController extends React.Component {
       }));
       console.log('Blocks up to date');
     }, 5000);
-  }
-
-  /*
-   *
-   * Function not used rn
-   *
-   */
-  setLight() {
-    // Light 1
-    for (let i = 0; i < this.state.blocks.length - 2; i++) {
-      if (this.state.blocks[i].occupancy === true) {
-        this.state.blocks[i].transitLight = 'red';
-      } else if (this.state.blocks[i + 1].occupancy === true) {
-        this.state.blocks[i].transitLight = 'yellow';
-      } else {
-        this.state.blocks[i].transitLight = 'green';
-      }
-    }
-
-    if (this.state.blocks[this.state.blocks.length].occupancy === true) {
-      this.state.blocks[this.state.blocks.length].transitLight = 'red';
-    } else {
-      this.state.blocks[this.state.blocks.length].transitLight = 'green';
-    }
-
-    // Light 2
-    for (let i = 2; i < this.state.blocks.length; i++) {
-      if (this.state.blocks[i - 1].occupancy === true) {
-        this.state.blocks[i].transitLight2 = 'red';
-      } else if (this.state.blocks[i - 2].occupancy === true) {
-        this.state.blocks[i].transitLight2 = 'yellow';
-      } else {
-        this.state.blocks[i].transitLight2 = 'green';
-      }
-    }
-
-    if (this.state.blocks[0].occupancy === true) {
-      this.state.blocks[1].transitLight2 = 'red';
-    } else {
-      this.state.blocks[1].transitLight2 = 'green';
-    }
   }
 
   reset() {
@@ -748,26 +642,13 @@ class TrackController extends React.Component {
               <Grid item xs>
                 <div className="right">
                   <Chip
-                    label="Light Forward"
+                    label="Light"
                     color={
                       this.state.currBlock.transitLight === 'green'
                         ? 'success'
                         : this.state.currBlock.transitLight === 'yellow'
                         ? 'warning'
                         : this.state.currBlock.transitLight === 'red'
-                        ? 'error'
-                        : 'default'
-                    }
-                    variant="filled"
-                  />
-                  <Chip
-                    label="Light Backward"
-                    color={
-                      this.state.currBlock.transitLight2 === 'green'
-                        ? 'success'
-                        : this.state.currBlock.transitLight2 === 'yellow'
-                        ? 'warning'
-                        : this.state.currBlock.transitLight2 === 'red'
                         ? 'error'
                         : 'default'
                     }
@@ -1162,7 +1043,7 @@ class TrackController extends React.Component {
               <Grid item xs>
                 <div className="right">
                   <Chip
-                    label="Light Forward"
+                    label="Transit Light"
                     color={
                       this.state.currBlock.transitLight === 'green'
                         ? 'success'
@@ -1174,7 +1055,7 @@ class TrackController extends React.Component {
                     }
                     variant="filled"
                   />
-                  <Chip
+                  {/* <Chip
                     label="Light Backward"
                     color={
                       this.state.currBlock.transitLight2 === 'green'
@@ -1186,7 +1067,7 @@ class TrackController extends React.Component {
                         : 'default'
                     }
                     variant="filled"
-                  />
+                  /> */}
                 </div>
               </Grid>
             </Grid>
@@ -1326,7 +1207,7 @@ class TrackController extends React.Component {
                 </TableContainer>
               </Grid>
               <Grid item xs="auto">
-                <TableContainer>
+                {/* <TableContainer>
                   <Table
                     sx={{ minWidth: 'auto' }}
                     size="small"
@@ -1401,7 +1282,7 @@ class TrackController extends React.Component {
                       </TableRow>
                     </TableBody>
                   </Table>
-                </TableContainer>
+                </TableContainer> */}
               </Grid>
               <Grid item xs>
                 <div className="centered">
