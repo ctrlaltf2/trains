@@ -569,7 +569,13 @@ class TrackController extends React.Component {
                         <TableCell align="right">
                           {' '}
                           <Chip
-                            label={String(this.state.currBlock.crossing)}
+                            label={
+                              this.state.currBlock.crossing === false
+                                ? 'Not active'
+                                : this.state.currBlock.crossing === true
+                                ? 'Active'
+                                : 'default'
+                            }
                             color={
                               this.state.currBlock.crossing === false
                                 ? 'success'
@@ -590,7 +596,13 @@ class TrackController extends React.Component {
                         <TableCell align="right">
                           {' '}
                           <Chip
-                            label={String(this.state.currBlock.crossing)}
+                            label={
+                              this.state.currBlock.crossing === false
+                                ? 'Not active'
+                                : this.state.currBlock.crossing === true
+                                ? 'Active'
+                                : 'default'
+                            }
                             color={
                               this.state.currBlock.crossing === false
                                 ? 'success'
@@ -614,7 +626,13 @@ class TrackController extends React.Component {
                         </TableCell>
                         <TableCell align="right">
                           <Chip
-                            label={String(this.state.currBlock.occupancy)}
+                            label={
+                              this.state.currBlock.occupancy === false
+                                ? 'Not occupied'
+                                : this.state.currBlock.occupancy === true
+                                ? 'Occupied'
+                                : ''
+                            }
                             color={
                               this.state.currBlock.occupancy === false
                                 ? 'success'
@@ -886,7 +904,13 @@ class TrackController extends React.Component {
                         <TableCell component="th">Gates</TableCell>
                         <TableCell align="right">
                           <Chip
-                            label={String(this.state.currBlock.crossing)}
+                            label={
+                              this.state.currBlock.crossing === false
+                                ? 'Not active'
+                                : this.state.currBlock.crossing === true
+                                ? 'Active'
+                                : 'default'
+                            }
                             color={
                               this.state.currBlock.crossing === false
                                 ? 'success'
@@ -907,7 +931,13 @@ class TrackController extends React.Component {
                         <TableCell align="right">
                           {' '}
                           <Chip
-                            label={String(this.state.currBlock.crossing)}
+                            label={
+                              this.state.currBlock.crossing === false
+                                ? 'Not active'
+                                : this.state.currBlock.crossing === true
+                                ? 'Active'
+                                : 'default'
+                            }
                             color={
                               this.state.currBlock.crossing === false
                                 ? 'success'
@@ -924,10 +954,16 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        <TableCell component="th">Track Occupency</TableCell>
+                        <TableCell component="th">Track Occupancy</TableCell>
                         <TableCell align="right">
                           <Chip
-                            label={String(this.state.currBlock.occupancy)}
+                            label={
+                              this.state.currBlock.occupancy === false
+                                ? 'Not occupied'
+                                : this.state.currBlock.occupancy === true
+                                ? 'Occupied'
+                                : ''
+                            }
                             color={
                               this.state.currBlock.occupancy === false
                                 ? 'success'

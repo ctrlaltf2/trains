@@ -65,8 +65,12 @@ export class Track {
           this.blocks[i].createSwitch(this.blocks[i].id, low, high);
         }
       }
+      if (this.blocks[i].infrastructure.includes('CROSSING')) {
+          this.blocks[i].crossing = true;
+        }
+      }
     }
-  }
+
 
   getBlocks() {
     return this.blocks;
