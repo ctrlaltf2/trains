@@ -2,6 +2,7 @@ import { Block } from './Block';
 
 export class Track {
   public blocks: Block[] = [];
+  public sections = [];
 
   constructor(public line: string) {
     this.line = line;
@@ -9,6 +10,14 @@ export class Track {
 
   loadTrack(file: JSON) {
     for (const key in file) {
+      if (
+        this.sections.filter((section) => section === file[key].Section)
+          .length === 0
+      ) {
+        this.sections.push(
+          String(file[key].Section),
+        );
+      }
       this.blocks.push(
         new Block(
           file[key]['Block Number'],
@@ -22,9 +31,10 @@ export class Track {
           file[key].Infrastructure
         )
       );
-    }
 
-    this.setInfrastructure();
+      console.log(this.sections);
+      console.log(this.blocks);
+    }
   }
 
   /*
@@ -34,16 +44,26 @@ export class Track {
   setInfrastructure() {
     for (let i = 0; i < this.blocks.length; i++) {
       if (this.blocks[i].infrastructure.includes('SWITCH')) {
-        // low and high switch positions
-        const low = parseInt(
-          this.blocks[i].infrastructure.split('(')[1].split(';')[0].split('-')[1]
-        );
-        const high = parseInt(
-          this.blocks[i].infrastructure.split('(')[1].split(';')[1].split('-')[1]
-        );
+        if (this.blocks[i].infrastructure.includes('YARD')) {
+          this.blocks[i].createSwitch(this.blocks[i].id, 0, 0);
+        } else {
+          // low and high switch positions
+          const low = parseInt(
+            this.blocks[i].infrastructure
+              .split('(')[1]
+              .split(';')[0]
+              .split('-')[1]
+          );
+          const high = parseInt(
+            this.blocks[i].infrastructure
+              .split('(')[1]
+              .split(';')[1]
+              .split('-')[1]
+          );
 
-        // Set block to switch block
-        this.blocks[i].createSwitch(this.blocks[i].id, low, high);
+          // Set block to switch block
+          this.blocks[i].createSwitch(this.blocks[i].id, low, high);
+        }
       }
     }
   }
