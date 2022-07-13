@@ -11,7 +11,7 @@ export class Block {
   // Fields set by setter functions
   public switch?: Switch;
 
-  public occupied: boolean;
+  public occupancy: boolean;
 
   /*
    * TODO: other classes? beacon  and station
@@ -45,7 +45,7 @@ export class Block {
     this.cumElevation = cumElevation;
     this.underground = underground;
     this.crossing = crossing;
-    this.occupied = false;
+    this.occupancy = false;
 
     // Failures
     this.brokenRailFailure = false;
