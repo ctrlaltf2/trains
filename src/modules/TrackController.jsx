@@ -35,7 +35,8 @@ import blueA from './PLC/blueA.json';
 import blueB from './PLC/blueB.json';
 import blueC from './PLC/blueC.json';
 import ba from './PLC/bA.json';
-
+import greenLine from './TrackComponents/TrackJSON/VF2/green.json';
+import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 import './TrackController.css';
 
 console.log(blueA);
@@ -55,32 +56,35 @@ class TrackController extends React.Component {
     super(props);
     this.name = name;
 
-    // Testing sub classes
-    this.track = new Track('blue');
-    this.track.loadTrack(blueJSON);
-    this.track.setInfrastructure();
-    const res = this.track.blocks;
-    console.log(res);
+    this.currTrack = null;
 
+    // Testing sub classes
+    // this.trackGreen = new Track('green');
+    // this.trackGreen.loadTrack(greenLine);
+    // this.trackGreen.setInfrastructure();
+
+    this.trackRed = new Track('red');
+    this.trackRed.loadTrack(redLine);
+    this.trackRed.setInfrastructure();
+    console.log(this.trackRed.blocks);
+    // console.log(this.trackRed.sections);
+    this.currTrack = this.trackRed;
+
+    // WIP
     this.PLCReader = new PLCReader(ba, 'green');
     this.PLCReader.parse();
 
-    // const sections = [];
-
-
-    //   });
-
-
     this.state = {
       testMode: false,
-      blocks: this.track.blocks,
+      track: this.trackRed,
+      blocks: this.currTrack.blocks,
       maintenanceMode: false,
-      currBlock: this.track.blocks[0],
+      currBlock: this.currTrack.blocks[0],
       appState: false,
       direction: true,
       trackLine: 'blue',
-      currSection: this.track.blocks[0].section,
-      sections: ['A', 'B', 'C'],
+      currSection: this.currTrack.blocks[0].section,
+      sections: this.currTrack.sections,
       selectedPLC: '',
       schedule: parseInt(0),
       // inputFile: useRef(null),
@@ -104,7 +108,7 @@ class TrackController extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeSection = this.handleChangeSection.bind(this);
 
-    this.plc = this.plc.bind(this);
+    // this.plc = this.plc.bind(this);
     this.handleChangePLC = this.handleChangePLC.bind(this);
 
     this.reset = this.reset.bind(this);
@@ -114,8 +118,6 @@ class TrackController extends React.Component {
     this.railFailure = this.railFailure.bind(this);
     this.lightFailure = this.lightFailure.bind(this);
     this.signalFailure = this.signalFailure.bind(this);
-
-    // this.initializeBlocks = this.initializeBlocks.bind(this);
   }
 
   handleChangePLC(event) {
@@ -136,178 +138,12 @@ class TrackController extends React.Component {
     }
   }
 
-  plc(file) {
-    for (const key in file) {
-      if (file[key].command === 'switch') {
-        let block = null;
-        let block2 = null;
-        let arg1 = null;
-        let arg2 = null;
-        let logical = null;
-        let dest = null;
-
-        // set when switch is true (does to low number)
-        let temp = file[key].true.split(',');
-
-        // for blue line, simple 2 way switch
-        block = temp[0].split(' ')[0];
-        arg1 =
-          temp[0].split(' ')[1] === 'o'
-            ? 'occupancy'
-            : temp[0].split(' ')[1] === 's'
-            ? 'schedule'
-            : '';
-        logical = temp[1];
-        block2 = temp[2].split(' ')[0];
-        arg2 =
-          temp[2].split(' ')[1] === 'o'
-            ? 'occupancy'
-            : temp[0].split(' ')[1] === 's'
-            ? 'schedule'
-            : '';
-        dest = temp[3];
-
-        console.log(
-          `Block ${block} ${arg1} ${logical} block ${block2} ${arg2}`
-        );
-
-        this.state.blocks[file[key].block - 1].SWTrue = {
-          block,
-          arg1,
-          logical,
-          block2,
-          arg2,
-          dest,
-        };
-
-        // set when switch is true (does to low number)
-        temp = file[key].false.split(',');
-
-        // for blue line, simple 2 way switch
-        block = temp[0].split(' ')[0];
-        arg1 =
-          temp[0].split(' ')[1] === 'o'
-            ? 'occupancy'
-            : temp[0].split(' ')[1] === 's'
-            ? 'schedule'
-            : '';
-        logical = temp[1];
-        block2 = temp[2].split(' ')[0];
-        arg2 =
-          temp[2].split(' ')[1] === 'o'
-            ? 'occupancy'
-            : temp[0].split(' ')[1] === 's'
-            ? 'schedule'
-            : '';
-
-        dest = temp[3];
-
-        console.log(
-          `Block ${block} ${arg1} ${logical} block ${block2} ${arg2}`
-        );
-        this.state.blocks[file[key].block - 1].SWFalse = {
-          block,
-          arg1,
-          logical,
-          block2,
-          arg2,
-          dest,
-        };
-
-        console.log(this.state.blocks[file[key].block]);
-      }
-      if (file[key].command === 'light') {
-        // TODO improve implementation
-      }
-    }
-  }
-
-  // Always keep status of blocks ----- prob not correct implementation
+  // Always keep status of blocks ----- executes PLC logic
   componentDidMount() {
     const interval = setInterval(() => {
       // console.log(this.state.blocks.length);
       for (let i = 0; i < this.state.blocks.length; i++) {
-        // If it is a switch block
-        if (
-          this.state.blocks[i].switchPosition != 'null' &&
-          (this.state.blocks[i].section === 'A'
-            ? this.state.sections[0].plc
-            : this.state.blocks[i].section === 'B'
-            ? this.state.sections[1].plc
-            : this.state.blocks[i].section === 'C'
-            ? this.state.sections[2].plc
-            : false)
-        ) {
-          // Condition to swt switch to true (low num)
-          console.log(this.state.blocks[i].switchPosition);
-          const curr = this.state.blocks[i];
-          if (
-            this.state.blocks[curr.SWTrue.block][curr.SWTrue.arg1] &&
-            !this.state.blocks[curr.SWTrue.block2][curr.SWTrue.arg2]
-          ) {
-            this.state.blocks[i].switchPosition = curr.SWTrue.dest;
-            // this.state.blocks[curr.SWFalse.dest].switchPosition = false;
-            // this.state.blocks[curr.SWTrue.dest].switchPosition = true;
-            console.log(curr.SWTrue.dest);
-          } else if (
-            this.state.blocks[curr.SWFalse.block][curr.SWFalse.arg1] &&
-            !this.state.blocks[curr.SWFalse.block2][curr.SWFalse.arg2]
-          ) {
-            console.log(curr.SWFalse.dest);
-            this.state.blocks[i].switchPosition = curr.SWFalse.dest;
-            // this.state.blocks[curr.SWFalse.dest].switchPosition = true;
-            // this.state.blocks[curr.SWTrue.dest].switchPosition = false;
-          }
-
-          // Set light for switch too
-          const sw = this.state.blocks[i].switchPosition;
-          if (this.state.blocks[sw - 1].occupancy === true) {
-            this.state.blocks[i].transitLight = 'red';
-          } else if (this.state.blocks[sw].occupancy === true) {
-            this.state.blocks[i].transitLight = 'yellow';
-          } else {
-            this.state.blocks[i].transitLight = 'green';
-          }
-        } else if (i < this.state.blocks.length - 2) {
-          // light 1
-          if (this.state.blocks[i + 1].occupancy === true) {
-            this.state.blocks[i].transitLight = 'red';
-          } else if (this.state.blocks[i + 2].occupancy === true) {
-            this.state.blocks[i].transitLight = 'yellow';
-          } else {
-            this.state.blocks[i].transitLight = 'green';
-          }
-
-          if (i > 2) {
-            if (this.state.blocks[i - 1].occupancy === true) {
-              this.state.blocks[i].transitLight2 = 'red';
-            } else if (this.state.blocks[i - 2].occupancy === true) {
-              this.state.blocks[i].transitLight2 = 'yellow';
-            } else {
-              this.state.blocks[i].transitLight2 = 'green';
-            }
-          }
-        } else if (i < this.state.blocks.length - 1) {
-          if (this.state.blocks[i + 1].occupancy === true) {
-            this.state.blocks[i].transitLight = 'red';
-          }
-
-          if (this.state.blocks[i - 1].occupancy === true) {
-            this.state.blocks[i].transitLight2 = 'red';
-          }
-        } else {
-          //   if (this.state.blocks[this.state.blocks.length-1].occupancy === true) {
-          //     this.state.blocks[this.state.blocks.length].transitLight = 'red';
-          //   } else {
-          //     this.state.blocks[this.state.blocks.length].transitLight = 'green';
-          //   }
-
-          if (this.state.blocks[0].occupancy === true) {
-            this.state.blocks[1].transitLight2 = 'red';
-          } else {
-            this.state.blocks[1].transitLight2 = 'green';
-          }
-        }
+        // If a switch block
       }
 
       /*
@@ -553,7 +389,7 @@ class TrackController extends React.Component {
                     >
                       {this.state.blocks
                         .filter(
-                          (block) => block.section === this.state.currSection.id
+                          (block) => block.section === this.state.currSection
                         )
                         .map((block) => (
                           <MenuItem key={block.id} value={block.id}>
@@ -578,8 +414,8 @@ class TrackController extends React.Component {
                       onChange={this.handleChangeSection}
                     >
                       {this.state.sections.map((section) => (
-                        <MenuItem key={section.id} value={section.id}>
-                          {String(section.id)}
+                        <MenuItem key={section} value={section}>
+                          {String(section)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -810,94 +646,6 @@ class TrackController extends React.Component {
                   </Table>
                 </TableContainer>
               </Grid>
-              <Grid item xs="auto">
-                {/* <TableContainer>
-                  <Table
-                    sx={{ minWidth: 'auto' }}
-                    size="small"
-                    aria-label="table"
-                  >
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Failures</TableCell>
-                        <TableCell>Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">
-                          <Button onClick={this.railFailure}>Rail</Button>
-                        </TableCell>
-                        {this.state.currBlock.railFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">
-                          <Button onClick={this.lightFailure}>Light</Button>
-                        </TableCell>
-                        {this.state.currBlock.lightFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">
-                          <Button onClick={this.engineFailure}>Engine</Button>
-                        </TableCell>
-                        {this.state.currBlock.engineFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">
-                          <Button onClick={this.signalFailure}>Signal</Button>
-                        </TableCell>
-                        {this.state.currBlock.signalFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">
-                          <Button onClick={this.brakeFailure}>Brake</Button>
-                        </TableCell>
-                        {this.state.currBlock.brakeFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer> */}
-              </Grid>
               <Grid item xs>
                 <div className="centered">
                   <TextField
@@ -956,7 +704,7 @@ class TrackController extends React.Component {
                     >
                       {this.state.blocks
                         .filter(
-                          (block) => block.section === this.state.currSection.id
+                          (block) => block.section === this.state.currSection
                         )
                         .map((block) => (
                           <MenuItem key={block.id} value={block.id}>
@@ -976,13 +724,13 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-section"
                       id="select-section"
-                      value={this.state.currSection.id}
+                      value={this.state.currSection}
                       label="Sections"
                       onChange={this.handleChangeSection}
                     >
                       {this.state.sections.map((section) => (
-                        <MenuItem key={section.id} value={section.id}>
-                          {String(section.id)}
+                        <MenuItem key={section} value={section}>
+                          {String(section)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -1206,84 +954,6 @@ class TrackController extends React.Component {
                     </TableBody>
                   </Table>
                 </TableContainer>
-              </Grid>
-              <Grid item xs="auto">
-                {/* <TableContainer>
-                  <Table
-                    sx={{ minWidth: 'auto' }}
-                    size="small"
-                    aria-label="table"
-                  >
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Failures</TableCell>
-                        <TableCell>Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">Rail</TableCell>
-                        {this.state.currBlock.railFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">Light</TableCell>
-                        {this.state.currBlock.lightFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">Engine</TableCell>
-                        {this.state.currBlock.engineFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">Signal</TableCell>
-                        {this.state.currBlock.signalFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">Brake</TableCell>
-                        {this.state.currBlock.brakeFailure ? (
-                          <TableCell align="right">FAIL</TableCell>
-                        ) : (
-                          <TableCell align="right">OK</TableCell>
-                        )}
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer> */}
               </Grid>
               <Grid item xs>
                 <div className="centered">
