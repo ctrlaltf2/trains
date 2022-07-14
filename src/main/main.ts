@@ -182,5 +182,13 @@ app
         moduleWindows[moduleName].webContents.send(moduleName, payload);
       });
     });
+
+    ipcMain.on('timer::pause', (_event, payload) => {
+      console.log('timer::pause', payload)
+    });
+
+    ipcMain.on('timer::fast-forward', (_event, payload) => {
+      console.log('timer::fast-forward', payload)
+    });
   })
   .catch(console.log);

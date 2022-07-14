@@ -59,21 +59,41 @@ class Timer extends React.Component {
 
     this.state = {
       current_time: this.formatTime(this.timestamp),
-      isPaused: false,
+      isPaused: true,
       isFastForward: false,
     };
   }
 
   formatTime(n_ms_midnight) {
-    console.log('formatTime', n_ms_midnight);
     const d = new Date(2000, 0, 1, 0, 0, 0, n_ms_midnight)
 
     const HH = d.getHours().toString().padStart(2, '0');
     const MM = d.getMinutes().toString().padStart(2, '0');
     const SS = d.getSeconds().toString().padStart(2, '0');
 
-    console.log(HH, MM);
     return `${HH}:${MM}:${SS}`;
+  }
+
+  handleFastForwardPress() {
+    const { isFastForward } = this.state;
+    const newFastForwardState = !isFastForward;
+
+    this.setState({
+      isFastForward: newFastForwardState,
+    });
+
+    window.electronAPI.sendTimeFastForward(newFastForwardState);
+  }
+
+  handlePausePlayPress() {
+    const { isPaused } = this.state;
+    const newPauseState = !isPaused;
+
+    this.setState({
+      isPaused: newPauseState,
+    });
+
+    window.electronAPI.sendTimePause(newPauseState);
   }
 
   render() {
@@ -85,35 +105,26 @@ class Timer extends React.Component {
           <Typography variant="h4">Current Time:</Typography>
           <Typography variant="h3">{current_time}</Typography>
           <div id="timer-button-group">
-            {
-              isPaused ?
-                <IconButton color="default" aria-label="pause" component="span" size="large"
-                  onClick={() => { this.setState({isPaused: false}) }}
-                >
+            <IconButton color="default" aria-label="pause" component="span" size="large"
+              onClick={() => { this.handlePausePlayPress()}}
+            >
+              {
+                isPaused ?
                   <PlayArrowIcon/>
-                </IconButton>
-              :
-                <IconButton color="default" aria-label="pause" component="span" size="large"
-                  onClick={() => { this.setState({isPaused: true}) }}
-                >
+                :
                   <PauseIcon/>
-                </IconButton>
-            }
-            {
-              isFastForward ?
-                <IconButton color="default" aria-label="pause" component="span" color="primary" size="large"
-                  onClick={() => { this.setState({isFastForward: false}) }}
-                >
-                  <FastForwardIcon/>
-                </IconButton>
-              :
-                <IconButton color="default" aria-label="pause" component="span" size="large"
-                  onClick={() => { this.setState({isFastForward: true}) }}
-                >
-                  <FastForwardIcon/>
-                </IconButton>
-
-            }
+              }
+            </IconButton>
+            <IconButton
+              color="default"
+              aria-label="pause"
+              component="span"
+              color={isFastForward ? "primary" : "default"}
+              size="large"
+              onClick={() => { this.handleFastForwardPress() }}
+            >
+              <FastForwardIcon/>
+            </IconButton>
           </div>
         </div>
       </ThemeProvider>
