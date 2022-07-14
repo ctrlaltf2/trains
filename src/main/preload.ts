@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   subscribeTrackModelMessage:       (callback) => ipcRenderer.on(Modules.TRACK_MODEL, callback),
   subscribeTrainModelMessage:       (callback) => ipcRenderer.on(Modules.TRAIN_MODEL, callback),
   subscribeTrainControllerMessage:  (callback) => ipcRenderer.on(Modules.TRAIN_CONTROLLER, callback),
+  subscribeTimerMessage:            (callback) => ipcRenderer.on(Modules.TIMER, callback),
 
   // These will be called by the electron:renderer process for this module
   // send*Message:    Asynchronously send a message (no response expected)
