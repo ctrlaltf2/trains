@@ -9,11 +9,13 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+
+const fs = require('fs');
 
 import * as Modules from './modules';
 
@@ -162,6 +164,41 @@ app
     Object.values(Modules.ALL_MODULES).forEach(moduleName => {
       ipcMain.on(moduleName, (_event, payload) => {
         moduleWindows[moduleName].webContents.send(moduleName, payload);
+      });
+    });
+
+    ipcMain.on('file', (_event, tag) => {
+      dialog.showOpenDialog({
+        properties: ['openFile']
+      })
+      .then((response) => {
+        if(!response.canceled) {
+          _event.sender.send('file', response.filePaths[0]);
+
+          fs.readFile(response.filePaths[0], 'utf8', (err, data) => {
+            if(err) {
+              _event.sender.send('file', {
+                tag: tag,
+                status: 'error',
+                payload: err
+              });
+
+              return;
+            }
+
+            _event.sender.send('file', {
+              tag: tag,
+              status: 'success',
+              payload: data
+            });
+          });
+        } else {
+          _event.sender.send('file', {
+            tag: tag,
+            status: 'error',
+            payload: 'cancelled'
+          });
+        }
       });
     });
   })
