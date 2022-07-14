@@ -55,7 +55,7 @@ class Timer extends React.Component {
     });
 
     // ms since midnight
-    this.timestamp = 8 * 60 * 60 * 1000; // 08:00
+    this.timestamp = 8 * 60 * 60 * 1000 + 1000; // 08:00
 
     this.state = {
       current_time: this.formatTime(this.timestamp),
@@ -65,8 +65,15 @@ class Timer extends React.Component {
   }
 
   formatTime(n_ms_midnight) {
-    // TODO
-    return '08:00';
+    console.log('formatTime', n_ms_midnight);
+    const d = new Date(2000, 0, 1, 0, 0, 0, n_ms_midnight)
+
+    const HH = d.getHours().toString().padStart(2, '0');
+    const MM = d.getMinutes().toString().padStart(2, '0');
+    const SS = d.getSeconds().toString().padStart(2, '0');
+
+    console.log(HH, MM);
+    return `${HH}:${MM}:${SS}`;
   }
 
   render() {
@@ -76,7 +83,7 @@ class Timer extends React.Component {
       <ThemeProvider theme={darkTheme}>
         <div id="main">
           <Typography variant="h4">Current Time:</Typography>
-          <Typography variant="h3">{this.formatTime(current_time)}</Typography>
+          <Typography variant="h3">{current_time}</Typography>
           <div id="timer-button-group">
             {
               isPaused ?
