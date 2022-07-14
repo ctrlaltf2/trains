@@ -14,9 +14,7 @@ export class Track {
         this.sections.filter((section) => section === file[key].Section)
           .length === 0
       ) {
-        this.sections.push(
-          String(file[key].Section),
-        );
+        this.sections.push(String(file[key].Section));
       }
       this.blocks.push(
         new Block(
@@ -66,11 +64,10 @@ export class Track {
         }
       }
       if (this.blocks[i].infrastructure.includes('CROSSING')) {
-          this.blocks[i].crossing = true;
-        }
+        this.blocks[i].crossing = true;
       }
     }
-
+  }
 
   getBlocks() {
     return this.blocks;

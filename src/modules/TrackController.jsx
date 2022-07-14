@@ -24,10 +24,9 @@ import {
   Typography,
 } from '@mui/material';
 
-import { JoinLeft } from '@mui/icons-material';
-import { isNullOrUndefined } from 'util';
 import { Track } from './TrackComponents/Track';
 import { PLCReader } from './PLCReader';
+import { Wayside } from './Wayside.ts';
 import blueJSON from './TrackComponents/TrackJSON/blue.json';
 
 import blueLine from './TrackComponents/TrackJSON/blue.json';
@@ -38,6 +37,7 @@ import ba from './PLC/bA.json';
 import greenLine from './TrackComponents/TrackJSON/VF2/green.json';
 import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 import './TrackController.css';
+import Wayside from './wayside';
 
 console.log(blueA);
 
@@ -63,10 +63,8 @@ class TrackController extends React.Component {
     // this.trackGreen.loadTrack(greenLine);
     // this.trackGreen.setInfrastructure();
 
-    this.trackRed = new Track('red');
-    this.trackRed.loadTrack(redLine);
-    this.trackRed.setInfrastructure();
-    console.log(this.trackRed.blocks);
+    this.controller = new Wayside(redLine);
+
     // console.log(this.trackRed.sections);
     this.currTrack = this.trackRed;
 
@@ -165,7 +163,7 @@ class TrackController extends React.Component {
         appSate: !prevState.appState,
       }));
       console.log('Blocks up to date');
-    }, 5000);
+    }, 1000);
   }
 
   reset() {
@@ -215,14 +213,8 @@ class TrackController extends React.Component {
     }
   }
 
-  setSwitch() {
-    if (this.state.currBlock.switchPosition != 'null') {
-      if (this.state.currBlock.switchPosition === '11') {
-        this.state.currBlock.switchPosition = '6';
-      } else {
-        this.state.currBlock.switchPosition = '11';
-      }
-    }
+  setSwitch(block, position) {
+    this.state.blocks[block].switch.position(position);
 
     this.setState((prevState) => ({
       appState: !prevState.appState,
