@@ -1,0 +1,50 @@
+[
+  {
+    "switch": "13",
+    "True": "13 && !1-12",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "29",
+    "True": "150 && !12-28",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "57",
+    "True": "57 && 0",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "62",
+    "True": "62",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "76",
+    "True": "77 && !101-150",
+    "False": "76 && !77-85",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "85",
+    "True": "100 && !77-85",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  }
+]

@@ -3,15 +3,14 @@ import { Switch } from './Switch';
 export class Block {
   // Failures (default to false)
   public brokenRailFailure: boolean;
-
   public signalFailure: boolean;
-
   public engineFailure: boolean;
 
   // Fields set by setter functions
   public switch?: Switch;
 
-  public occupancy: boolean;
+  public occupancy: boolean= false;
+  public maintenanceMode: boolean = false;
 
   /*
    * TODO: other classes? beacon  and station
@@ -45,7 +44,6 @@ export class Block {
     this.cumElevation = cumElevation;
     this.underground = underground;
     this.crossing = crossing;
-    this.occupancy = false;
 
     // Failures
     this.brokenRailFailure = false;
