@@ -83,9 +83,10 @@ class TrainControllerSW extends React.Component {
       error_kprev: 0,
       k_p: 10000, // Proportional Gain
       k_i: 0, // Integral Gain
-      T: 0, // Represents the sample period of the train model
+      T: 1000, // Represents the sample period of the train model
       setSpeed: 0, // Speed set by the driver: the speech you want to approach
-      currentSpeed: 0, // The current speed of the train, also known as currentVelocity
+      currentSpeed: 0, // The current speed of the train, also known as currentVelocity, in meters per second
+      currentSpeedMPH: 0, // The current speed of the train in miles per hour
 
     };
 
@@ -93,9 +94,6 @@ class TrainControllerSW extends React.Component {
     this.accelerationLim = 0.5; // medium acceleration of the train
     this.decelerationEBrake = -2.73; // deceleration of the emergency brake
     this.decelerationSBrake = -1.2; // deceleration of the service brake
-    this.gravity = -9.8;
-    this.trainMass = 40900; // mass of train in kilograms (40.9 tons)
-    this.passengerMass = 80; // mass of 1 passenger in kilograms (per Profeta's words)
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
@@ -111,6 +109,7 @@ class TrainControllerSW extends React.Component {
     // Environment funcitons
     this.underground = this.underground.bind(this);
     this.platformSide = this.platformSide.bind(this);
+    this.announcements = this.announcements.bind(this);
 
     // Failures
     this.brakeFailure = this.brakeFailure.bind(this);
@@ -125,6 +124,7 @@ class TrainControllerSW extends React.Component {
     this.handleSuggestedSpeedChange = this.handleSuggestedSpeedChange.bind(this);
     this.setKp = this.setKp.bind(this);
     this.setKi = this.setKi.bind(this);
+    this.setDesiredSpeed = this.setDesiredSpeed.bind(this);
 
     //  Conversion functions
     this.meters_to_miles = this.meters_to_miles.bind(this);
@@ -143,8 +143,9 @@ class TrainControllerSW extends React.Component {
             this.setState({currentSpeed: 0});
           }
           else{
-          //  this.handleSpeedChange(this.state.currentSpeed);
-          //  this.calculatePower();
+            this.setState((prevState) => ({
+              currentSpeed: prevState.currentSpeed - 1,
+            }));
           }
         }
 
@@ -154,8 +155,9 @@ class TrainControllerSW extends React.Component {
             this.setState({currentSpeed: 0});
           }
           else{
-           // this.handleSpeedChange(this.state.currentSpeed);
-          //  this.calculatePower();
+            this.setState((prevState) => ({
+              currentSpeed: prevState.currentSpeed - 1,
+            }));
           }
         }
 
@@ -165,7 +167,9 @@ class TrainControllerSW extends React.Component {
             this.setState({currentSpeed: 0});
           }
           else{
-            // TODO
+            this.setState((prevState) => ({
+              currentSpeed: prevState.currentSpeed - 1,
+            }));
           }
         }
         else{
@@ -184,77 +188,73 @@ class TrainControllerSW extends React.Component {
       // Manual Mode
       else{
         if(this.state.brakeStatus && this.state.currentSpeed != 0){
-          // TODO
+          this.setState((prevState) => ({
+            currentSpeed: prevState.currentSpeed - 1,
+          }));
         }
         else if(this.state.emergencyButton && (this.state.currentSpeed != 0)){
-          // TODO
+          this.setState((prevState) => ({
+            currentSpeed: prevState.currentSpeed - 1,
+          }));
         }
       }
     },1000);
   }
   handleSpeedChange(event) {
-    // event.target.value represents the inputted speed
-    this.setState({currentSpeed: event.target.value});
-
-    // Calculate mass
-    this.setState({totalMass: this.trainMass + (this.passengerMass*this.state.passengers)});
-
-    if(this.state.currentSpeed == 0){
-      this.setState({force: 0});
+    if(event.target.value < 0){
+      this.setState({currentSpeed: 0})
+    }
+    else if (event.target.value > 43){
+      this.setState({currentSpeed: 43})
     }
     else{
-       // Calculate force of the train
-      this.setState({force: (this.state.power / this.state.currentSpeed)});
-
-      //Calculate force in the opposite direction based on slope of the track
-      this.setState((prevState) => ({
-        force: prevState.force - (this.state.friction*this.state.totalMass*this.gravity*Math.sin(this.state.blockSlope)),
-      }));
-
-      // this.setState((prevState) => ({
-      //   force: prevState.force - (0.01*this.state.totalMass*this.gravity),
-      // }));
-    }
-
-    // Calculate acceleration of the train
-    this.setState({prevAcceleration: this.state.acceleration});
-    this.setState({acceleration: this.state.force/this.state.totalMass});
-    if(this.state.acceleration > this.accelerationLim){
-      this.setState({acceleration: this.accelerationLim});
-    }
-
-    // If the emergency brake is activated and there isn't a
-    // brake failure, set the deceleration rate to -2.73
-    else if(this.state.emergencyButton && !this.state.brakeFailureDisplay){
-      this.setState({acceleration: this.state.decelerationEBrake});
-    }
-
-    // If the service brake is activated and there isn't a
-    // brake failure, set the deceleration rate to -1.2
-    else if(this.state.brakeStatus && !this.state.brakeFailureDisplay){
-      this.setState({acceleration: this.state.decelerationSBrake});
-    }
-
-    // Calculate Velocity in meters per sec
-    this.setState({setSpeed: this.state.currentSpeed + (this.state.T/2000)*(this.state.acceleration+this.state.prevAcceleration)})
-
-    // Check if speed is higher than speed limit, then set speed to speed limit
-    if(this.state.setSpeed > this.state.commandedSpeed){
-      this.setState({currentSpeed: this.state.commandedSpeed});
-    }
-    else{
-      this.setState({currentSpeed: this.state.setSpeed});
-    }
-
-    if(this.state.currentSpeed < 0){
-      this.setState({currentSpeed: 0});
-    }
-    if(this.state.currentSpeed == 0 && this.state.acceleration < 0){
-      this.setState({acceleration: 0});
+      this.setState({currentSpeed: event.target.value});
     }
   }
 
-  handleCommandedSpeedChange(event) {
+  handleTemperatureChange(event) {
+    if(event.target.value < 60){
+      this.setState({temperature: 60});
+    }
+    else if (event.target.value > 80){
+      this.setState({temperature: 80});
+    }
+    else{
+      this.setState({temperature: event.target.value});
+    }
+  }
+
+  emergencyBrake(){ // Toggles the emergency brake
+    this.setState((prevState) => ({
+      emergencyButton: !prevState.emergencyButton,
+    }));
+  }
+
+  toggleServiceBrake(){ // Turns the service brake on/off
+    this.setState((prevState) => ({
+      brakeStatus: !prevState.brakeStatus,
+    }));
+  }
+
+  setDesiredSpeed(event){
+    if(event.target.value < 0){
+      this.setState({setSpeed: 0});
+    }
+    else if (event.target.value > 43){
+      this.setState({setSpeed: 43});
+    }
+    else if (event.target.value >= this.state.commandedSpeed){
+      this.setState({setSpeed: this.state.commandedSpeed});
+    }
+    else{
+      this.setState({setSpeed: event.target.value})
+    }
+  }
+
+
+  // Test UI Functions
+
+  handleCommandedSpeedChange(event) { // Changes the commanded speed
     // 43 represents top speed of train in MPH
     if(event.target.value > 43)
     {
@@ -269,7 +269,7 @@ class TrainControllerSW extends React.Component {
     }
   }
 
-  handleSuggestedSpeedChange(event){
+  handleSuggestedSpeedChange(event){ // Changes the suggested speed
     if(event.target.value > 43)
     {
       this.setState({suggestedSpeed: 43});
@@ -278,33 +278,18 @@ class TrainControllerSW extends React.Component {
     {
       this.setState({suggestedSpeed: 0});
     }
-    else if (event.target.value > this.state.commandedSpeed){
-      this.setState({suggestedSpeed: this.state.commandedSpeed});
-    }
     else{
       this.setState({suggestedSpeed: event.target.value});
     }
   }
 
-  handleAuthorityChange(event) {
+  handleAuthorityChange(event) { // Changes the authority
     if(event.target.value < 0)
     {
       this.setState({authority: 0});
     }
     else{
       this.setState({authority: event.target.value});
-    }
-  }
-
-  handleTemperatureChange(event) {
-    if(event.target.value < 60){
-      this.setState({temperature: 60});
-    }
-    else if (event.target.value > 80){
-      this.setState({temperature: 80});
-    }
-    else{
-      this.setState({temperature: event.target.value});
     }
   }
 
@@ -327,7 +312,7 @@ class TrainControllerSW extends React.Component {
     }
   }
 
-  // Conversion functions
+  // Conversion and calculation functions
   // Speed comes from Train Model calculation
 
   meters_to_miles(speed){ // 1 m/s = approx. 2.2369 mph
@@ -337,6 +322,33 @@ class TrainControllerSW extends React.Component {
   miles_to_meters(speed){
     return (speed / 2.2369)
   }
+
+  calculatePower(){ // Function that calculates the current power of the train
+
+    // Calculate error
+    this.setState({error_kprev: this.state.error_k});
+    this.setState({error_k: Math.abs(this.state.setSpeed - this.state.currentSpeed)});
+
+    // If P_cmd < P_max, use this equation
+    if (this.state.power < this.state.maxPower){
+      this.setState((prevState) => ({
+        cumulative_err: (prevState.cumulative_err + (this.state.T/2)*(this.state.error_k + this.state.error_kprev)),
+      }));
+    }
+
+    // If P_cmd >= P_max, use this equation
+    else if (this.state.power >= this.state.maxPower){
+      this.setState((prevState) => ({
+        cumulative_err: prevState.cumulative_err,
+      }));
+    }
+
+    // Final Power Calculation
+    this.setState({power: ((this.state.k_p*this.state.error_k)+(this.state.k_i*this.state.cumulative_err))});
+  }
+
+  // Environment functions
+  // For automatic mode
 
   underground(){ // Checks if the train is underground, activates lights accordingly
     if(this.under && this.automaticMode){
@@ -358,15 +370,13 @@ class TrainControllerSW extends React.Component {
     }
   }
 
+  announcements(){
+
+  }
+
   toggleAutomatic(){ // Toggles between automatic mode and manual mode
     this.setState((prevState) => ({
       automaticMode: !prevState.automaticMode,
-    }));
-  }
-
-  toggleServiceBrake(){ // Turns the service brake on/off
-    this.setState((prevState) => ({
-      brakeStatus: !prevState.brakeStatus,
     }));
   }
 
@@ -406,11 +416,6 @@ class TrainControllerSW extends React.Component {
     }));
   }
 
-  emergencyBrake(){ // Toggles the emergency brake in the Test UI
-    this.setState((prevState) => ({
-      emergencyButton: !prevState.emergencyButton,
-    }));
-  }
 
   brakeFailure(){ // Toggles the break failure display in the Test UI
     this.setState((prevState) => ({
@@ -428,26 +433,6 @@ class TrainControllerSW extends React.Component {
     this.setState((prevState) => ({
       signalPickupFailureDisplay: !prevState.signalPickupFailureDisplay,
     }));
-  }
-
-  calculatePower(){ // Function that calculates the current power of the train
-
-    // If P_cmd < P_max, use this equation
-    if (this.state.power < this.state.maxPower){
-      this.setState((prevState) => ({
-        cumulative_err: (prevState.cumulative_err + (this.state.T/2000)*(this.state.error_k + this.state.error_kprev)),
-      }));
-    }
-
-    // If P_cmd >= P_max, use this equation
-    else if (this.state.power >= this.state.maxPower){
-      this.setState((prevState) => ({
-        cumulative_err: prevState.cumulative_err,
-      }));
-    }
-
-    // Final Power Calculation
-    this.setState({power: ((this.state.k_p*this.state.error_k)+(this.state.k_i*this.state.cumulative_err))});
   }
 
   engineerPanel(){
@@ -499,17 +484,6 @@ class TrainControllerSW extends React.Component {
         <Grid container spacing={4}>
           <Grid item xs={5} md={5}>
             <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  onClick={this.toggleAutomatic}
-                  label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={5} md={5}>
-            <Item>
               {this.state.brakeStatus ? (
               <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
                 Service Brake Activated
@@ -537,12 +511,6 @@ class TrainControllerSW extends React.Component {
           <Grid item xs={4} md={2}>
             <Item>Power: {this.state.power} kilowatts</Item>
           </Grid>
-          <Grid item xs={3} md={3}>
-              <label>
-                Temperature:
-                <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
-              </label>
-          </Grid>
           <Grid item xs={4} md={2}>
               <label>
                 Current Speed:
@@ -565,6 +533,12 @@ class TrainControllerSW extends React.Component {
               <label>
                 Suggested Speed:
                 <input type="number" value={this.state.suggestedSpeed} onChange={this.handleSuggestedSpeedChange} />
+              </label>
+          </Grid>
+          <Grid item xs={4} md={2}>
+              <label>
+                Set Desired Speed:
+                <input type="number" value={this.state.setSpeed} onChange={this.setDesiredSpeed} />
               </label>
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
@@ -709,7 +683,7 @@ class TrainControllerSW extends React.Component {
             </Item>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>Power: _ Watts</Item>
+            <Item>Power: {this.state.power} Kilowatts</Item>
           </Grid>
           <Grid item xs={3} md={3}>
               <label>
@@ -718,16 +692,16 @@ class TrainControllerSW extends React.Component {
               </label>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>Current Speed: _ MPH</Item>
+            <Item>Current Speed: {this.state.currentSpeed} MPH</Item>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>Commanded Speed: _ MPH</Item>
+            <Item>Commanded Speed: {this.state.commandedSpeed} MPH</Item>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>Suggested Speed: _ MPH</Item>
+            <Item>Suggested Speed: {this.state.suggestedSpeed} MPH</Item>
           </Grid>
           <Grid item xs={4} md={2}>
-            <Item>Authority: _ Miles</Item>
+            <Item>Authority: {this.state.authority} Miles</Item>
           </Grid>
           <Grid item xs={5} md={2}>
             <Item>Next Stop: _</Item>
