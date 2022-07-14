@@ -55,11 +55,12 @@ const installExtensions = async () => {
 
 const activeModules = [
   'CTCOffice',
-  'TrackController',
+  //'TrackController',
   // 'TrackModel',
   // 'TrainModel',
   // 'TrainControllerHW',
-  'TrainControllerSW',
+  //'TrainControllerSW',
+  'Timer',
 ];
 
 const createWindow = async (moduleName: string) => {
@@ -75,17 +76,34 @@ const createWindow = async (moduleName: string) => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
-  let moduleWindow = new BrowserWindow({
-    show: false,
-    width: 1024,
-    height: 728,
-    icon: getAssetPath('icon.png'),
-    webPreferences: {
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
-    },
-  });
+  let moduleWindow;
+  if(moduleName === Modules.TIMER) {
+    moduleWindow = new BrowserWindow({
+      show: false,
+      width: 350,
+      height: 250,
+      icon: getAssetPath('icon.png'),
+      webPreferences: {
+        preload: app.isPackaged
+          ? path.join(__dirname, 'preload.js')
+          : path.join(__dirname, '../../.erb/dll/preload.js'),
+      },
+    });
+  } else {
+    moduleWindow = new BrowserWindow({
+      show: false,
+      width: 1024,
+      height: 728,
+      icon: getAssetPath('icon.png'),
+      webPreferences: {
+        preload: app.isPackaged
+          ? path.join(__dirname, 'preload.js')
+          : path.join(__dirname, '../../.erb/dll/preload.js'),
+      },
+    });
+  }
+
+
   moduleWindows[moduleName] = moduleWindow;
 
   moduleWindow.loadURL(`${resolveHtmlPath('index.html')}#${moduleName}`);
