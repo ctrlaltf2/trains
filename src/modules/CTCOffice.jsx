@@ -69,9 +69,15 @@ class CTCOffice extends React.Component {
           // TODO: message validation
           this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
           break;
+        case 'timing':
+          console.log(Date.now() - payload.value);
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
+    });
+
+    window.electronAPI.subscribeFileMessage( (_event, payload) => {
+      console.log(payload);
     });
 
     this.state = {
