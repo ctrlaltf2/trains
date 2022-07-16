@@ -36,22 +36,12 @@ class Timer extends React.Component {
     super(props);
 
     window.electronAPI.subscribeTimerMessage( (_event, payload) => {
-      switch(payload.type) {
-        case 'sync':
-          this.timestamp = payload.value;
-          this.setState({
-            current_time: this.formatTime(this.timestamp),
-          });
-          break;
-        case 'time passed':
-          this.timestamp += payload.value;
-          this.setState({
-            current_time: this.formatTime(this.timestamp),
-          });
-          break;
-        default:
-          console.warn(`Unknown payload type of ${payload.type}`);
-      }
+      const { timestamp } = payload;
+      this.timestamp = timestamp;
+
+      this.setState({
+        current_time: this.formatTime(this.timestamp),
+      });
     });
 
     // ms since midnight

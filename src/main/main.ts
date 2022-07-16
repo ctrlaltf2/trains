@@ -16,6 +16,7 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
 import * as Modules from './modules';
+import Timer from './Timer';
 
 export default class AppUpdater {
   constructor() {
@@ -149,6 +150,8 @@ app.on('window-all-closed', () => {
   }
 });
 
+const t = new Timer(100, 8 * 60 * 60 * 1000);
+
 app
   .whenReady()
   .then(() => {
@@ -184,11 +187,25 @@ app
     });
 
     ipcMain.on('timer::pause', (_event, payload) => {
+      // TODO: Message validation
       console.log('timer::pause', payload)
+      t.pause(payload);
     });
 
     ipcMain.on('timer::time-multiplier', (_event, payload) => {
+      // TODO: Message validation
       console.log('timer::time-multiplier', payload)
+      t.setTimeScalar(payload);
     });
+
+    t.onClock((timestamp) => {
+      activeModules.forEach(moduleName => {
+        moduleWindows[moduleName].webContents.send(Modules.TIMER, {
+          timestamp: timestamp,
+        });
+      });
+    });
+
+    t.start();
   })
   .catch(console.log);
