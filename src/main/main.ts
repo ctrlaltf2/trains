@@ -187,8 +187,8 @@ app
       console.log('timer::pause', payload)
     });
 
-    ipcMain.on('timer::fast-forward', (_event, payload) => {
-      console.log('timer::fast-forward', payload)
+    ipcMain.on('timer::time-multiplier', (_event, payload) => {
+      console.log('timer::time-multiplier', payload)
     });
   })
   .catch(console.log);

@@ -33,5 +33,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   requestTrainControllerHWMessage:  (payload) => ipcRenderer.invoke(Modules.TRAIN_CONTROLLER_SW, payload),
 
   sendTimePause:          (doPause) => ipcRenderer.send('timer::pause', doPause),
-  sendTimeFastForward:    (doFastForward) => ipcRenderer.send('timer::fast-forward', doFastForward),
+  sendTimeFastForward:    (timeScalar) => ipcRenderer.send('timer::time-multiplier', timeScalar),
 });
