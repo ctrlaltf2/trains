@@ -82,7 +82,9 @@ class Timer extends React.Component {
       isFastForward: newFastForwardState,
     });
 
-    window.electronAPI.sendTimeFastForward(newFastForwardState);
+    const timeScalar = (newFastForwardState ? 10.0 : 1.0);
+
+    window.electronAPI.sendTimeFastForward(timeScalar);
   }
 
   handlePausePlayPress() {
