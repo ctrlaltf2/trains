@@ -123,8 +123,7 @@ class SystemMap extends React.Component {
     return (
       <CytoscapeComponent
         id="cy"
-        elements={CytoscapeComponent.normalizeElements(TrackModel.lines.blue)}
-        layout={layout}
+        elements={CytoscapeComponent.normalizeElements(TrackModel.lines.green)}
         cy={(cy) => { this.cy = cy }}
         autolock={false}
         stylesheet={Style['base'].concat(Style['blue_line'])}
@@ -142,6 +141,8 @@ SystemMap.propTypes = {
   // blockClosures: PropTypes.object.isRequired,
   // onSwitchChange: PropTypes.func.isRequired,
   manualMode:   PropTypes.bool.isRequired,
+  // displayGraph: Proptypes.object.isRequired,
+  // stylesheet:   PropTypes.object.isRequired,
 };
 
 export default SystemMap;
