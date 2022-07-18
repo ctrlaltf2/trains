@@ -5,8 +5,6 @@ import CytoscapeComponent from 'react-cytoscapejs';
 import dagre from 'cytoscape-dagre';
 
 import './SystemMap.css';
-import TrackModel from '../../../data/TrackModel-display.json';
-import Style from './SystemMap.cy.json';
 
 Cytoscape.use(dagre);
 
@@ -77,31 +75,27 @@ class SystemMap extends React.Component {
   }
 
   updateBlockOccupancyUI(oldOccupancy, newOccupancy) {
+    console.log(oldOccupancy, newOccupancy);
     // Detect changes and call cy functions accordingly
-    for (const line in newOccupancy) {
-      if(line !== 'blue') // TODO: Configure system map to be able to select lines
-        continue;
+    for (const block in newOccupancy) {
+      const newBlock = !oldOccupancy[block];
 
-      const newLine = !oldOccupancy[line]; // true if new line occupancy info added
+      // Was an update?
+      if(newBlock || (oldOccupancy[block] !== newOccupancy[block])) {
+        const is_occupied = newOccupancy[block];
 
-      for (const block in newOccupancy[line]) {
-        const newBlock = newLine || !oldOccupancy[line][block];
+        const blockstr = block.toString();
 
-        // Was an update?
-        if(newBlock || (oldOccupancy[line][block] !== newOccupancy[line][block])) {
-          const is_occupied = newOccupancy[line][block];
-
-          if(is_occupied) {
-            this.cy.$(`[block_id = '${block}']`).style('line-color', 'white');
-            this.cy.$(`[block_id = '${block}']`).style('source-arrow-color', 'white');
-            this.cy.$(`[block_id = '${block}']`).style('target-arrow-color', 'white');
-            this.cy.$(`[block_id = '${block}']`).style('color', 'black');
-          } else {
-            this.cy.$(`[block_id = '${block}']`).removeStyle('line-color');
-            this.cy.$(`[block_id = '${block}']`).removeStyle('source-arrow-color');
-            this.cy.$(`[block_id = '${block}']`).removeStyle('target-arrow-color');
-            this.cy.$(`[block_id = '${block}']`).removeStyle('color');
-          }
+        if(is_occupied) {
+          this.cy.$(`[block_id = '${blockstr}']`).style('line-color', 'white');
+          this.cy.$(`[block_id = '${blockstr}']`).style('source-arrow-color', 'white');
+          this.cy.$(`[block_id = '${blockstr}']`).style('target-arrow-color', 'white');
+          this.cy.$(`[block_id = '${blockstr}']`).style('color', 'black');
+        } else {
+          this.cy.$(`[block_id = '${blockstr}']`).removeStyle('line-color');
+          this.cy.$(`[block_id = '${blockstr}']`).removeStyle('source-arrow-color');
+          this.cy.$(`[block_id = '${blockstr}']`).removeStyle('target-arrow-color');
+          this.cy.$(`[block_id = '${blockstr}']`).removeStyle('color');
         }
       }
     }
@@ -115,20 +109,20 @@ class SystemMap extends React.Component {
       // name: 'dagre',
       name: 'dagre',
       rankDir: 'LR',
-      minLen(edge) { return 2; }
+      minLen: function(edge) { return 2; }
     };
 
     const { lockNodes } = this.state
+    const { stylesheet, displayGraph } = this.props;
 
     return (
       <CytoscapeComponent
         id="cy"
-        elements={CytoscapeComponent.normalizeElements(TrackModel.lines.blue)}
-        layout={layout}
+        elements={CytoscapeComponent.normalizeElements(displayGraph)}
         cy={(cy) => { this.cy = cy }}
-        autolock={false}
-        stylesheet={Style.base.concat(Style.blue_line)}
-        motionBlur
+        autolock={lockNodes}
+        stylesheet={stylesheet}
+        motionBlur={true}
       />
     );
   }
@@ -142,6 +136,8 @@ SystemMap.propTypes = {
   // blockClosures: PropTypes.object.isRequired,
   // onSwitchChange: PropTypes.func.isRequired,
   manualMode:   PropTypes.bool.isRequired,
+  displayGraph: PropTypes.object.isRequired,
+  stylesheet:   PropTypes.object.isRequired,
 };
 
 export default SystemMap;
