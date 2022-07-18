@@ -25,6 +25,8 @@ import SystemMap from './CTCOffice/SystemMap';
 import Train from './CTCOffice/Train';
 import TrackSwitch from './CTCOffice/Switch';
 import TrackModel from '../../data/TrackModel-route.json';
+import TrackModelDisplay from '../../data/TrackModel-display.json';
+import Style from './CTCOffice/SystemMap.cy.json';
 
 import './CTCOffice.css';
 
@@ -117,6 +119,7 @@ class CTCOffice extends React.Component {
       editingSwitch: undefined,
       editingBlock: undefined,
       switchGoingToPosition: undefined,
+      activeLine: 'red',
     };
 
     this.nextTrainID = 1;
@@ -477,6 +480,7 @@ class CTCOffice extends React.Component {
       switches,
       closures,
       switchGoingToPosition,
+      activeLine,
     } = this.state;
 
     const { lineSelection, blockSelection } = this.state.testUI;
@@ -551,7 +555,7 @@ class CTCOffice extends React.Component {
           </div>
           <div id="systemMap" className="floating">
             <SystemMap
-              occupancy={occupancy}
+              occupancy={occupancy[activeLine]}
               manualMode={manualMode}
               onSwitchEdit={(switch_connections) => this.setState({
                 switchModalOpen: true,
@@ -562,6 +566,8 @@ class CTCOffice extends React.Component {
                 editingBlock: block_id,
               })}
               ref={this.systemMapRef}
+              displayGraph={TrackModelDisplay.lines[activeLine]}
+              stylesheet={Style['base'].concat(Style[activeLine])}
             />
           </div>
           <Modal
@@ -705,7 +711,7 @@ class CTCOffice extends React.Component {
                 </Typography>
                 {
                   editingSwitch ?
-                    <p>Coming from block {switches['blue'][editingSwitch].coming_from}</p>
+                    <p>Coming from block {switches[activeLine][editingSwitch].coming_from}</p>
                   :
                     []
                 }
@@ -719,7 +725,7 @@ class CTCOffice extends React.Component {
                   >
                     {
                       editingSwitch ?
-                        switches['blue'][editingSwitch].going_to_options.map( (sw) => {
+                        switches[activeLine][editingSwitch].going_to_options.map( (sw) => {
                           return <MenuItem value={sw}>{sw}</MenuItem>;
                         })
                         :
@@ -760,7 +766,7 @@ class CTCOffice extends React.Component {
                   checked={closures['blue'][editingBlock]}
                   control={<Switch onChange={(ev) => {
                     const closures_ = _.cloneDeep(closures);
-                    closures_['blue'][editingBlock] = !!ev.target.checked;
+                    closures_[activeLine][editingBlock] = !!ev.target.checked;
 
                     this.setState({
                       closures: closures_,
