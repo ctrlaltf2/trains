@@ -1,5 +1,6 @@
+/* eslint-disable react/destructuring-assignment */
 import { Module } from 'module';
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   Button,
   Container,
@@ -27,11 +28,7 @@ import blueTrackImg from './BlueTrack.jpg';
 import blueTrackJson from './blueLineTrackModel.json';
 
 // variables
-//const switchPos = 0;
-function handleChange() {
-  return 0;
-}
-
+const fileInput = '';
 const darkMode = createTheme({
   palette: {
     mode: 'dark',
@@ -123,6 +120,10 @@ class TrackModel extends React.Component {
 
   //need to implement this
   loadNewTrackModel = (event) => {
+    const fileInput = useRef();
+    const selectFile = () => {
+      fileInput.current.click();
+    };
     console.log('load new track has not been yet implemented.');
   };
 
@@ -254,7 +255,7 @@ class TrackModel extends React.Component {
                 className="LoadTrack"
               >
                 <AddIcon /> Load New Track Model
-                <input type="file" hidden />
+                <input type="file" />
               </Button>
             </Grid>
             <Grid item xs={4}>
@@ -349,15 +350,21 @@ class TrackModel extends React.Component {
             direction="row"
           >
             <Grid item xs={4}>
-              <Button
+              {/* <Button
                 variant="contained"
                 sx={{ fontSize: 14 }}
                 className="LoadTrack"
                 // onClick={this.loadNewTrackModel}
               >
                 Load New Track Model
-                <input type="file" hidden />
-              </Button>
+              </Button> */}
+              <div className="LoadTrackModelDiv">
+                <input
+                  type="file"
+                  ref={fileInput}
+                  onClick={this.loadNewTrackModel}
+                />
+              </div>
             </Grid>
             <Grid item xs={4}>
               <Grid item>
