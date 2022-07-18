@@ -28,12 +28,13 @@ import blueTrackImg from './BlueTrack.jpg';
 import blueTrackJson from './blueLineTrackModel.json';
 
 // variables
-const fileInput = '';
 const darkMode = createTheme({
   palette: {
     mode: 'dark',
   },
 });
+
+// const TrackModelFile;
 
 class TrackModel extends React.Component {
   constructor(props, name) {
@@ -46,7 +47,7 @@ class TrackModel extends React.Component {
     });
 
     this.state = {
-      //  system variable defaults will go here -- booleans
+      //  system variable defaults will go here
       testMode: false,
       trackPower: 'functional',
       railStatus: 'functional',
@@ -89,7 +90,8 @@ class TrackModel extends React.Component {
       this.testUITrackHeaterStatusFun.bind(this);
   }
 
-  //  appears to be working so far
+  //  appears to be working so far -- NEED TO REFACTOR THIS
+
   loadBlockInfo = (event) => {
     let { myValue } = event.currentTarget.dataset;
     console.log(myValue);
@@ -123,10 +125,11 @@ class TrackModel extends React.Component {
     });
   };
 
-  //need to implement this
+  //  Load Track Block Info
+  //  need to implement this
   loadNewTrackModel = (event) => {
-    window.electronAPI.openFileDialog('TrackModel');
-    };
+    var TrackModelFile = window.electronAPI.openFileDialog('TrackModel');
+
     console.log('load new track has not been yet implemented.');
   };
 
@@ -353,21 +356,21 @@ class TrackModel extends React.Component {
             direction="row"
           >
             <Grid item xs={4}>
-              {/* <Button
+              <Button
                 variant="contained"
                 sx={{ fontSize: 14 }}
                 className="LoadTrack"
-                // onClick={this.loadNewTrackModel}
+                onClick={this.loadNewTrackModel}
               >
                 Load New Track Model
-              </Button> */}
-              <div className="LoadTrackModelDiv">
+              </Button>
+              {/* <div className="LoadTrackModelDiv">
                 <input
                   type="file"
                   ref={fileInput}
                   onClick={this.loadNewTrackModel}
                 />
-              </div>
+              </div> */}
             </Grid>
             <Grid item xs={4}>
               <Grid item>

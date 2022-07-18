@@ -86,7 +86,7 @@ const createWindow = async (moduleName: string) => {
   };
 
   let moduleWindow;
-  if(moduleName === Modules.TIMER) {
+  if (moduleName === Modules.TIMER) {
     moduleWindow = new BrowserWindow({
       show: false,
       width: 350,
@@ -111,7 +111,6 @@ const createWindow = async (moduleName: string) => {
       },
     });
   }
-
 
   moduleWindows[moduleName] = moduleWindow;
 
@@ -195,18 +194,18 @@ app
 
     ipcMain.on('timer::pause', (_event, payload) => {
       // TODO: Message validation
-      console.log('timer::pause', payload)
+      console.log('timer::pause', payload);
       t.pause(payload);
     });
 
     ipcMain.on('timer::time-multiplier', (_event, payload) => {
       // TODO: Message validation
-      console.log('timer::time-multiplier', payload)
+      console.log('timer::time-multiplier', payload);
       t.setTimeScalar(payload);
     });
 
     t.onClock((timestamp) => {
-      activeModules.forEach(moduleName => {
+      activeModules.forEach((moduleName) => {
         moduleWindows[moduleName].webContents.send(Modules.TIMER, {
           timestamp: timestamp,
         });
@@ -216,38 +215,39 @@ app
     t.start();
 
     ipcMain.on('file', (_event, tag) => {
-      dialog.showOpenDialog({
-        properties: ['openFile']
-      })
-      .then((response) => {
-        if(!response.canceled) {
-          _event.sender.send('file', response.filePaths[0]);
+      dialog
+        .showOpenDialog({
+          properties: ['openFile'],
+        })
+        .then((response) => {
+          if (!response.canceled) {
+            _event.sender.send('file', response.filePaths[0]);
 
-          fs.readFile(response.filePaths[0], 'utf8', (err, data) => {
-            if(err) {
+            fs.readFile(response.filePaths[0], 'utf8', (err, data) => {
+              if (err) {
+                _event.sender.send('file', {
+                  tag: tag,
+                  status: 'error',
+                  payload: err,
+                });
+
+                return;
+              }
+
               _event.sender.send('file', {
                 tag: tag,
-                status: 'error',
-                payload: err
+                status: 'success',
+                payload: data,
               });
-
-              return;
-            }
-
+            });
+          } else {
             _event.sender.send('file', {
               tag: tag,
-              status: 'success',
-              payload: data
+              status: 'error',
+              payload: 'cancelled',
             });
-          });
-        } else {
-          _event.sender.send('file', {
-            tag: tag,
-            status: 'error',
-            payload: 'cancelled'
-          });
-        }
-      });
+          }
+        });
     });
   })
   .catch(console.log);
