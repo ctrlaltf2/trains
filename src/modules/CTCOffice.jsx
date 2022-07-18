@@ -16,7 +16,8 @@ import MenuItem from '@mui/material/MenuItem';
 import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import cytoscape from 'cytoscape'; // TODO: make this not use require
+import cytoscape from 'cytoscape';
+const df = require('data-forge'); // TODO: make this not use require
 
 import _ from 'lodash';
 
@@ -24,10 +25,10 @@ import SystemMap from './CTCOffice/SystemMap';
 import Train from './CTCOffice/Train';
 import TrackSwitch from './CTCOffice/Switch';
 import TrackModel from '../../data/TrackModel-route.json';
+import TrackModelDisplay from '../../data/TrackModel-display.json';
+import Style from './CTCOffice/SystemMap.cy.json';
 
 import './CTCOffice.css';
-
-const df = require('data-forge');
 
 const darkTheme = createTheme({
   palette: {
@@ -63,16 +64,22 @@ class CTCOffice extends React.Component {
           throughput[payload.line] = payload.value;
 
           this.setState({
-            throughput
+            throughput: throughput
           });
           break;
         case 'occupancy':
           // TODO: message validation
           this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
           break;
+        case 'timing':
+          console.log(Date.now() - payload.value);
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
+    });
+
+    window.electronAPI.subscribeFileMessage( (_event, payload) => {
+      console.log(payload);
     });
 
     this.state = {
@@ -118,6 +125,7 @@ class CTCOffice extends React.Component {
       editingSwitch: undefined,
       editingBlock: undefined,
       switchGoingToPosition: undefined,
+      activeLine: 'red',
     };
 
     this.nextTrainID = 1;
@@ -150,7 +158,8 @@ class CTCOffice extends React.Component {
       return new Set(this.cy[line].filter('edge[block_id]').map( (elem) => {
         return elem.data('block_id');
       }));
-    return new Set([]);
+    else
+      return new Set([]);
   }
 
   /**
@@ -168,7 +177,7 @@ class CTCOffice extends React.Component {
     occupancy[line][block_id] = !!is_occupied;
 
     this.setState({
-      occupancy,
+      occupancy: occupancy,
     });
   }
 
@@ -176,7 +185,7 @@ class CTCOffice extends React.Component {
     const switches = _.cloneDeep(this.state.switches);
     switches[line][switch_identifier].point_to(new_direction);
     this.setState({
-      switches
+      switches: switches
     });
   }
 
@@ -234,7 +243,7 @@ class CTCOffice extends React.Component {
     });
 
     // Find minimum cost route
-    const min = Infinity;
+    let min = Infinity;
     let i_best_route = -1;
     for (const i in routes) {
       if(routes[i].distance < min)
@@ -271,7 +280,7 @@ class CTCOffice extends React.Component {
     const activeTrainIDs = _.cloneDeep(this.state.activeTrainIDs);
     activeTrainIDs[line].push(this.nextTrainID);
     this.setState({
-      activeTrainIDs
+      activeTrainIDs: activeTrainIDs
     });
 
     this.nextTrainID++;
@@ -334,9 +343,9 @@ class CTCOffice extends React.Component {
                   label="Line"
                   onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
                 >
-                  <MenuItem value="blue">Blue</MenuItem>
-                  <MenuItem value="red">Red</MenuItem>
-                  <MenuItem value="green">Green</MenuItem>
+                  <MenuItem value={'blue'}>Blue</MenuItem>
+                  <MenuItem value={'red'}>Red</MenuItem>
+                  <MenuItem value={'green'}>Green</MenuItem>
                 </Select>
               </FormControl>
               <FormControl className="testUIConfigDropdown">
@@ -383,10 +392,10 @@ class CTCOffice extends React.Component {
               (lineSelection) ?
                 <TextField margin="none" size="small" label="Throughput" variant="standard" onChange={(ev) => {
                   const testUI = _.cloneDeep(this.state.testUI);
-                  testUI.throughputValue = ev.target.value;
+                  testUI['throughputValue'] = ev.target.value;
 
                   this.setState({
-                    testUI
+                    testUI: testUI
                   });
                 }}/>
               :
@@ -401,7 +410,7 @@ class CTCOffice extends React.Component {
                     throughput[lineSelection] = parseInt(throughputValue, 10);
 
                     this.setState({
-                      throughput
+                      throughput: throughput
                     });
                   }
                 }}>
@@ -477,13 +486,14 @@ class CTCOffice extends React.Component {
       switches,
       closures,
       switchGoingToPosition,
+      activeLine,
     } = this.state;
 
     const { lineSelection, blockSelection } = this.state.testUI;
 
-    const redLineThroughput = throughput.red;
-    const greenLineThroughput = throughput.green;
-    const blueLineThroughput = throughput.blue;
+    const redLineThroughput = throughput['red'];
+    const greenLineThroughput = throughput['green'];
+    const blueLineThroughput = throughput['blue'];
 
     return (
       <ThemeProvider theme={darkTheme}>
@@ -540,7 +550,7 @@ class CTCOffice extends React.Component {
 
                     this.dispatchTrain('blue', 10, '21:00', false);
 
-                    
+                    return;
                   }}
                 />
                 <Button variant="contained" component="span">
@@ -551,7 +561,7 @@ class CTCOffice extends React.Component {
           </div>
           <div id="systemMap" className="floating">
             <SystemMap
-              occupancy={occupancy}
+              occupancy={occupancy[activeLine]}
               manualMode={manualMode}
               onSwitchEdit={(switch_connections) => this.setState({
                 switchModalOpen: true,
@@ -562,6 +572,8 @@ class CTCOffice extends React.Component {
                 editingBlock: block_id,
               })}
               ref={this.systemMapRef}
+              displayGraph={TrackModelDisplay.lines[activeLine]}
+              stylesheet={Style['base'].concat(Style[activeLine])}
             />
           </div>
           <Modal
@@ -574,7 +586,7 @@ class CTCOffice extends React.Component {
 
               this.setState({
                 isDispatchModalOpen: false,
-                testUI,
+                testUI: testUI,
               });
             }}>
             <Box
@@ -604,9 +616,9 @@ class CTCOffice extends React.Component {
                       label="Line"
                       onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
                     >
-                      <MenuItem value="blue">Blue</MenuItem>
-                      <MenuItem value="red">Red</MenuItem>
-                      <MenuItem value="green">Green</MenuItem>
+                      <MenuItem value={'blue'}>Blue</MenuItem>
+                      <MenuItem value={'red'}>Red</MenuItem>
+                      <MenuItem value={'green'}>Green</MenuItem>
                     </Select>
                   </FormControl>
                   {
@@ -705,7 +717,7 @@ class CTCOffice extends React.Component {
                 </Typography>
                 {
                   editingSwitch ?
-                    <p>Coming from block {switches.blue[editingSwitch].coming_from}</p>
+                    <p>Coming from block {switches[activeLine][editingSwitch].coming_from}</p>
                   :
                     []
                 }
@@ -719,7 +731,7 @@ class CTCOffice extends React.Component {
                   >
                     {
                       editingSwitch ?
-                        switches.blue[editingSwitch].going_to_options.map( (sw) => {
+                        switches[activeLine][editingSwitch].going_to_options.map( (sw) => {
                           return <MenuItem value={sw}>{sw}</MenuItem>;
                         })
                         :
@@ -757,10 +769,10 @@ class CTCOffice extends React.Component {
                   Editing Block {editingBlock}
                 </Typography>
                 <FormControlLabel
-                  checked={closures.blue[editingBlock]}
+                  checked={closures['blue'][editingBlock]}
                   control={<Switch onChange={(ev) => {
                     const closures_ = _.cloneDeep(closures);
-                    closures_.blue[editingBlock] = !!ev.target.checked;
+                    closures_[activeLine][editingBlock] = !!ev.target.checked;
 
                     this.setState({
                       closures: closures_,

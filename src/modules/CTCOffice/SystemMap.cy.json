@@ -75,13 +75,33 @@
       }
     }
   ],
-  "blue_line": [
+  "blue": [
     {
       "selector": "edge[^.occupied]",
       "style": {
         "line-color": "#283593",
         "color": "#fff",
         "target-arrow-color": "#283593"
+      }
+    }
+  ],
+  "green": [
+    {
+      "selector": "edge[^.occupied]",
+      "style": {
+        "line-color": "#2E7D32",
+        "color": "#fff",
+        "target-arrow-color": "#2E7D32"
+      }
+    }
+  ],
+  "red": [
+    {
+      "selector": "edge[^.occupied]",
+      "style": {
+        "line-color": "#B71C1C",
+        "color": "#fff",
+        "target-arrow-color": "#B71C1C"
       }
     }
   ]
