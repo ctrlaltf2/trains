@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   subscribeTrackModelMessage:       (callback) => ipcRenderer.on(Modules.TRACK_MODEL, callback),
   subscribeTrainModelMessage:       (callback) => ipcRenderer.on(Modules.TRAIN_MODEL, callback),
   subscribeTrainControllerMessage:  (callback) => ipcRenderer.on(Modules.TRAIN_CONTROLLER, callback),
+  subscribeTimerMessage:            (callback) => ipcRenderer.on(Modules.TIMER, callback),
 
   subscribeFileMessage: (callback) => ipcRenderer.on('file', callback),
 
@@ -22,5 +23,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendTrainControllerSWMessage:   (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
   sendTrainControllerHWMessage:   (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
 
+  sendTrainControllerHWMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
+  requestTrainControllerHWMessage:  (payload) => ipcRenderer.invoke(Modules.TRAIN_CONTROLLER_SW, payload),
+
+  sendTimePause:          (doPause) => ipcRenderer.send('timer::pause', doPause),
+  sendTimeFastForward:    (timeScalar) => ipcRenderer.send('timer::time-multiplier', timeScalar),
+
   openFileDialog: (tag) => ipcRenderer.send('file', tag)
+
 });
