@@ -137,10 +137,11 @@ class TrackController extends React.Component {
   componentDidMount() {
     const interval = setInterval(() => {
       // console.log(this.state.blocks.length);
-      var status = [true, true, true];
+      var status = [];
 
       for (let j = 0; j < this.PLCReader.switchLogic.length; j++) {
         // Run 3x for vitality
+        status = [true, true, true]
         for (let vitality = 0; vitality < 3; vitality++) {
           for (
             let k = 0;
@@ -174,6 +175,7 @@ class TrackController extends React.Component {
             }
           }
         }
+        console.log(status);
         // Vitality check before setting switch position
         if (status.every((val) => val === true)) {
           this.state.blocks[
@@ -367,11 +369,7 @@ class TrackController extends React.Component {
                       label="Blocks"
                       onChange={this.handleChange}
                     >
-                      {this.state.blocks
-                        .filter(
-                          (block) => block.section === this.state.currSection
-                        )
-                        .map((block) => (
+                      {this.state.blocks.map((block) => (
                           <MenuItem key={block.id} value={block.id}>
                             {String(block.id)}
                           </MenuItem>
@@ -412,29 +410,22 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  {this.state.currBlock.switchPosition != null &&
+                  { this.state.currBlock.switch != undefined &&
                   this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
-                      label={`Switch Position: ${this.state.currBlock.switchPosition}`}
-                      color={
-                        this.state.currBlock.switchPosition === 'null'
-                          ? 'default'
-                          : 'success'
+                      label={`Switch Position: ${this.state.currBlock.switch.position}`}
+                      color={ 'success'
                       }
                       variant="outlined"
                     />
-                  ) : (
+                  ) : (this.state.currBlock.switch != undefined ? (
                     <Chip
-                      label={`Switch Position: ${this.state.currBlock.switchPosition}`}
-                      color={
-                        this.state.currBlock.switchPosition === 'null'
-                          ? 'default'
-                          : 'success'
-                      }
-                      variant="outlined"
-                    />
-                  )}
+                    label={`Switch Position: ${this.state.currBlock.switch.position}`}
+                    color={ 'success' }
+                    variant="outlined"
+                  />
+                  ): <div></div>) }
                 </div>
               </Grid>
               <Grid item xs="auto">
