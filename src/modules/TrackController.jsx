@@ -30,16 +30,11 @@ import { Wayside } from './Wayside.ts';
 import blueJSON from './TrackComponents/TrackJSON/blue.json';
 
 import blueLine from './TrackComponents/TrackJSON/blue.json';
-import blueA from './PLC/blueA.json';
-import blueB from './PLC/blueB.json';
-import blueC from './PLC/blueC.json';
-import ba from './PLC/bA.json';
+import greenPLC from './PLC/Green/allPLC.json';
 import greenLine from './TrackComponents/TrackJSON/VF2/green.json';
 import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 import './TrackController.css';
 import Wayside from './wayside';
-
-console.log(blueA);
 
 const darkTheme = createTheme({
   palette: {
@@ -59,28 +54,30 @@ class TrackController extends React.Component {
     this.currTrack = null;
 
     // Testing sub classes
-    // this.trackGreen = new Track('green');
-    // this.trackGreen.loadTrack(greenLine);
-    // this.trackGreen.setInfrastructure();
+    this.trackGreen = new Track('green');
+    this.trackGreen.loadTrack(greenLine);
+    this.trackGreen.setInfrastructure();
 
-    this.controller = new Wayside(redLine);
+    this.controller = new Wayside(greenLine);
 
     // console.log(this.trackRed.sections);
-    this.currTrack = this.trackRed;
+    this.currTrack = this.trackGreen;
 
     // WIP
-    this.PLCReader = new PLCReader(ba, 'green');
+    this.PLCReader = new PLCReader(greenPLC, 'green');
     this.PLCReader.parse();
+    console.log(this.PLCReader.switchLogic);
 
     this.state = {
       testMode: false,
-      track: this.trackRed,
+      track: this.trackGreen,
       blocks: this.currTrack.blocks,
-      maintenanceMode: false,
       currBlock: this.currTrack.blocks[0],
+      maintenanceMode: false,
+      currController: this.currTrack.blocks[0],
       appState: false,
       direction: true,
-      trackLine: 'blue',
+      trackLine: 'green',
       currSection: this.currTrack.blocks[0].section,
       sections: this.currTrack.sections,
       selectedPLC: '',
@@ -140,22 +137,62 @@ class TrackController extends React.Component {
   componentDidMount() {
     const interval = setInterval(() => {
       // console.log(this.state.blocks.length);
-      for (let i = 0; i < this.state.blocks.length; i++) {
-        // If a switch block
-      }
+      var status = [true, true, true];
 
-      /*
-       *
-       * Set auth
-       *
-       */
-      for (let i = 0; i < this.state.blocks.length; i++) {
-        if (
-          this.state.blocks[i].schedule &&
-          (this.state.blocks[i].transitLight === 'green' ||
-            this.state.blocks[i].transitLight === 'yellow')
-        ) {
-          this.state.blocks[i].authority = true;
+      for (let j = 0; j < this.PLCReader.switchLogic.length; j++) {
+        // Run 3x for vitality
+        for (let vitality = 0; vitality < 3; vitality++) {
+          for (
+            let k = 0;
+            k < this.PLCReader.switchLogic[j].logicTrue.length;
+            k++
+          ) {
+            // AND
+            if (this.PLCReader.switchLogic[j].logicTrue[k] === '&&') {
+            }
+            // NOT
+            else if (this.PLCReader.switchLogic[j].logicTrue[k].includes('!')) {
+              if (
+                this.state.blocks[
+                  parseInt(
+                    this.PLCReader.switchLogic[j].logicTrue[k].substring(1)
+                  ) - 1
+                ].occupancy
+              ) {
+                status[vitality] = false;
+              }
+            }
+            // Regular
+            else {
+              if (
+                !this.state.blocks[
+                  parseInt(this.PLCReader.switchLogic[j].logicTrue[k]) - 1
+                ].occupancy
+              ) {
+                status[vitality] = false;
+              }
+            }
+          }
+        }
+        // Vitality check before setting switch position
+        if (status.every((val) => val === true)) {
+          this.state.blocks[
+            parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
+          ].switch.position = true;
+          console.log(
+            this.state.blocks[
+              parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
+            ].switch.position
+          );
+        } else {
+          this.state.blocks[
+            parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
+          ].switch.position = false;
+          console.log(
+            this.state.blocks[
+              parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
+            ].switch.position
+          );
         }
       }
 
@@ -176,28 +213,10 @@ class TrackController extends React.Component {
 
   schedule(e) {
     if (!isNaN(e.target.value)) {
-      if (e.target.value <= 15) {
-        this.setState({
-          schedule: e.target.value,
-        });
-
-        // reset state for all
-        for (let i = 0; i < this.state.blocks.length; i++) {
-          this.state.blocks[i].schedule = false;
-          this.state.blocks[i].authority = false;
-        }
-
-        // Blue line only have switches manually set TO CHANGE
-        if (e.target.value < 11) {
-          for (let i = 0; i < e.target.value; i++) {
-            this.state.blocks[i].schedule = true;
-          }
-        } else if (e.target.value > 10) {
-          for (let j = 0; j < e.target.value; j++) {
-            if (j < 5 || j > 9) {
-              this.state.blocks[j].schedule = true;
-            }
-          }
+      for (let i = 0; i < this.state.blocks.length; i++) {
+        this.state.blocks[i].occupancy = true;
+        for (let j = 0; j < 500000; j++) {
+          this.state.blocks[i].occupancy = false;
         }
       }
     }
@@ -320,37 +339,6 @@ class TrackController extends React.Component {
       appState: !prevState.appState,
     }));
   }
-
-  // readPLC(path) {
-  //   const reader = new FileReader();
-  //   reader.addEventListener('load', (event) => {
-  //     const result = event.target.result;
-  //     // Do something with result
-  //   });
-
-  //   reader.addEventListener('progress', (event) => {
-  //     if (event.loaded && event.total) {
-  //       const percent = (event.loaded / event.total) * 100;
-  //       console.log(`Progress: ${Math.round(percent)}`);
-  //     }
-  //   });
-  //   reader.readAsDataURL(path);
-  // }
-
-  // brakeFail() {
-  //   console.log("brake fail");
-  //   this.setState((prevState) => ({
-  //     this.state.blocks[this.state.activeBlock].brakeFailure: !prevbrakeFailure,
-  //   }))
-  // }
-
-  // initializeBlocks() {
-  //   this.setState({
-  //     // eslint-disable-next-line react/destructuring-assignment
-  //     blocks: [this.state.blocks, new Block],
-  //   });
-  //   console.log(this.state.blocks)
-  // }
 
   // eslint-disable-next-line class-methods-use-this
   testUI() {
