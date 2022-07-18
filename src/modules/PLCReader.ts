@@ -6,9 +6,7 @@ export class PLCReader {
   public greenLogic = [];
   public authorityLogic = [];
 
-  constructor() {
-    this.parse;
-  }
+  constructor() {}
 
   // Parse PLC file into useful logic
   parse(file: JSON) {
@@ -20,17 +18,21 @@ export class PLCReader {
     this.greenLogic = [];
     this.authorityLogic = [];
 
-    for (const key in this.file) {
+    for (const key in file) {
       /*
        *  switch logic
        */
-      if (this.file[key].command.includes('switch')) {
-        // store arg and logic for switch
-        this.switchLogic.push({
-          switchNumber: this.file[key].command.split(' ')[1],
-          logicTrue: this.file[key].True.split(' '),
-          logicFalse: this.file[key].False.split(' '),
-        });
+      try {
+        if (file[key].command.split(' ')[0] === 'switch') {
+          // store arg and logic for switch
+          this.switchLogic.push({
+            switchNumber: file[key].command.split(' ')[1],
+            logicTrue: file[key].True.split(' '),
+            logicFalse: file[key].False.split(' '),
+          });
+        }
+      } catch (e) {
+        console.log(`error parsing: ${e}`);
       }
     }
     /*
