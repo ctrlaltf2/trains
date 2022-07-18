@@ -40,6 +40,11 @@ class TrackModel extends React.Component {
     super(props);
     this.name = name;
 
+    //  function to load in new files
+    window.electronAPI.subscribeFileMessage((_event, payload) => {
+      console.log(payload);
+    });
+
     this.state = {
       //  system variable defaults will go here -- booleans
       testMode: false,
@@ -120,9 +125,7 @@ class TrackModel extends React.Component {
 
   //need to implement this
   loadNewTrackModel = (event) => {
-    const fileInput = useRef();
-    const selectFile = () => {
-      fileInput.current.click();
+    window.electronAPI.openFileDialog('TrackModel');
     };
     console.log('load new track has not been yet implemented.');
   };
