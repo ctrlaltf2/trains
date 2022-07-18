@@ -1,4 +1,4 @@
-{
+[{
   "command": "switch 63",
   "True": "62",
   "False": "",
@@ -6,3 +6,4 @@
   "yellow": "",
   "green": ""
 }
+]

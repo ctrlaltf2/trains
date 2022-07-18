@@ -46,7 +46,6 @@ const darkTheme = createTheme({
   },
 });
 
-
 class TrackController extends React.Component {
   constructor(props, name) {
     super(props);
@@ -54,7 +53,12 @@ class TrackController extends React.Component {
 
     // For loading plc file via file explorer
     window.electronAPI.subscribeFileMessage((_event, payload) => {
-      console.log(payload);
+      try {
+        this.controllers[this.state.currController].setPLC(JSON.parse(payload.payload));
+      } catch (e) {
+        console.log(`Error loading plc: ${e}`);
+      }
+
     });
 
     // Receiving Messages from CTC and Track Model
@@ -97,7 +101,7 @@ class TrackController extends React.Component {
       blocks: this.currTrack.blocks,
       currBlock: this.currTrack.blocks[0],
       maintenanceMode: false,
-      currController: this.controllers[0],
+      currController: 0,
       appState: false,
       trackLine: 'green',
       sections: this.currTrack.sections,
@@ -107,30 +111,31 @@ class TrackController extends React.Component {
     };
 
     // Wayside controllers for switches on green line
-    this.controllers.push(new Wayside(1, this.state.blocks.slice(0, 12), 13));
-    let temp = this.state.blocks.slice(11, 27);
-    temp.push(this.state.blocks[149]);
+    this.controllers.push(new Wayside(1, this.state.blocks.slice(0, 13), 13));
+    let temp = this.state.blocks.slice(11, 28);
+    temp.push(this.state.blocks[150]);
     this.controllers.push(new Wayside(2, temp, 29));
-    this.controllers.push(new Wayside(3, this.state.blocks[56], 57));
-    this.controllers.push(new Wayside(4, this.state.blocks[61], 63));
+    this.controllers.push(new Wayside(3, this.state.blocks.slice(56,57), 57));
+    this.controllers.push(new Wayside(4, this.state.blocks.slice(61,62), 63));
     temp = this.state.blocks.slice(100, 149);
     temp.push(this.state.blocks[76]);
     this.controllers.push(new Wayside(5, temp, 76));
-    temp = this.state.blocks.slice(76, 84).push(this.state.blocks[99]);
+    temp = this.state.blocks.slice(76, 85);
+    temp.push(this.state.blocks[99]);
     this.controllers.push(new Wayside(6, temp, 85));
 
     // Set default controller
-    this.setState((prevState) => ({
-      currController: this.controllers[0],
-    }));
+    // this.setState((prevState) => ({
+    //   currController: this.controllers[0],
+    // }));
 
     // Load PLC for testing purposes
-    this.controllers[0].setPLC(SW13);
-    this.controllers[1].setPLC(SW29);
-    this.controllers[2].setPLC(SW57);
-    this.controllers[3].setPLC(SW63);
-    this.controllers[4].setPLC(SW76);
-    this.controllers[5].setPLC(SW85);
+    // this.controllers[0].setPLC(SW13);
+    // this.controllers[1].setPLC(SW29);
+    // this.controllers[2].setPLC(SW57);
+    // this.controllers[3].setPLC(SW63);
+    // this.controllers[4].setPLC(SW76);
+    // this.controllers[5].setPLC(SW85);
 
     // Functions for testing
     this.toggle = this.toggle.bind(this);
@@ -150,8 +155,6 @@ class TrackController extends React.Component {
 
   loadNewPLC = (event) => {
     var PLC = window.electronAPI.openFileDialog('PLC');
-
-    console.log('load has not been yet implemented.');
   };
 
   handleChangePLC(event) {
@@ -163,7 +166,9 @@ class TrackController extends React.Component {
   // Always keep status of blocks ----- executes PLC logic
   componentDidMount() {
     const interval = setInterval(() => {
-      // /*
+
+      console.log(this.controllers);
+            // /*
       //  * Send CTC:
       //  *
       //  * Authority Changes
@@ -185,12 +190,11 @@ class TrackController extends React.Component {
       // window.electronAPI.sendTrackModelMessage({
       //   'type': 'blocks',
       //   'blocks': this.state.blocks,
-      // })
-
+      // }
       this.setState((prevState) => ({
         appSate: !prevState.appState,
       }));
-      console.log('Blocks up to date');
+      // console.log('Blocks up to date');
     }, 1000);
   }
 
@@ -260,14 +264,12 @@ class TrackController extends React.Component {
 
   handleChangeController(event) {
     this.setState({
-      currController: this.state.controllers[event.target.value - 1],
+      currController: event.target.value - 1,
       // currBlock: this.state.blocks
       // .filter(
       //   (block) => block.section === event.target.value.charCodeAt(0) - 65
       // )[0],
     });
-
-    console.log(this.state.sections);
   }
 
   toggle() {
@@ -331,7 +333,7 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  {this.state.currBlock.switch != undefined &&
+                  {this.state.blocks[this.controllers[this.state.currController].swBlock] != undefined &&
                   this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
@@ -602,15 +604,12 @@ class TrackController extends React.Component {
                       label="Blocks"
                       onChange={this.handleChange}
                     >
-                      {this.state.blocks
-                        .filter(
-                          (block) => block.section === this.state.currController
-                        )
+                      { this.controllers[this.state.currController] != undefined ? (this.controllers[this.state.currController].blocks
                         .map((block) => (
                           <MenuItem key={block.id} value={block.id}>
                             {String(block.id)}
                           </MenuItem>
-                        ))}
+                        ))): <div></div>}
                     </Select>
                   </FormControl>
                 </div>
@@ -624,13 +623,13 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-section"
                       id="select-section"
-                      value={this.state.currController}
+                      value={this.state.currController + 1}
                       label="Sections"
                       onChange={this.handleChangeController}
                     >
-                      {this.state.sections.map((section) => (
-                        <MenuItem key={section} value={section}>
-                          {String(section)}
+                      {this.controllers.map((controller) => (
+                        <MenuItem key={+controller.id} value={+controller.id}>
+                          {String(controller.id)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -647,11 +646,11 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  {this.state.currBlock.switchPosition != null &&
+                {this.state.blocks[this.controllers[this.state.currController].swBlock - 1].switch == undefined ? <div></div> :
                   this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
-                      label={`Switch Position: ${this.state.currBlock.switchPosition}`}
+                      label={`Switch Position: ${this.state.blocks[this.controllers[this.state.currController].swBlock - 1].switch.position}`}
                       color={
                         this.state.currBlock.switchPosition === 'null'
                           ? 'default'
@@ -661,7 +660,7 @@ class TrackController extends React.Component {
                     />
                   ) : (
                     <Chip
-                      label={`Switch Position: ${this.state.currBlock.switchPosition}`}
+                      label={`Switch Position: ${this.state.blocks[this.controllers[this.state.currController].swBlock - 1].switch.position}`}
                       color={
                         this.state.currBlock.switchPosition === 'null'
                           ? 'default'
@@ -881,9 +880,9 @@ class TrackController extends React.Component {
                     variant="contained"
                     sx={{ fontSize: 14 }}
                     className="LoadTrack"
+                    onClick={this.loadNewPLC}
                   >
-                    <AddIcon /> Load PLC
-                    <input type="file" />
+                    Load PLC
                   </Button>
                 </div>
               </Grid>
