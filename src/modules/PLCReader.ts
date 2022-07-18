@@ -1,22 +1,25 @@
 export class PLCReader {
-  public file: JSON;
   public switchLogic = [];
   public crossingLogic = [];
   public redLogic = [];
   public yellowLogic = [];
   public greenLogic = [];
   public authorityLogic = [];
-  public line: string;
 
-  constructor(file: JSON, line: string) {
-    this.line = line;
-    this.file = file;
-
+  constructor() {
     this.parse;
   }
 
   // Parse PLC file into useful logic
-  parse() {
+  parse(file: JSON) {
+    // Set logic to empty
+    this.switchLogic = [];
+    this.crossingLogic = [];
+    this.redLogic = [];
+    this.yellowLogic = [];
+    this.greenLogic = [];
+    this.authorityLogic = [];
+
     for (const key in this.file) {
       /*
        *  switch logic

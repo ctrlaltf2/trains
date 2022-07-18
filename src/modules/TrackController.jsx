@@ -25,16 +25,20 @@ import {
 } from '@mui/material';
 
 import { Track } from './TrackComponents/Track';
-import { PLCReader } from './PLCReader';
 import { Wayside } from './Wayside.ts';
-import blueJSON from './TrackComponents/TrackJSON/blue.json';
 
-import blueLine from './TrackComponents/TrackJSON/blue.json';
-import greenPLC from './PLC/Green/allPLC.json';
 import greenLine from './TrackComponents/TrackJSON/VF2/green.json';
 import redLine from './TrackComponents/TrackJSON/VF2/red.json';
+
+// plc for testing until upload works
+import SW13 from './PLC/Green/SW13.json';
+import SW29 from './PLC/Green/SW29.json';
+import SW57 from './PLC/Green/SW57.json';
+import SW63 from './PLC/Green/SW63.json';
+import SW76 from './PLC/Green/SW76.json';
+import SW85 from './PLC/Green/SW85.json';
+
 import './TrackController.css';
-import Wayside from './wayside';
 
 const darkTheme = createTheme({
   palette: {
@@ -51,22 +55,39 @@ class TrackController extends React.Component {
     super(props);
     this.name = name;
 
+    // Receiving Messages from CTC and Track Model
+    window.electronAPI.subscribeTrackControllerMessage((_event, payload) => {
+      console.log('IPC:TrackController: ', payload);
+
+      switch (payload.type) {
+        case 'failure':
+          // TODO
+          break;
+        case 'occupancy':
+          // TODO: message validation
+          this.updateBlockOccupancy(
+            payload.line,
+            payload.block_id,
+            payload.value
+          );
+          break;
+        case 'timing':
+          console.log(Date.now() - payload.value);
+        default:
+          console.warn('Unknown payload type received: ', payload.type);
+      }
+    });
+
     this.currTrack = null;
+    this.controllers = [];
 
     // Testing sub classes
     this.trackGreen = new Track('green');
     this.trackGreen.loadTrack(greenLine);
     this.trackGreen.setInfrastructure();
 
-    this.controller = new Wayside(greenLine);
-
     // console.log(this.trackRed.sections);
     this.currTrack = this.trackGreen;
-
-    // WIP
-    this.PLCReader = new PLCReader(greenPLC, 'green');
-    this.PLCReader.parse();
-    console.log(this.PLCReader.switchLogic);
 
     this.state = {
       testMode: false,
@@ -76,7 +97,6 @@ class TrackController extends React.Component {
       maintenanceMode: false,
       currController: this.currTrack.blocks[0],
       appState: false,
-      direction: true,
       trackLine: 'green',
       currSection: this.currTrack.blocks[0].section,
       sections: this.currTrack.sections,
@@ -84,6 +104,27 @@ class TrackController extends React.Component {
       schedule: parseInt(0),
       // inputFile: useRef(null),
     };
+
+    // Wayside controllers for switches on green line
+    this.controllers.push(new Wayside(1, this.state.blocks.slice(0, 12), 13));
+    let temp = this.state.blocks.slice(11, 27);
+    temp.push(this.state.blocks[149]);
+    this.controllers.push(new Wayside(2, temp, 29));
+    this.controllers.push(new Wayside(3, this.state.blocks[56], 57));
+    this.controllers.push(new Wayside(4, this.state.blocks[61], 63));
+    temp = this.state.blocks.slice(100, 149);
+    temp.push(this.state.blocks[76]);
+    this.controllers.push(new Wayside(5, temp, 76));
+    temp = this.state.blocks.slice(76, 84).push(this.state.blocks[99]);
+    this.controllers.push(new Wayside(6, temp, 85));
+
+    // Load PLC for testing purposes
+    this.controllers[0].setPLC(SW13);
+    this.controllers[1].setPLC(SW29);
+    this.controllers[2].setPLC(SW57);
+    this.controllers[3].setPLC(SW63);
+    this.controllers[4].setPLC(SW76);
+    this.controllers[5].setPLC(SW85);
 
     // For inputting file
     this.inputFileRef = React.createRef(null);
@@ -99,7 +140,6 @@ class TrackController extends React.Component {
     this.suggSpeed = this.suggSpeed.bind(this);
     this.schedule = this.schedule.bind(this);
     this.setSwitch = this.setSwitch.bind(this);
-    this.blockDirection = this.blockDirection.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeSection = this.handleChangeSection.bind(this);
 
@@ -137,66 +177,90 @@ class TrackController extends React.Component {
   componentDidMount() {
     const interval = setInterval(() => {
       // console.log(this.state.blocks.length);
-      var status = [];
+      // var status = [];
 
-      for (let j = 0; j < this.PLCReader.switchLogic.length; j++) {
-        // Run 3x for vitality
-        status = [true, true, true]
-        for (let vitality = 0; vitality < 3; vitality++) {
-          for (
-            let k = 0;
-            k < this.PLCReader.switchLogic[j].logicTrue.length;
-            k++
-          ) {
-            // AND
-            if (this.PLCReader.switchLogic[j].logicTrue[k] === '&&') {
-            }
-            // NOT
-            else if (this.PLCReader.switchLogic[j].logicTrue[k].includes('!')) {
-              if (
-                this.state.blocks[
-                  parseInt(
-                    this.PLCReader.switchLogic[j].logicTrue[k].substring(1)
-                  ) - 1
-                ].occupancy
-              ) {
-                status[vitality] = false;
-              }
-            }
-            // Regular
-            else {
-              if (
-                !this.state.blocks[
-                  parseInt(this.PLCReader.switchLogic[j].logicTrue[k]) - 1
-                ].occupancy
-              ) {
-                status[vitality] = false;
-              }
-            }
-          }
-        }
-        console.log(status);
-        // Vitality check before setting switch position
-        if (status.every((val) => val === true)) {
-          this.state.blocks[
-            parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
-          ].switch.position = true;
-          console.log(
-            this.state.blocks[
-              parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
-            ].switch.position
-          );
-        } else {
-          this.state.blocks[
-            parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
-          ].switch.position = false;
-          console.log(
-            this.state.blocks[
-              parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
-            ].switch.position
-          );
-        }
-      }
+      // for (let j = 0; j < this.PLCReader.switchLogic.length; j++) {
+      //   // Run 3x for vitality
+      //   status = [true, true, true];
+      //   for (let vitality = 0; vitality < 3; vitality++) {
+      //     for (
+      //       let k = 0;
+      //       k < this.PLCReader.switchLogic[j].logicTrue.length;
+      //       k++
+      //     ) {
+      //       // AND
+      //       if (this.PLCReader.switchLogic[j].logicTrue[k] === '&&') {
+      //       }
+      //       // NOT
+      //       else if (this.PLCReader.switchLogic[j].logicTrue[k].includes('!')) {
+      //         if (
+      //           this.state.blocks[
+      //             parseInt(
+      //               this.PLCReader.switchLogic[j].logicTrue[k].substring(1)
+      //             ) - 1
+      //           ].occupancy
+      //         ) {
+      //           status[vitality] = false;
+      //         }
+      //       }
+      //       // Regular
+      //       else {
+      //         if (
+      //           !this.state.blocks[
+      //             parseInt(this.PLCReader.switchLogic[j].logicTrue[k]) - 1
+      //           ].occupancy
+      //         ) {
+      //           status[vitality] = false;
+      //         }
+      //       }
+      //     }
+      //   }
+      //   console.log(status);
+      //   // Vitality check before setting switch position
+      //   if (status.every((val) => val === true)) {
+      //     this.state.blocks[
+      //       parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
+      //     ].switch.position = true;
+      //     console.log(
+      //       this.state.blocks[
+      //         parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
+      //       ].switch.position
+      //     );
+      //   } else {
+      //     this.state.blocks[
+      //       parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
+      //     ].switch.position = false;
+      //     console.log(
+      //       this.state.blocks[
+      //         parseInt(this.PLCReader.switchLogic[j].switchNumber) - 1
+      //       ].switch.position
+      //     );
+      //   }
+      // }
+
+      // /*
+      //  * Send CTC:
+      //  *
+      //  * Authority Changes
+      //  * Failures
+      //  * Block states (switches, crossing, transit lights)
+      //  */
+      // window.electronAPI.sendCTCMessage({
+      //   type: 'blocks',
+      //   blocks: this.state.blocks,
+      // });
+
+      /*
+       * Send to track model:
+       *
+       * Authority
+       * Train/Suggested Speed
+       * Block states (switches, crossing, transit lights)
+       */
+      // window.electronAPI.sendTrackModelMessage({
+      //   'type': 'blocks',
+      //   'blocks': this.state.blocks,
+      // })
 
       this.setState((prevState) => ({
         appSate: !prevState.appState,
@@ -248,14 +312,6 @@ class TrackController extends React.Component {
       appState: !prevState.appState,
     }));
     console.log(this.state.currBlock.occupancy);
-  }
-
-  blockDirection() {
-    this.state.currSection.direction = !this.state.currSection.direction;
-    this.setState((prevState) => ({
-      appSate: !prevState.appState,
-    }));
-    console.log(this.state.currSection.direction);
   }
 
   handleFileChange(e) {
@@ -370,10 +426,10 @@ class TrackController extends React.Component {
                       onChange={this.handleChange}
                     >
                       {this.state.blocks.map((block) => (
-                          <MenuItem key={block.id} value={block.id}>
-                            {String(block.id)}
-                          </MenuItem>
-                        ))}
+                        <MenuItem key={block.id} value={block.id}>
+                          {String(block.id)}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -410,22 +466,23 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  { this.state.currBlock.switch != undefined &&
+                  {this.state.currBlock.switch != undefined &&
                   this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${this.state.currBlock.switch.position}`}
-                      color={ 'success'
-                      }
+                      color={'success'}
                       variant="outlined"
                     />
-                  ) : (this.state.currBlock.switch != undefined ? (
+                  ) : this.state.currBlock.switch != undefined ? (
                     <Chip
-                    label={`Switch Position: ${this.state.currBlock.switch.position}`}
-                    color={ 'success' }
-                    variant="outlined"
-                  />
-                  ): <div></div>) }
+                      label={`Switch Position: ${this.state.currBlock.switch.position}`}
+                      color={'success'}
+                      variant="outlined"
+                    />
+                  ) : (
+                    <div></div>
+                  )}
                 </div>
               </Grid>
               <Grid item xs="auto">
@@ -620,16 +677,6 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        {/* <TableCell component="th">
-                          <Button onClick={this.blockDirection}>
-                            Direction
-                          </Button>
-                        </TableCell>
-                        <TableCell align="right">
-                          {this.state.currSection.direction
-                            ? 'forward'
-                            : 'backward'}
-                        </TableCell> */}
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -951,12 +998,6 @@ class TrackController extends React.Component {
                           '&:last-child td, &:last-child th': { border: 0 },
                         }}
                       >
-                        {/* <TableCell component="th">Direction</TableCell>
-                        <TableCell align="right">
-                          {this.state.currSection.direction
-                            ? 'forward'
-                            : 'backward'}
-                        </TableCell> */}
                       </TableRow>
                     </TableBody>
                   </Table>
