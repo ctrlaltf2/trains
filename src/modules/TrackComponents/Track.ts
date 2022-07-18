@@ -30,8 +30,8 @@ export class Track {
         )
       );
 
-      console.log(this.sections);
-      console.log(this.blocks);
+      // console.log(this.sections);
+      // console.log(this.blocks);
     }
   }
 
