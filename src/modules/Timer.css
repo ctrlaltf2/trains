@@ -1,0 +1,17 @@
+#main {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0;
+  text-align: center;
+}
+
+#main > * {
+  width: 100%;
+}
+
+#timer-button-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
