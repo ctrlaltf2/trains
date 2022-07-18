@@ -4,6 +4,7 @@ export const TRACK_MODEL          = 'TrackModel';
 export const TRAIN_MODEL          = 'TrainModel';
 export const TRAIN_CONTROLLER_SW  = 'TrainControllerSW';
 export const TRAIN_CONTROLLER_HW  = 'TrainControllerHW';
+export const TIMER                = 'Timer';
 
 export const ALL_MODULES = {
   CTC_OFFICE,
@@ -12,6 +13,7 @@ export const ALL_MODULES = {
   TRAIN_MODEL,
   TRAIN_CONTROLLER_SW,
   TRAIN_CONTROLLER_HW,
+  TIMER,
 };
 
 
