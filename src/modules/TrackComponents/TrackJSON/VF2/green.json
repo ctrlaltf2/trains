@@ -142,7 +142,7 @@
     "Block Length (m)": "150",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "70",
-    "Infrastructure": "SWITCH (13-12; 13-1)",
+    "Infrastructure": "SWITCH (13-1; 13-12)",
     "ELEVATION (M)": "0",
     "CUMALTIVE ELEVATION (M)": "0.5",
     "seconds to traverse block": "7.7"
