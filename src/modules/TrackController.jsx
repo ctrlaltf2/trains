@@ -67,16 +67,14 @@ class TrackController extends React.Component {
       console.log('IPC:TrackController: ', payload);
 
       switch (payload.type) {
-        case 'failure':
+        case 'trackModelStatus':
           // TODO
           break;
-        case 'occupancy':
-          // TODO: message validation
-          this.updateBlockOccupancy(
-            payload.line,
-            payload.block_id,
-            payload.value
-          );
+        case 'dispatch train':
+          // TODO
+          break;
+        case 'closure':
+
           break;
         case 'timing':
           console.log(Date.now() - payload.value);
@@ -203,10 +201,12 @@ class TrackController extends React.Component {
        * Train/Suggested Speed
        * Block states (switches, crossing, transit lights)
        */
-      // window.electronAPI.sendTrackModelMessage({
-      //   'type': 'blocks',
-      //   'blocks': this.state.blocks,
-      // }
+      window.electronAPI.sendTrackModelMessage({
+        'type': 'blocks',
+        'blocks': this.state.blocks,
+      });
+
+      // Logic
       this.controllers.forEach((controller) => {
         var status = [];
 
