@@ -11,6 +11,7 @@ export class Block {
 
   public occupancy: boolean= false;
   public maintenanceMode: boolean = false;
+  public transitLight: string = '';
 
   /*
    * TODO: other classes? beacon  and station

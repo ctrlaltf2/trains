@@ -4,8 +4,9 @@ export class Track {
   public blocks: Block[] = [];
   public sections = [];
 
-  constructor(public line: string) {
+  constructor(public line: string, public id: number) {
     this.line = line;
+    this.id = id;
   }
 
   loadTrack(file: JSON) {
