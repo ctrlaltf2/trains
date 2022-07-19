@@ -82,7 +82,6 @@ class CTCOffice extends React.Component {
       throughput: {
         'red': 0,
         'green': 1,
-        'blue': 2,
       },
       testUI: {
         lineSelection: undefined,
@@ -93,7 +92,6 @@ class CTCOffice extends React.Component {
       occupancy: { // occupancy[line][block_id] = is_occupied: bool
         'red': {},
         'green': {},
-        'blue': {},
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
         'red': {},
@@ -105,12 +103,10 @@ class CTCOffice extends React.Component {
       closures: { // closures[line][block_id] = is_closed;
         'red': {},
         'green': {},
-        'blue': {},
       },
       activeTrainIDs: {
         'red': [],
         'green': [],
-        'blue': [],
       },
       enteredETA: undefined,
       manualMode: false,
@@ -188,8 +184,6 @@ class CTCOffice extends React.Component {
    */
   getStartingBlockQuery(line) {
     switch(line) {
-      case 'blue':
-        return `node[id = 'y']`;
       default:
         console.warn(`Unimplemented line '${line}' for starting block query detected`);
         return 'oops';
@@ -337,7 +331,6 @@ class CTCOffice extends React.Component {
                   label="Line"
                   onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
                 >
-                  <MenuItem value={'blue'}>Blue</MenuItem>
                   <MenuItem value={'red'}>Red</MenuItem>
                   <MenuItem value={'green'}>Green</MenuItem>
                 </Select>
@@ -487,7 +480,6 @@ class CTCOffice extends React.Component {
 
     const redLineThroughput = throughput['red'];
     const greenLineThroughput = throughput['green'];
-    const blueLineThroughput = throughput['blue'];
 
     return (
       <ThemeProvider theme={darkTheme}>
@@ -495,8 +487,6 @@ class CTCOffice extends React.Component {
           <div className="throughputContainer floating">
             <h4 className="throughputTitle">Throughput Statistics</h4>
             <div className="throughputGrid">
-              <div className="throughputLabel" id="blueLineLabel">Blue Line Throughput</div>
-              <div className="throughputValue" id="blueLineValue">{blueLineThroughput} trains/hr</div>
               <div className="throughputLabel" id="redLineLabel">Red Line Throughput</div>
               <div className="throughputValue" id="redLineValue">{redLineThroughput} trains/hr</div>
               <div className="throughputLabel" id="greenLineLabel">Green Line Throughput</div>
@@ -541,8 +531,6 @@ class CTCOffice extends React.Component {
                   type="file"
                   onChange={(ev) => {
                     console.log(ev);
-
-                    this.dispatchTrain('blue', 10, '21:00', false);
 
                     return;
                   }}
@@ -610,7 +598,6 @@ class CTCOffice extends React.Component {
                       label="Line"
                       onChange={(ev, elem) => { this.handleLineSelect(this, ev, elem)}}
                     >
-                      <MenuItem value={'blue'}>Blue</MenuItem>
                       <MenuItem value={'red'}>Red</MenuItem>
                       <MenuItem value={'green'}>Green</MenuItem>
                     </Select>
@@ -763,7 +750,7 @@ class CTCOffice extends React.Component {
                   Editing Block {editingBlock}
                 </Typography>
                 <FormControlLabel
-                  checked={closures['blue'][editingBlock]}
+                  checked={closures[activeLine][editingBlock]}
                   control={<Switch onChange={(ev) => {
                     const closures_ = _.cloneDeep(closures);
                     closures_[activeLine][editingBlock] = !!ev.target.checked;
