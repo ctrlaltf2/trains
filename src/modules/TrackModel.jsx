@@ -1,3 +1,4 @@
+/* eslint-disable no-plusplus */
 /* eslint-disable react/destructuring-assignment */
 import { Module } from 'module';
 import React, { useRef } from 'react';
@@ -67,6 +68,7 @@ class TrackModel extends React.Component {
       IPC_Recieved_Message: '',
 
       // if information has problem might need blocks: blocks
+      //  is an array of blocks, one block has block info for the track
       blocks,
 
       testUISpeedLimit: 30,
@@ -142,49 +144,31 @@ class TrackModel extends React.Component {
     this.loadBlockInfo = this.loadBlockInfo.bind(this);
     this.resetAllSettings = this.resetAllSettings.bind(this);
     this.handleChange = this.handleChange.bind(this);
-
     this.generateTrackModelEVtemp = this.generateTrackModelEVtemp.bind(this);
     this.checkTrackHeaters = this.checkTrackHeaters.bind(this);
-
     this.loadFile = this.loadFile.bind(this);
-
     this.testUISpeedLimitFun = this.testUISpeedLimitFun.bind(this);
     this.testUIEnvtempFun = this.testUIEnvtempFun.bind(this);
     this.testUITrackHeaterStatusFun =
       this.testUITrackHeaterStatusFun.bind(this);
   }
 
-  //  appears to be working so far -- NEED TO REFACTOR THIS
-
+  //  Load's blocks information from the Track Model File - alpha = blockIndex
   loadBlockInfo = (alpha) => {
-    const myValue = alpha;
-    console.log(myValue);
-    console.log(this.state.TrackJSON.Track[myValue - 1]);
-    const tempObj = this.state.TrackJSON.Track[myValue - 1];
+    const curBlock = this.state.blocks[alpha]; //  get the block selected
+    const blockLengthImperial = (curBlock.BlockLength * 0.000621371).toFixed(3);
+    const speedLimitImperial = (curBlock.SpeedLimit * 0.621371).toFixed(3);
+    const elevationImperial = (curBlock.Elevation * 3.28084).toFixed(3);
 
-    //  Assign values from JSON for calculations
-    const blockLengthMetric = tempObj['Block Length (m)']; //  convert from meters to miles
-    const speedLimitMetric = tempObj['Speed Limit (Km/Hr)']; //   Convert from km/h to mph
-    const elevationMetric = tempObj['ELEVATION (M)']; //  Convert from M to Feet
-    console.log('elevation:');
-    console.log('The elevation is: ', elevationMetric);
+    //  Assign values from the Blocks array to State vars
     this.setState({
-      blockLength: (blockLengthMetric * 0.000621371).toFixed(3),
+      blockLength: blockLengthImperial,
     });
     this.setState({
-      speedLimit: (speedLimitMetric * 0.621371).toFixed(3),
+      speedLimit: speedLimitImperial,
     });
     this.setState({
-      switchPos: tempObj.switch,
-    });
-    this.setState({
-      blockIndex: myValue,
-    });
-    this.setState({
-      elevation: (elevationMetric * 3.28084).toFixed(3),
-    });
-    this.setState({
-      blockOccupancy: tempObj['Block Occupancy'],
+      elevation: elevationImperial,
     });
   };
 
@@ -192,34 +176,51 @@ class TrackModel extends React.Component {
   //  need to implement this
   loadNewTrackModel = (event) => {
     //  Load the initial variables with information
-    try {
-      console.log('trying to load info.');
-      console.log('This is the first block: ', this.state.TrackJSON.Track[0]);
+    // try {
+    //  console.log('This is the first block: ', this.state.TrackJSON.Track[0]);
 
-      const temp = this.state.TrackJSON.Track[0].Line;
+    //  load the TrackJSON object's properties into the blocks array
+    const tempTrackObj = {};
 
-      //  set line Name
-      this.setState({ lineName: temp });
+    for (let i = 0; i < this.state.TrackJSON.Track.length; i++) {
+      console.log('i = ', i);
 
-      //  set envionment temp by calling function
-      this.generateTrackModelEVtemp();
+      const temp = this.state.TrackJSON.Track[i]; // gets the info from object at index i
+      tempTrackObj.Line = temp['Line'];
+      tempTrackObj.Section = temp['Section'];
+      tempTrackObj.BlockNumber = temp['Block Number'];
+      tempTrackObj.BlockLength = temp['Block Length (m)'];
+      tempTrackObj.BlockGrade = temp['Block Grade (%)'];
+      tempTrackObj.SpeedLimit = temp['Speed Limit (Km/Hr)'];
+      tempTrackObj.Infrastructure = temp['Infrastructure'];
+      tempTrackObj.Elevation = temp['ELEVATION (M)'];
+      tempTrackObj.CumElevation = temp['CUMALTIVE ELEVATION (M)'];
 
-      //  call the function to check if the heaters are needed
-      this.checkTrackHeaters();
+      // this.state.blocks.push(tempTrackObj);
+      this.state.blocks.push({
+        tempTrackObj,
+        //  line: tempTrackObj.Line,
+        //  section: tempTrackObj.Section
+      });
 
-      //  assign indices of the JSON object into an array called blocks
-      //  Store the block index of the JSON object as a regular value in the blocks array
-      const blockObj = {};
-      // eslint-disable-next-line no-plusplus
-      for (let i = 0; i < this.state.TrackJSON.Track.length; i++) {
-        const TrackJSONObj = this.state.TrackJSON.Track[i];
-        blockObj.blockIndex = TrackJSONObj['Block Number'];
-        blocks.push(blockObj.blockIndex); //  pushes the object to the block array
-        console.log('The index number: ', blockObj.blockIndex);
-      }
-    } catch (error) {
-      console.log('that didnt work', error);
+      console.log('tempTrackObj: ', tempTrackObj);
+      console.log('Blocks array at index i: ', blocks[i]);
     }
+
+    console.log('blocks array: ', blocks);
+    const temp = this.state.TrackJSON.Track[0].Line;
+
+    //  set line Name -- any index of the file will work as the line is same throughout
+    this.setState({ lineName: temp });
+
+    //  set envionment temp by calling function
+    this.generateTrackModelEVtemp();
+
+    //  call the function to check if the heaters are needed
+    this.checkTrackHeaters();
+    // } catch (error) {
+    //   console.log('that didnt work', error);
+    // }
   };
 
   loadFile = (event) => {
@@ -312,7 +313,6 @@ class TrackModel extends React.Component {
 
   //  handle the select change
   handleChange = (event) => {
-    // this.state.blockIndex = event.target.value;
     this.setState({ blockIndex: event.target.value });
     console.log('the block index is: ', event.target.value);
     this.loadBlockInfo(event.target.value);
@@ -656,8 +656,11 @@ class TrackModel extends React.Component {
                       // value="Hello"
                     >
                       {this.state.blocks.map((block) => (
-                        <MenuItem key={block} value={block}>
-                          {String(block)}
+                        <MenuItem
+                          key={block.BlockNumber}
+                          value={block.BlockNumber}
+                        >
+                          {String(block.BlockNumber)}
                         </MenuItem>
                       ))}
                       {/* Want to give the user n options to chose from where n is the amount of blocks in the TrackJSON object
