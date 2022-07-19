@@ -27,6 +27,7 @@ import './TrackBlock.js';
 import blueTrackImg from './BlueTrack.jpg';
 import blueTrackJson from './blueLineTrackModel.json';
 import { array } from 'prop-types';
+import { PortableWifiOffRounded } from '@mui/icons-material';
 
 // variables
 const darkMode = createTheme({
@@ -35,7 +36,7 @@ const darkMode = createTheme({
   },
 });
 
-let blocks = new Array();
+const blocks = [];
 
 class TrackModel extends React.Component {
   constructor(props, name) {
@@ -63,8 +64,10 @@ class TrackModel extends React.Component {
       personsAtStation: 10,
 
       TrackJSON: '',
+      IPC_Recieved_Message: '',
 
-      blocks: blocks,
+      // if information has problem might need blocks: blocks
+      blocks,
 
       testUISpeedLimit: 30,
       testUIEnvtemp: 80,
@@ -84,6 +87,45 @@ class TrackModel extends React.Component {
 
       //  testing
       console.log('Line: ', this.state.TrackJSON.Track[0].Line);
+    });
+
+    //  Function to recieve messages from other modules via IPC communication
+    window.electronAPI.subscribeTrackModelMessage((_event, payload) => {
+      console.log('IPC:Track Model: ', payload);
+      switch (payload.type) {
+        default:
+          console.warn('Unknown payload type recievedL ', payload.type);
+      }
+
+      try {
+        //  store the message payload in the recieved message var
+        this.state.IPC_Recieved_Message = payload.payload;
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    //  function to send message to the Track Controller
+    window.electronAPI.sendTrackControllerMessage({
+      //  anything inside here is a property of the object you are sending
+      //  example 'type': 'closure'
+      TrackSignalPickup: '',
+      RailStatus: this.state.railStatus,
+      TrackPowerStatus: this.state.trackPower,
+      SpeedLimit: this.state.speedLimit,
+      TrainEngineFailure: '',
+      BrakeFailure: '',
+      throughput: '',
+    });
+
+    //  function to send message to the Train Model
+    window.electronAPI.sendTrainModelMessage({
+      //  anything here is a property of the object you are sending
+      TransitLightStatus: '',
+      MaintenanceMode: '',
+      CommandedSpeed: '',
+      Authority: '',
+      Beacon: '',
     });
 
     //  function prototypes
