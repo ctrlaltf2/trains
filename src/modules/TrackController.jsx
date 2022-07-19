@@ -87,14 +87,21 @@ class TrackController extends React.Component {
 
     this.currTrack = null;
     this.controllers = [];
+    this.tracks = [];
 
     // Testing sub classes
-    this.trackGreen = new Track('green');
+    this.trackGreen = new Track('green', 1);
     this.trackGreen.loadTrack(greenLine);
     this.trackGreen.setInfrastructure();
+    this.tracks.push(this.trackGreen);
+
+    this.trackRed = new Track('red', 2);
+    this.trackRed.loadTrack(redLine);
+    this.trackRed.setInfrastructure();
+    this.tracks.push(this.trackRed);
 
     // console.log(this.trackRed.sections);
-    this.currTrack = this.trackGreen;
+    this.currTrack = this.tracks[0];
 
     this.state = {
       testMode: false,
@@ -104,26 +111,18 @@ class TrackController extends React.Component {
       maintenanceMode: false,
       currController: 0,
       appState: false,
-      trackLine: 'green',
-      sections: this.currTrack.sections,
       selectedPLC: '',
       schedule: parseInt(0),
       // inputFile: useRef(null),
     };
 
     // Wayside controllers for switches on green line
-    this.controllers.push(
-      new Wayside(1, this.state.blocks.slice(0, 13), 13)
-    );
+    this.controllers.push(new Wayside(1, this.state.blocks.slice(0, 13), 13));
     let temp = this.state.blocks.slice(11, 28);
     temp.push(this.state.blocks[150]);
     this.controllers.push(new Wayside(2, temp, 29));
-    this.controllers.push(
-      new Wayside(3, this.state.blocks.slice(56, 57), 57)
-    );
-    this.controllers.push(
-      new Wayside(4, this.state.blocks.slice(61, 62), 63)
-    );
+    this.controllers.push(new Wayside(3, this.state.blocks.slice(56, 57), 57));
+    this.controllers.push(new Wayside(4, this.state.blocks.slice(61, 62), 63));
     temp = this.state.blocks.slice(100, 149);
     temp.push(this.state.blocks[76]);
     this.controllers.push(new Wayside(5, temp, 76));
@@ -152,6 +151,8 @@ class TrackController extends React.Component {
     this.schedule = this.schedule.bind(this);
     this.setSwitch = this.setSwitch.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleLineChange = this.handleLineChange.bind(this);
+
     this.handleChangeController = this.handleChangeController.bind(this);
 
     // this.plc = this.plc.bind(this);
@@ -163,6 +164,14 @@ class TrackController extends React.Component {
   loadNewPLC = (event) => {
     var PLC = window.electronAPI.openFileDialog('PLC');
   };
+
+  handleLineChange(event) {
+    this.currTrack = this.tracks[event.target.value - 1];
+    this.state.blocks = this.currTrack.blocks;
+    this.setState((prevState) => ({
+      appSate: !prevState.appState,
+    }));
+  }
 
   handleChangePLC(event) {
     this.setState({
@@ -205,12 +214,18 @@ class TrackController extends React.Component {
           // Run 3x for vitality
           status = [true, true, true];
           for (let vitality = 0; vitality < 3; vitality++) {
-            for (let k = 0; k < controller.plc.switchLogic[j].logicTrue.length; k++) {
+            for (
+              let k = 0;
+              k < controller.plc.switchLogic[j].logicTrue.length;
+              k++
+            ) {
               // AND
               if (controller.plc.switchLogic[j].logicTrue[k] === '&&') {
               }
               // NOT
-              else if (controller.plc.switchLogic[j].logicTrue[k].includes('!')) {
+              else if (
+                controller.plc.switchLogic[j].logicTrue[k].includes('!')
+              ) {
                 if (
                   this.state.blocks[
                     parseInt(
@@ -233,7 +248,6 @@ class TrackController extends React.Component {
               }
             }
           }
-          console.log(status);
           // Vitality check before setting switch position
           if (status.every((val) => val === true)) {
             this.state.blocks[
@@ -253,6 +267,60 @@ class TrackController extends React.Component {
                 parseInt(controller.plc.switchLogic[j].switchNumber) - 1
               ].switch.position
             );
+          }
+        }
+
+        // Transit light logic
+        for (let j = 0; j < controller.plc.lightLogic.length; j++) {
+          // Run 3x for vitality
+          status = [true, true, true];
+          for (let vitality = 0; vitality < 3; vitality++) {
+            for (
+              let k = 0;
+              k < controller.plc.lightLogic[j].green.length;
+              k++
+            ) {
+              // AND
+              if (controller.plc.lightLogic[j].green[k] === '&&') {
+              }
+              // NOT
+              else if (
+                controller.plc.lightLogic[j].green[k].includes('!')
+              ) {
+                if (
+                  this.state.blocks[
+                    parseInt(
+                      controller.plc.lightLogic[j].green[k].substring(1)
+                    ) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = false;
+                }
+              }
+              // Regular
+              else {
+                if (
+                  !this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].green[k]) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = false;
+                }
+              }
+            }
+          }
+          console.log(status);
+          // Vitality check before setting light position
+          if (status.every((val) => val === true)) {
+            this.state.blocks[
+              parseInt(controller.plc.lightLogic[j].block) - 1
+            ].transitLight = 'green';
+
+          } else {
+            this.state.blocks[
+              parseInt(controller.plc.lightLogic[j].block) - 1
+            ].transitLight = 'red';
+
           }
         }
       });
@@ -390,8 +458,27 @@ class TrackController extends React.Component {
                 <div className="centered"></div>
               </Grid>
               <Grid item xs={3}>
-                <div className="text-centered">
-                  Track Line: {this.state.trackLine}
+                <div className="centered">
+                  <FormControl fullWidth>
+                    <InputLabel id="select-Block">Line</InputLabel>
+                    <Select
+                      labelId="select-Line"
+                      id="select-Line"
+                      value={this.currTrack.id}
+                      label="Line"
+                      onChange={this.handleLineChange}
+                    >
+                      {this.tracks[0].id != undefined ? (
+                        this.tracks.map((line) => (
+                          <MenuItem key={line.id} value={line.id}>
+                            {String(line.line)}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <div></div>
+                      )}
+                    </Select>
+                  </FormControl>
                 </div>
               </Grid>
             </Grid>
@@ -625,18 +712,26 @@ class TrackController extends React.Component {
                     variant="standard"
                   />
                   <div style={{ margin: '1rem' }}>
-                    <Button variant="contained" onClick={this.reset}>
+                    <Button
+                      className="button"
+                      variant="contained"
+                      onClick={this.reset}
+                    >
                       reset
                     </Button>
                   </div>
+                  <Button
+                    className="button"
+                    variant="contained"
+                    onClick={this.toggle}
+                  >
+                    toggle test ui
+                  </Button>
                 </div>
               </Grid>
             </Grid>
           </Box>
         </ThemeProvider>
-        <Button variant="contained" onClick={this.toggle}>
-          toggle test ui
-        </Button>
       </div>
     );
   }
@@ -690,14 +785,14 @@ class TrackController extends React.Component {
               <Grid item xs={6}>
                 <div className="centered">
                   <FormControl fullWidth>
-                    <InputLabel id="select-section">
+                    <InputLabel id="select-controller">
                       Track Controller
                     </InputLabel>
                     <Select
-                      labelId="select-section"
-                      id="select-section"
+                      labelId="select-controller"
+                      id="select-controller"
                       value={this.state.currController + 1}
-                      label="Sections"
+                      label="Controller"
                       onChange={this.handleChangeController}
                     >
                       {this.controllers.map((controller) => (
@@ -710,8 +805,27 @@ class TrackController extends React.Component {
                 </div>
               </Grid>
               <Grid item xs={3}>
-                <div className="text-centered">
-                  Track Line: {this.state.trackLine}
+                <div className="centered">
+                  <FormControl fullWidth>
+                    <InputLabel id="select-Block">Line</InputLabel>
+                    <Select
+                      labelId="select-Line"
+                      id="select-Line"
+                      value={this.currTrack.id}
+                      label="Line"
+                      onChange={this.handleLineChange}
+                    >
+                      {this.tracks[0].id != undefined ? (
+                        this.tracks.map((line) => (
+                          <MenuItem key={line.id} value={line.id}>
+                            {String(line.line)}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <div></div>
+                      )}
+                    </Select>
+                  </FormControl>
                 </div>
               </Grid>
             </Grid>
@@ -719,15 +833,18 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  { this.state.blocks[this.controllers[this.state.currController].swBlock -1].switch ==
-                  undefined ? (
+                  {this.state.blocks[
+                    this.controllers[this.state.currController].swBlock - 1
+                  ].switch == undefined ? (
                     <div></div>
                   ) : this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
-                        this.state.blocks[this.controllers[this.state.currController].swBlock -1]
-                          .switch.position
+                        this.state.blocks[
+                          this.controllers[this.state.currController].swBlock -
+                            1
+                        ].switch.position
                       }`}
                       color={
                         this.state.currBlock.switchPosition === 'null'
@@ -739,8 +856,10 @@ class TrackController extends React.Component {
                   ) : (
                     <Chip
                       label={`Switch Position: ${
-                        this.state.blocks[this.controllers[this.state.currController].swBlock -1]
-                          .switch.position
+                        this.state.blocks[
+                          this.controllers[this.state.currController].swBlock -
+                            1
+                        ].switch.position
                       }`}
                       color={
                         this.state.currBlock.switchPosition === 'null'
@@ -947,7 +1066,8 @@ class TrackController extends React.Component {
                 </TableContainer>
               </Grid>
               <Grid item xs>
-                <div className="centered">
+                <div className='right'>
+                <div className="button">
                   <input
                     type="file"
                     ref={this.inputFileRef}
@@ -966,13 +1086,18 @@ class TrackController extends React.Component {
                     Load PLC
                   </Button>
                 </div>
+                <Button
+                  className="button"
+                  variant="contained"
+                  onClick={this.toggle}
+                >
+                  toggle test ui
+                </Button>
+                </div>
               </Grid>
             </Grid>
           </Box>
         </ThemeProvider>
-        <Button variant="contained" onClick={this.toggle}>
-          toggle test ui
-        </Button>
       </div>
     );
   }
