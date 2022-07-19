@@ -54,11 +54,12 @@ class TrackController extends React.Component {
     // For loading plc file via file explorer
     window.electronAPI.subscribeFileMessage((_event, payload) => {
       try {
-        this.controllers[this.state.currController].setPLC(JSON.parse(payload.payload));
+        this.controllers[this.state.currController].setPLC(
+          JSON.parse(payload.payload)
+        );
       } catch (e) {
         console.log(`Error loading plc: ${e}`);
       }
-
     });
 
     // Receiving Messages from CTC and Track Model
@@ -111,12 +112,18 @@ class TrackController extends React.Component {
     };
 
     // Wayside controllers for switches on green line
-    this.controllers.push(new Wayside(1, this.state.blocks.slice(0, 13), 13));
+    this.controllers.push(
+      new Wayside(1, this.state.blocks.slice(0, 13), 13)
+    );
     let temp = this.state.blocks.slice(11, 28);
     temp.push(this.state.blocks[150]);
     this.controllers.push(new Wayside(2, temp, 29));
-    this.controllers.push(new Wayside(3, this.state.blocks.slice(56,57), 57));
-    this.controllers.push(new Wayside(4, this.state.blocks.slice(61,62), 63));
+    this.controllers.push(
+      new Wayside(3, this.state.blocks.slice(56, 57), 57)
+    );
+    this.controllers.push(
+      new Wayside(4, this.state.blocks.slice(61, 62), 63)
+    );
     temp = this.state.blocks.slice(100, 149);
     temp.push(this.state.blocks[76]);
     this.controllers.push(new Wayside(5, temp, 76));
@@ -166,9 +173,9 @@ class TrackController extends React.Component {
   // Always keep status of blocks ----- executes PLC logic
   componentDidMount() {
     const interval = setInterval(() => {
+      this.controllers[0].runPLC();
 
-      console.log(this.controllers);
-            // /*
+      // /*
       //  * Send CTC:
       //  *
       //  * Authority Changes
@@ -191,6 +198,65 @@ class TrackController extends React.Component {
       //   'type': 'blocks',
       //   'blocks': this.state.blocks,
       // }
+      this.controllers.forEach((controller) => {
+        var status = [];
+
+        for (let j = 0; j < controller.plc.switchLogic.length; j++) {
+          // Run 3x for vitality
+          status = [true, true, true];
+          for (let vitality = 0; vitality < 3; vitality++) {
+            for (let k = 0; k < controller.plc.switchLogic[j].logicTrue.length; k++) {
+              // AND
+              if (controller.plc.switchLogic[j].logicTrue[k] === '&&') {
+              }
+              // NOT
+              else if (controller.plc.switchLogic[j].logicTrue[k].includes('!')) {
+                if (
+                  this.state.blocks[
+                    parseInt(
+                      controller.plc.switchLogic[j].logicTrue[k].substring(1)
+                    ) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = false;
+                }
+              }
+              // Regular
+              else {
+                if (
+                  !this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].logicTrue[k]) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = false;
+                }
+              }
+            }
+          }
+          console.log(status);
+          // Vitality check before setting switch position
+          if (status.every((val) => val === true)) {
+            this.state.blocks[
+              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+            ].switch.position = true;
+            console.log(
+              this.state.blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position
+            );
+          } else {
+            this.state.blocks[
+              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+            ].switch.position = false;
+            console.log(
+              this.state.blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position
+            );
+          }
+        }
+      });
+
       this.setState((prevState) => ({
         appSate: !prevState.appState,
       }));
@@ -333,8 +399,9 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  {this.state.blocks[this.controllers[this.state.currController].swBlock] != undefined &&
-                  this.state.maintenanceMode ? (
+                  {this.state.blocks[
+                    this.controllers[this.state.currController].swBlock
+                  ] != undefined && this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${this.state.currBlock.switch.position}`}
@@ -604,12 +671,18 @@ class TrackController extends React.Component {
                       label="Blocks"
                       onChange={this.handleChange}
                     >
-                      { this.controllers[this.state.currController] != undefined ? (this.controllers[this.state.currController].blocks
-                        .map((block) => (
-                          <MenuItem key={block.id} value={block.id}>
-                            {String(block.id)}
-                          </MenuItem>
-                        ))): <div></div>}
+                      {this.controllers[this.state.currController] !=
+                      undefined ? (
+                        this.controllers[this.state.currController].blocks.map(
+                          (block) => (
+                            <MenuItem key={block.id} value={block.id}>
+                              {String(block.id)}
+                            </MenuItem>
+                          )
+                        )
+                      ) : (
+                        <div></div>
+                      )}
                     </Select>
                   </FormControl>
                 </div>
@@ -646,11 +719,16 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                {this.state.blocks[this.controllers[this.state.currController].swBlock - 1].switch == undefined ? <div></div> :
-                  this.state.maintenanceMode ? (
+                  {this.controllers[this.state.currController].swBlock.switch ==
+                  undefined ? (
+                    <div></div>
+                  ) : this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
-                      label={`Switch Position: ${this.state.blocks[this.controllers[this.state.currController].swBlock - 1].switch.position}`}
+                      label={`Switch Position: ${
+                        this.controllers[this.state.currController].swBlock
+                          .switch.position
+                      }`}
                       color={
                         this.state.currBlock.switchPosition === 'null'
                           ? 'default'
@@ -660,7 +738,10 @@ class TrackController extends React.Component {
                     />
                   ) : (
                     <Chip
-                      label={`Switch Position: ${this.state.blocks[this.controllers[this.state.currController].swBlock - 1].switch.position}`}
+                      label={`Switch Position: ${
+                        this.controllers[this.state.currController].swBlock
+                          .switch.position
+                      }`}
                       color={
                         this.state.currBlock.switchPosition === 'null'
                           ? 'default'

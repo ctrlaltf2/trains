@@ -24,66 +24,66 @@ export class Wayside {
 
   // Execute plc instructions
   runPLC() {
-    var status = [];
+    // var status = [];
 
-    for (let j = 0; j < this.plc.switchLogic.length; j++) {
-      // Run 3x for vitality
-      status = [true, true, true]
-      for (let vitality = 0; vitality < 3; vitality++) {
-        for (
-          let k = 0;
-          k < this.plc.switchLogic[j].logicTrue.length;
-          k++
-        ) {
-          // AND
-          if (this.plc.switchLogic[j].logicTrue[k] === '&&') {
-          }
-          // NOT
-          else if (this.plc.switchLogic[j].logicTrue[k].includes('!')) {
-            if (
-              this.state.blocks[
-                parseInt(
-                  this.plc.switchLogic[j].logicTrue[k].substring(1)
-                ) - 1
-              ].occupancy
-            ) {
-              status[vitality] = false;
-            }
-          }
-          // Regular
-          else {
-            if (
-              !this.state.blocks[
-                parseInt(this.plc.switchLogic[j].logicTrue[k]) - 1
-              ].occupancy
-            ) {
-              status[vitality] = false;
-            }
-          }
-        }
-      }
-      console.log(status);
-      // Vitality check before setting switch position
-      if (status.every((val) => val === true)) {
-        this.state.blocks[
-          parseInt(this.plc.switchLogic[j].switchNumber) - 1
-        ].switch.position = true;
-        console.log(
-          this.state.blocks[
-            parseInt(this.plc.switchLogic[j].switchNumber) - 1
-          ].switch.position
-        );
-      } else {
-        this.state.blocks[
-          parseInt(this.plc.switchLogic[j].switchNumber) - 1
-        ].switch.position = false;
-        console.log(
-          this.state.blocks[
-            parseInt(this.plc.switchLogic[j].switchNumber) - 1
-          ].switch.position
-        );
-      }
-    }
+    // for (let j = 0; j < this.plc.switchLogic.length; j++) {
+    //   // Run 3x for vitality
+    //   status = [true, true, true]
+    //   for (let vitality = 0; vitality < 3; vitality++) {
+    //     for (
+    //       let k = 0;
+    //       k < this.plc.switchLogic[j].logicTrue.length;
+    //       k++
+    //     ) {
+    //       // AND
+    //       if (this.plc.switchLogic[j].logicTrue[k] === '&&') {
+    //       }
+    //       // NOT
+    //       else if (this.plc.switchLogic[j].logicTrue[k].includes('!')) {
+    //         if (
+    //           this.state.blocks[
+    //             parseInt(
+    //               this.plc.switchLogic[j].logicTrue[k].substring(1)
+    //             ) - 1
+    //           ].occupancy
+    //         ) {
+    //           status[vitality] = false;
+    //         }
+    //       }
+    //       // Regular
+    //       else {
+    //         if (
+    //           !this.state.blocks[
+    //             parseInt(this.plc.switchLogic[j].logicTrue[k]) - 1
+    //           ].occupancy
+    //         ) {
+    //           status[vitality] = false;
+    //         }
+    //       }
+    //     }
+    //   }
+    //   console.log(status);
+    //   // Vitality check before setting switch position
+    //   if (status.every((val) => val === true)) {
+    //     this.state.blocks[
+    //       parseInt(this.plc.switchLogic[j].switchNumber) - 1
+    //     ].switch.position = true;
+    //     console.log(
+    //       this.state.blocks[
+    //         parseInt(this.plc.switchLogic[j].switchNumber) - 1
+    //       ].switch.position
+    //     );
+    //   } else {
+    //     this.state.blocks[
+    //       parseInt(this.plc.switchLogic[j].switchNumber) - 1
+    //     ].switch.position = false;
+    //     console.log(
+    //       this.state.blocks[
+    //         parseInt(this.plc.switchLogic[j].switchNumber) - 1
+    //       ].switch.position
+    //     );
+    //   }
+    // }
   }
 
   // reset() {
