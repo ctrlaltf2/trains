@@ -94,7 +94,7 @@ class TrackModel extends React.Component {
       console.log('IPC:Track Model: ', payload);
       switch (payload.type) {
         default:
-          console.warn('Unknown payload type recievedL ', payload.type);
+          console.log('Unknown payload type recieved: ', payload.type);
       }
 
       try {
@@ -115,7 +115,7 @@ class TrackModel extends React.Component {
       SpeedLimit: this.state.speedLimit,
       TrainEngineFailure: '',
       BrakeFailure: '',
-      throughput: '',
+      Throughput: '',
     });
 
     //  function to send message to the Train Model
@@ -203,6 +203,9 @@ class TrackModel extends React.Component {
 
       //  set envionment temp by calling function
       this.generateTrackModelEVtemp();
+
+      //  call the function to check if the heaters are needed
+      this.checkTrackHeaters();
 
       //  assign indices of the JSON object into an array called blocks
       //  Store the block index of the JSON object as a regular value in the blocks array
@@ -304,6 +307,7 @@ class TrackModel extends React.Component {
   checkTrackHeaters = () => {
     if (this.state.enviornmentTemp < 32)
       this.setState({ trackHeaterStatus: 'enabled' });
+    else this.setState({ trackHeaterStatus: 'disabled' });
   };
 
   //  handle the select change
