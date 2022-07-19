@@ -719,14 +719,14 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="left">
-                  {this.controllers[this.state.currController].swBlock.switch ==
+                  { this.state.blocks[this.controllers[this.state.currController].swBlock -1].switch ==
                   undefined ? (
                     <div></div>
                   ) : this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
-                        this.controllers[this.state.currController].swBlock
+                        this.state.blocks[this.controllers[this.state.currController].swBlock -1]
                           .switch.position
                       }`}
                       color={
@@ -739,7 +739,7 @@ class TrackController extends React.Component {
                   ) : (
                     <Chip
                       label={`Switch Position: ${
-                        this.controllers[this.state.currController].swBlock
+                        this.state.blocks[this.controllers[this.state.currController].swBlock -1]
                           .switch.position
                       }`}
                       color={
