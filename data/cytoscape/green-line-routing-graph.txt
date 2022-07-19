@@ -1,0 +1,48 @@
+y JKy (yard-enter)
+y IJy (yard-exit)
+JKy 65 (yard-Glenbury)
+65 66 Glenbury
+66 73 (Glenbury-Dormont)
+73 74 Dormont
+74 77w (Dormont-MNR)
+77w 78w "Mt. Lebanon"
+78w 88 "(Mt. Lebanon-Poplar)"
+88 89 Poplar
+89 96 "(Poplar-Castle Shannon)"
+96 97 "Castle Shannon"
+97 78e "(Castle Shannon-Mt. Lebanon)"
+78e 77e "Mt. Lebanon"
+77e 105 "(Mt. Lebanon-Dormont)"
+105 106 Dormont
+106 114 "(Dormont-Glenbury)"
+114 115 Glenbury
+115 123 (Glenbury-Overbrook)
+123 124 Overbrook
+124 132 (Overbrook-Inglewood)
+132 133 Inglewood
+133 141 (Inglewood-Central)
+141 142 Central
+142 FGZ (Central-FGZ)
+FGZ 31 "(FGZ-South Bank)"
+31 32 "South Bank"
+32 39 "(South Bank-Central)"
+39 40 Central
+40 48 "(Central-Inglewood)"
+48 49 Inglewood
+49 IJy (Inglewood-Overbrook)
+IJy JKy J
+FGZ 22e (FGZ-Whited)
+22e 21e Whited
+21e 17e (Whited-UNKNOWN)
+17e 16e UNKNOWN
+16e ACDe (Unknown-ACDe)
+ACDe 9 (ACDe-Edgebrook)
+9 8 Edgebrook
+8 2 (Edgebrook-Pioneer)
+2 1 Pioneer
+1 ACDw (Pioneer-ACDw)
+ACDw 15w (ACDw-UNKNOWN)
+15w 16w UNKNOWN
+16w 21w (UNKNOWN-Whited)
+21w 22w Whited
+22w FGZ (Whited-FGZ)
