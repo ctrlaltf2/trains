@@ -95,6 +95,8 @@ class TrackModel extends React.Component {
     window.electronAPI.subscribeTrackModelMessage((_event, payload) => {
       console.log('IPC:Track Model: ', payload);
       switch (payload.type) {
+        case:
+
         default:
           console.log('Unknown payload type recieved: ', payload.type);
       }
@@ -111,6 +113,7 @@ class TrackModel extends React.Component {
     window.electronAPI.sendTrackControllerMessage({
       //  anything inside here is a property of the object you are sending
       //  example 'type': 'closure'
+      'type': 'trackModelStatus',
       TrackSignalPickup: '',
       RailStatus: this.state.railStatus,
       TrackPowerStatus: this.state.trackPower,
@@ -186,21 +189,27 @@ class TrackModel extends React.Component {
       console.log('i = ', i);
 
       const temp = this.state.TrackJSON.Track[i]; // gets the info from object at index i
-      tempTrackObj.Line = temp['Line'];
-      tempTrackObj.Section = temp['Section'];
+      tempTrackObj.Line = temp.Line;
+      tempTrackObj.Section = temp.Section;
       tempTrackObj.BlockNumber = temp['Block Number'];
       tempTrackObj.BlockLength = temp['Block Length (m)'];
       tempTrackObj.BlockGrade = temp['Block Grade (%)'];
       tempTrackObj.SpeedLimit = temp['Speed Limit (Km/Hr)'];
-      tempTrackObj.Infrastructure = temp['Infrastructure'];
+      tempTrackObj.Infrastructure = temp.Infrastructure;
       tempTrackObj.Elevation = temp['ELEVATION (M)'];
       tempTrackObj.CumElevation = temp['CUMALTIVE ELEVATION (M)'];
 
       // this.state.blocks.push(tempTrackObj);
       this.state.blocks.push({
-        tempTrackObj,
-        //  line: tempTrackObj.Line,
-        //  section: tempTrackObj.Section
+        Line: temp.Line,
+        Section: temp.Section,
+        BlockNumber: temp['Block Number'],
+        BlockLength: temp['Block Length (m)'],
+        BlockGrade: temp['Block Grade (%)'],
+        SpeedLimit: temp['Speed Limit (Km/Hr)'],
+        Infrastructure: temp.Infrastructure,
+        Elevation: temp['ELEVATION (M)'],
+        CumElevation: temp['CUMALTIVE ELEVATION (M)'],
       });
 
       console.log('tempTrackObj: ', tempTrackObj);
@@ -208,6 +217,7 @@ class TrackModel extends React.Component {
     }
 
     console.log('blocks array: ', blocks);
+    // eslint-disable-next-line react/no-access-state-in-setstate
     const temp = this.state.TrackJSON.Track[0].Line;
 
     //  set line Name -- any index of the file will work as the line is same throughout
