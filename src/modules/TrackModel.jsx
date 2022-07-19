@@ -26,6 +26,7 @@ import './TrackModel.css';
 import './TrackBlock.js';
 import blueTrackImg from './BlueTrack.jpg';
 import blueTrackJson from './blueLineTrackModel.json';
+import { array } from 'prop-types';
 
 // variables
 const darkMode = createTheme({
@@ -34,20 +35,16 @@ const darkMode = createTheme({
   },
 });
 
-// const TrackModelFile;
+let blocks = new Array();
 
 class TrackModel extends React.Component {
   constructor(props, name) {
     super(props);
     this.name = name;
 
-    //  function to load in new files
-    window.electronAPI.subscribeFileMessage((_event, payload) => {
-      console.log(payload);
-    });
-
     this.state = {
       //  system variable defaults will go here
+      lineName: '',
       testMode: false,
       trackPower: 'functional',
       railStatus: 'functional',
@@ -58,16 +55,36 @@ class TrackModel extends React.Component {
       blockIndex: 1,
       blockLength: 1,
       elevation: 0,
+      enviornmentTemp: 0,
       beaconStatus: 'functional',
       directionOfTravel: 'forwards',
       trackHeaterStatus: 'disabled',
       trainOccupancy: 25,
       personsAtStation: 10,
 
+      TrackJSON: '',
+
+      blocks: blocks,
+
       testUISpeedLimit: 30,
       testUIEnvtemp: 80,
       testUITrackHeaterStatus: 'enabled',
     };
+
+    //  function to load in new files
+    window.electronAPI.subscribeFileMessage((_event, payload) => {
+      try {
+        // console.log(payload.payload);
+        this.state.TrackJSON = JSON.parse(payload.payload); //  assigns the value of the JSON data to the JSON var
+        // call other function
+        this.loadNewTrackModel();
+      } catch (error) {
+        // console.log(error);
+      }
+
+      //  testing
+      console.log('Line: ', this.state.TrackJSON.Track[0].Line);
+    });
 
     //  function prototypes
     this.toggle = this.toggle.bind(this);
@@ -84,6 +101,11 @@ class TrackModel extends React.Component {
     this.resetAllSettings = this.resetAllSettings.bind(this);
     this.handleChange = this.handleChange.bind(this);
 
+    this.generateTrackModelEVtemp = this.generateTrackModelEVtemp.bind(this);
+    this.checkTrackHeaters = this.checkTrackHeaters.bind(this);
+
+    this.loadFile = this.loadFile.bind(this);
+
     this.testUISpeedLimitFun = this.testUISpeedLimitFun.bind(this);
     this.testUIEnvtempFun = this.testUIEnvtempFun.bind(this);
     this.testUITrackHeaterStatusFun =
@@ -92,16 +114,18 @@ class TrackModel extends React.Component {
 
   //  appears to be working so far -- NEED TO REFACTOR THIS
 
-  loadBlockInfo = (event) => {
-    let { myValue } = event.currentTarget.dataset;
+  loadBlockInfo = (alpha) => {
+    const myValue = alpha;
     console.log(myValue);
-    console.log(blueTrackJson[myValue - 1]);
-    const tempObj = blueTrackJson[myValue - 1];
+    console.log(this.state.TrackJSON.Track[myValue - 1]);
+    const tempObj = this.state.TrackJSON.Track[myValue - 1];
 
     //  Assign values from JSON for calculations
     const blockLengthMetric = tempObj['Block Length (m)']; //  convert from meters to miles
     const speedLimitMetric = tempObj['Speed Limit (Km/Hr)']; //   Convert from km/h to mph
-
+    const elevationMetric = tempObj['ELEVATION (M)']; //  Convert from M to Feet
+    console.log('elevation:');
+    console.log('The elevation is: ', elevationMetric);
     this.setState({
       blockLength: (blockLengthMetric * 0.000621371).toFixed(3),
     });
@@ -115,22 +139,46 @@ class TrackModel extends React.Component {
       blockIndex: myValue,
     });
     this.setState({
-      elevation: tempObj.Elevation,
+      elevation: (elevationMetric * 3.28084).toFixed(3),
     });
     this.setState({
       blockOccupancy: tempObj['Block Occupancy'],
-    });
-    this.setState({
-      enviornmentTemp: tempObj['Enviorment Temp'],
     });
   };
 
   //  Load Track Block Info
   //  need to implement this
   loadNewTrackModel = (event) => {
-    var TrackModelFile = window.electronAPI.openFileDialog('TrackModel');
+    //  Load the initial variables with information
+    try {
+      console.log('trying to load info.');
+      console.log('This is the first block: ', this.state.TrackJSON.Track[0]);
 
-    console.log('load new track has not been yet implemented.');
+      const temp = this.state.TrackJSON.Track[0].Line;
+
+      //  set line Name
+      this.setState({ lineName: temp });
+
+      //  set envionment temp by calling function
+      this.generateTrackModelEVtemp();
+
+      //  assign indices of the JSON object into an array called blocks
+      //  Store the block index of the JSON object as a regular value in the blocks array
+      const blockObj = {};
+      // eslint-disable-next-line no-plusplus
+      for (let i = 0; i < this.state.TrackJSON.Track.length; i++) {
+        const TrackJSONObj = this.state.TrackJSON.Track[i];
+        blockObj.blockIndex = TrackJSONObj['Block Number'];
+        blocks.push(blockObj.blockIndex); //  pushes the object to the block array
+        console.log('The index number: ', blockObj.blockIndex);
+      }
+    } catch (error) {
+      console.log('that didnt work', error);
+    }
+  };
+
+  loadFile = (event) => {
+    window.electronAPI.openFileDialog('TrackModel');
   };
 
   handleSwitchChange = (event) => {
@@ -200,10 +248,28 @@ class TrackModel extends React.Component {
     }
   };
 
+  generateTrackModelEVtemp = () => {
+    const maxTemp = 110;
+    const minTemp = 0;
+
+    //  Generates a ramdom temperature for the track model between the constraints
+    const temp1 = Math.floor(Math.random() * (maxTemp - minTemp + 1)) + minTemp;
+
+    this.setState({ enviornmentTemp: temp1 });
+  };
+
+  //  check if the track heaters should turn on
+  checkTrackHeaters = () => {
+    if (this.state.enviornmentTemp < 32)
+      this.setState({ trackHeaterStatus: 'enabled' });
+  };
+
   //  handle the select change
   handleChange = (event) => {
     // this.state.blockIndex = event.target.value;
     this.setState({ blockIndex: event.target.value });
+    console.log('the block index is: ', event.target.value);
+    this.loadBlockInfo(event.target.value);
   };
 
   resetAllSettings = (event) => {
@@ -360,7 +426,7 @@ class TrackModel extends React.Component {
                 variant="contained"
                 sx={{ fontSize: 14 }}
                 className="LoadTrack"
-                onClick={this.loadNewTrackModel}
+                onClick={this.loadFile}
               >
                 Load New Track Model
               </Button>
@@ -402,6 +468,9 @@ class TrackModel extends React.Component {
             <Grid item xs={4}>
               {/* within grid want two more columns for label and data flowing in */}
               <Grid container column spacing={1}>
+                <Grid item xs={12}>
+                  <div className="label">Track Block Settings</div>
+                </Grid>
                 <Grid item xs={6}>
                   <div className="label">Track Power</div>
                 </Grid>
@@ -509,6 +578,9 @@ class TrackModel extends React.Component {
             <Grid item xs={4}>
               <Grid container spacing={1}>
                 <Grid item xs={12}>
+                  <div>Track Line: {this.state.lineName}</div>
+                </Grid>
+                <Grid item xs={12}>
                   <img
                     src={blueTrackImg}
                     sx={{ width: 400, height: 400 }}
@@ -537,7 +609,14 @@ class TrackModel extends React.Component {
                       value={this.state.blockIndex}
                       // value="Hello"
                     >
-                      <MenuItem data-my-value={1} onClick={this.loadBlockInfo}>
+                      {this.state.blocks.map((block) => (
+                        <MenuItem key={block} value={block}>
+                          {String(block)}
+                        </MenuItem>
+                      ))}
+                      {/* Want to give the user n options to chose from where n is the amount of blocks in the TrackJSON object
+                      specifically map the index of the block to the value of the select option */}
+                      {/* <MenuItem data-my-value={1} onClick={this.loadBlockInfo}>
                         1
                       </MenuItem>
                       <MenuItem data-my-value={2} onClick={this.loadBlockInfo}>
@@ -581,7 +660,7 @@ class TrackModel extends React.Component {
                       </MenuItem>
                       <MenuItem data-my-value={15} onClick={this.loadBlockInfo}>
                         15
-                      </MenuItem>
+                      </MenuItem> */}
                     </Select>
                   </FormControl>
                 </Grid>

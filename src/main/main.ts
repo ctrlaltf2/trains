@@ -57,19 +57,19 @@ const installExtensions = async () => {
 };
 
 const activeModules = [
-  //  'CTCOffice',
+  // 'CTCOffice',
   // 'TrackController',
   'TrackModel',
   //  'TrainModel',
   //  'TrainControllerHW',
   //  'TrainControllerSW',
-  'CTCOffice',
+  // 'CTCOffice',
   //'TrackController',
   // 'TrackModel',
   // 'TrainModel',
   // 'TrainControllerHW',
   //'TrainControllerSW',
-  'Timer',
+  // 'Timer',
 ];
 
 const createWindow = async (moduleName: string) => {
