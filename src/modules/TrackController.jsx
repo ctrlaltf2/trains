@@ -74,7 +74,6 @@ class TrackController extends React.Component {
           // TODO
           break;
         case 'closure':
-
           break;
         case 'timing':
           console.log(Date.now() - payload.value);
@@ -180,8 +179,6 @@ class TrackController extends React.Component {
   // Always keep status of blocks ----- executes PLC logic
   componentDidMount() {
     const interval = setInterval(() => {
-
-
       // /*
       //  * Send CTC:
       //  *
@@ -202,8 +199,8 @@ class TrackController extends React.Component {
        * Block states (switches, crossing, transit lights)
        */
       window.electronAPI.sendTrackModelMessage({
-        'type': 'blocks',
-        'blocks': this.state.blocks,
+        type: 'blocks',
+        blocks: this.state.blocks,
       });
 
       // Logic
@@ -232,6 +229,22 @@ class TrackController extends React.Component {
                       controller.plc.switchLogic[j].logicTrue[k].substring(1)
                     ) - 1
                   ].occupancy
+                ) {
+                  status[vitality] = false;
+                }
+              }
+              // Authority part will be in format '<blockNum>A<authNumber>'
+              else if (
+                controller.plc.switchLogic[j].logicTrue[k].includes('A')
+              ) {
+                // If authority of train on block is less than - return false
+                if (
+                  this.state.blocks[
+                    parseInt(
+                      controller.plc.switchLogic[j].logicTrue[k].split('A')[0]
+                    ) - 1
+                  ].authority <
+                  controller.plc.switchLogic[j].logicTrue[k].split('A')[1]
                 ) {
                   status[vitality] = false;
                 }
@@ -284,9 +297,7 @@ class TrackController extends React.Component {
               if (controller.plc.lightLogic[j].green[k] === '&&') {
               }
               // NOT
-              else if (
-                controller.plc.lightLogic[j].green[k].includes('!')
-              ) {
+              else if (controller.plc.lightLogic[j].green[k].includes('!')) {
                 if (
                   this.state.blocks[
                     parseInt(
@@ -315,12 +326,10 @@ class TrackController extends React.Component {
             this.state.blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
             ].transitLight = 'green';
-
           } else {
             this.state.blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
             ].transitLight = 'red';
-
           }
         }
       });
@@ -928,7 +937,7 @@ class TrackController extends React.Component {
                     size="small"
                     aria-label="table"
                   > */}
-                    {/* <TableHead>
+                  {/* <TableHead>
                       <TableRow>
                         <TableCell>Train Metrics</TableCell>
                       </TableRow>
@@ -1066,33 +1075,33 @@ class TrackController extends React.Component {
                 </TableContainer>
               </Grid>
               <Grid item xs>
-                <div className='right'>
-                <div className="button">
-                  <input
-                    type="file"
-                    ref={this.inputFileRef}
-                    onChange={this.onFileChange}
-                    style={{ display: 'none' }}
-                  />
-                  {/* <button variant="contained" onClick={this.onBtnClick}>
+                <div className="right">
+                  <div className="button">
+                    <input
+                      type="file"
+                      ref={this.inputFileRef}
+                      onChange={this.onFileChange}
+                      style={{ display: 'none' }}
+                    />
+                    {/* <button variant="contained" onClick={this.onBtnClick}>
                     Load plc
                   </button> */}
+                    <Button
+                      variant="contained"
+                      sx={{ fontSize: 14 }}
+                      className="LoadTrack"
+                      onClick={this.loadNewPLC}
+                    >
+                      Load PLC
+                    </Button>
+                  </div>
                   <Button
+                    className="button"
                     variant="contained"
-                    sx={{ fontSize: 14 }}
-                    className="LoadTrack"
-                    onClick={this.loadNewPLC}
+                    onClick={this.toggle}
                   >
-                    Load PLC
+                    toggle test ui
                   </Button>
-                </div>
-                <Button
-                  className="button"
-                  variant="contained"
-                  onClick={this.toggle}
-                >
-                  toggle test ui
-                </Button>
                 </div>
               </Grid>
             </Grid>
