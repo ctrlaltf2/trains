@@ -180,7 +180,7 @@ class TrackController extends React.Component {
   // Always keep status of blocks ----- executes PLC logic
   componentDidMount() {
     const interval = setInterval(() => {
-      this.controllers[0].runPLC();
+
 
       // /*
       //  * Send CTC:
