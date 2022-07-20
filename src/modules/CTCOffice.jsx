@@ -96,7 +96,7 @@ class CTCOffice extends React.Component {
         'green': {
           '85-86-100': new TrackSwitch(undefined, '85', ['86', '100']),
           '76-77-101': new TrackSwitch(undefined, '77', ['76', '101']),
-          '28-29-150': new TrackSwitch(undefined, '29', ['28', '150']),
+          '29-30-150': new TrackSwitch(undefined, '29', ['30', '150']),
           '1-12-13':   new TrackSwitch(undefined, '13', [ '1',  '12']),
         },
         'blue': {
@@ -161,7 +161,7 @@ class CTCOffice extends React.Component {
       '(Inglewood-Central)': range(133, 140, 1),
       'Central::W': [141],
       '(Central-FGZ)': range(142, 150, 1),
-      '(FGZ-South Bank)': [29, 30],
+      '(FGZ-South Bank)': [30],
       'South Bank': [31],
       '(South Bank-Central)': range(32, 38, 1),
       'Central::E': [39],
@@ -170,7 +170,7 @@ class CTCOffice extends React.Component {
       '(Inglewood-Overbrook)': range(49, 56, 1),
       'Overbrook::E': [57],
       'J': range(58, 62, 1),
-      '(FGZ-Whited)': range(28, 23, 1),
+      '(FGZ-Whited)': range(29, 23, 1),
       'Whited::E': [22],
       '(Whited-UNKNOWN)': range(21, 17, 1),
       'UNKNOWN::E': [16],
@@ -184,7 +184,7 @@ class CTCOffice extends React.Component {
       'UNKNOWN::W': [16],
       '(UNKNOWN-Whited)': range(17, 21, 1),
       'Whited::W': [20],
-      '(Whited-FGZ)': range(23, 28, 1)
+      '(Whited-FGZ)': range(23, 29, 1)
     };
 
     this.initCy();
