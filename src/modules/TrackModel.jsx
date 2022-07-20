@@ -67,6 +67,9 @@ class TrackModel extends React.Component {
       TrackJSON: '',
       IPC_Recieved_Message: '',
 
+      // beacon
+      beacon: '',
+
       // if information has problem might need blocks: blocks
       //  is an array of blocks, one block has block info for the track
       blocks,
@@ -88,15 +91,16 @@ class TrackModel extends React.Component {
       }
 
       //  testing
-      console.log('Line: ', this.state.TrackJSON.Track[0].Line);
+      // console.log('Line: ', this.state.TrackJSON.Track[0].Line);
     });
 
     //  Function to recieve messages from other modules via IPC communication
     window.electronAPI.subscribeTrackModelMessage((_event, payload) => {
       console.log('IPC:Track Model: ', payload);
       switch (payload.type) {
-        case:
-
+        case 'trackControllerStatus':
+          //  store the information
+          break;
         default:
           console.log('Unknown payload type recieved: ', payload.type);
       }
@@ -113,7 +117,7 @@ class TrackModel extends React.Component {
     window.electronAPI.sendTrackControllerMessage({
       //  anything inside here is a property of the object you are sending
       //  example 'type': 'closure'
-      'type': 'trackModelStatus',
+      type: 'trackModelStatus',
       TrackSignalPickup: '',
       RailStatus: this.state.railStatus,
       TrackPowerStatus: this.state.trackPower,
@@ -121,6 +125,7 @@ class TrackModel extends React.Component {
       TrainEngineFailure: '',
       BrakeFailure: '',
       Throughput: '',
+      TrackBlockOccupancy: '',
     });
 
     //  function to send message to the Train Model
@@ -130,7 +135,7 @@ class TrackModel extends React.Component {
       MaintenanceMode: '',
       CommandedSpeed: '',
       Authority: '',
-      Beacon: '',
+      Beacon: this.state.beacon,
     });
 
     //  function prototypes
@@ -154,10 +159,15 @@ class TrackModel extends React.Component {
     this.testUIEnvtempFun = this.testUIEnvtempFun.bind(this);
     this.testUITrackHeaterStatusFun =
       this.testUITrackHeaterStatusFun.bind(this);
+    this.generateBeacon = this.generateBeacon.bind(this);
   }
 
   //  Load's blocks information from the Track Model File - alpha = blockIndex
   loadBlockInfo = (alpha) => {
+    //  generate beacon message
+    this.generateBeacon();
+    console.log('beacon message: ', this.state.beacon);
+
     const curBlock = this.state.blocks[alpha]; //  get the block selected
     const blockLengthImperial = (curBlock.BlockLength * 0.000621371).toFixed(3);
     const speedLimitImperial = (curBlock.SpeedLimit * 0.621371).toFixed(3);
@@ -176,17 +186,12 @@ class TrackModel extends React.Component {
   };
 
   //  Load Track Block Info
-  //  need to implement this
   loadNewTrackModel = (event) => {
-    //  Load the initial variables with information
-    // try {
-    //  console.log('This is the first block: ', this.state.TrackJSON.Track[0]);
-
     //  load the TrackJSON object's properties into the blocks array
     const tempTrackObj = {};
 
     for (let i = 0; i < this.state.TrackJSON.Track.length; i++) {
-      console.log('i = ', i);
+      // console.log('i = ', i);
 
       const temp = this.state.TrackJSON.Track[i]; // gets the info from object at index i
       tempTrackObj.Line = temp.Line;
@@ -212,11 +217,11 @@ class TrackModel extends React.Component {
         CumElevation: temp['CUMALTIVE ELEVATION (M)'],
       });
 
-      console.log('tempTrackObj: ', tempTrackObj);
-      console.log('Blocks array at index i: ', blocks[i]);
+      // console.log('tempTrackObj: ', tempTrackObj);
+      // console.log('Blocks array at index i: ', blocks[i]);
     }
 
-    console.log('blocks array: ', blocks);
+    // console.log('blocks array: ', blocks);
     // eslint-disable-next-line react/no-access-state-in-setstate
     const temp = this.state.TrackJSON.Track[0].Line;
 
@@ -240,9 +245,9 @@ class TrackModel extends React.Component {
   handleSwitchChange = (event) => {
     let { myValue } = event.currentTarget.dataset;
     let index = this.state.blockIndex;
-    console.log(`switch value: ${myValue}`);
+    // console.log(`switch value: ${myValue}`);
     if (index === '5') {
-      console.log(`reacehed if statement: ${index}`);
+      // console.log(`reacehed if statement: ${index}`);
       if (myValue === '0') {
         //  make engaged
         this.setState({ switchPos: 'engaged' });
@@ -314,6 +319,27 @@ class TrackModel extends React.Component {
     this.setState({ enviornmentTemp: temp1 });
   };
 
+  //  function shall retrieve beacon information from JSON data in the blocks
+  generateBeacon = () => {
+    const beaconMessage =
+      this.state.blocks[this.state.blockIndex].Infrastructure;
+    console.log('Infrastructure: ', beaconMessage);
+    if (beaconMessage.includes('STATION')) {
+      //  capture the string after station until ';' or end of string
+      const firstInd = beaconMessage.indexOf(';');
+      let mess = beaconMessage.substring(firstInd + 1);
+      console.log('mess: ', mess);
+      this.setState({ beacon: mess });
+      if (mess.includes(';')) {
+        mess = mess.substring(0, mess.indexOf(';'));
+        console.log('mess: ', mess);
+        this.setState({ beacon: mess });
+      }
+    } else {
+      this.setState({ beacon: 'No Station' });
+    }
+  };
+
   //  check if the track heaters should turn on
   checkTrackHeaters = () => {
     if (this.state.enviornmentTemp < 32)
@@ -324,7 +350,7 @@ class TrackModel extends React.Component {
   //  handle the select change
   handleChange = (event) => {
     this.setState({ blockIndex: event.target.value });
-    console.log('the block index is: ', event.target.value);
+    // console.log('the block index is: ', event.target.value);
     this.loadBlockInfo(event.target.value);
   };
 
