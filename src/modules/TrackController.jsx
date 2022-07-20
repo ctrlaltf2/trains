@@ -122,7 +122,7 @@ class TrackController extends React.Component {
     this.controllers.push(new Wayside(4, this.state.blocks.slice(61, 62), 63));
     temp = this.state.blocks.slice(100, 149);
     temp.push(this.state.blocks[76]);
-    this.controllers.push(new Wayside(5, temp, 76));
+    this.controllers.push(new Wayside(5, temp, 77));
     temp = this.state.blocks.slice(76, 85);
     temp.push(this.state.blocks[99]);
     this.controllers.push(new Wayside(6, temp, 85));
