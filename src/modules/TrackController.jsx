@@ -547,7 +547,7 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs="auto">
                 <TableContainer className="metrics">
-                  <Table
+                  {/* <Table
                     sx={{ minWidth: 'auto' }}
                     size="small"
                     aria-label="table"
@@ -597,7 +597,7 @@ class TrackController extends React.Component {
                         </TableCell>
                       </TableRow>
                     </TableBody>
-                  </Table>
+                  </Table> */}
                   <Table
                     sx={{ minWidth: 'auto' }}
                     size="small"
@@ -923,12 +923,12 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs="auto">
                 <TableContainer className="metrics">
-                  <Table
+                  {/* <Table
                     sx={{ minWidth: 'auto' }}
                     size="small"
                     aria-label="table"
-                  >
-                    <TableHead>
+                  > */}
+                    {/* <TableHead>
                       <TableRow>
                         <TableCell>Train Metrics</TableCell>
                       </TableRow>
@@ -965,7 +965,7 @@ class TrackController extends React.Component {
                         </TableCell>
                       </TableRow>
                     </TableBody>
-                  </Table>
+                  </Table> */}
                   <Table
                     sx={{ minWidth: 'auto' }}
                     size="small"
