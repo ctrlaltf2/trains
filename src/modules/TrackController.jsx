@@ -266,20 +266,10 @@ class TrackController extends React.Component {
             this.state.blocks[
               parseInt(controller.plc.switchLogic[j].switchNumber) - 1
             ].switch.position = true;
-            console.log(
-              this.state.blocks[
-                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-              ].switch.position
-            );
           } else {
             this.state.blocks[
               parseInt(controller.plc.switchLogic[j].switchNumber) - 1
             ].switch.position = false;
-            console.log(
-              this.state.blocks[
-                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-              ].switch.position
-            );
           }
         }
 
@@ -320,7 +310,7 @@ class TrackController extends React.Component {
               }
             }
           }
-          console.log(status);
+          // console.log(status);
           // Vitality check before setting light position
           if (status.every((val) => val === true)) {
             this.state.blocks[
