@@ -17,14 +17,13 @@ import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import cytoscape from 'cytoscape';
-const df = require('data-forge'); // TODO: make this not use require
 
 import _ from 'lodash';
 
 import SystemMap from './CTCOffice/SystemMap';
 import Train from './CTCOffice/Train';
 import TrackSwitch from './CTCOffice/Switch';
-import TrackModel from '../../data/TrackModel-route.json';
+import TrackModel from '../../data/TrackModel-section-routing.json';
 import TrackModelDisplay from '../../data/TrackModel-display.json';
 import Style from './CTCOffice/SystemMap.cy.json';
 
@@ -51,7 +50,6 @@ const UIState = {
 
 class CTCOffice extends React.Component {
   constructor(props) {
-  console.log(df);
     super(props);
 
     window.electronAPI.subscribeCTCMessage( (_event, payload) => {
@@ -95,7 +93,12 @@ class CTCOffice extends React.Component {
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
         'red': {},
-        'green': {},
+        'green': {
+          '85-86-100': new TrackSwitch(undefined, '85', ['86', '100']),
+          '76-77-101': new TrackSwitch(undefined, '77', ['76', '101']),
+          '28-29-150': new TrackSwitch(undefined, '29', ['28', '150']),
+          '1-12-13':   new TrackSwitch(undefined, '13', [ '1',  '12']),
+        },
         'blue': {
           '5-6-11': new TrackSwitch(undefined, '5', ['6', '11'])
         },
@@ -115,7 +118,7 @@ class CTCOffice extends React.Component {
       editingSwitch: undefined,
       editingBlock: undefined,
       switchGoingToPosition: undefined,
-      activeLine: 'red',
+      activeLine: 'green',
     };
 
     this.nextTrainID = 1;
@@ -125,31 +128,183 @@ class CTCOffice extends React.Component {
     // Off-screen cytoscape element for routing algos and other shenanigans
     // Indexed by line
     this.cy = {
-      'blue': undefined,
       'red': undefined,
       'green': undefined,
+    };
+
+    // Generate section-based routing expansions
+    const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
+
+    this.route_green_lookup = {
+      '(yard-enter)': [-1],
+      '(yard-exit)': [-1],
+      '(yard-Glenbury)': [63, 64],
+      'Glenbury::S': [65],
+      '(Glenbury-Dormont)': range(66, 72, 1),
+      'Dormont::S': [73],
+      '(Dormont-MNR)': [74, 75, 76],
+      'Mt. Lebanon::W': [77],
+      '(Mt. Lebanon-Poplar)': range(78, 87, 1),
+      'Poplar': [88],
+      '(Poplar-Castle Shannon)': range(89, 95, 1),
+      'Castle Shannon': [96],
+      '(Castle Shannon-Mt. Lebanon)': [].concat(range(97, 100, 1), range(85, 78, -1)),
+      'Mt. Lebanon::E': [77],
+      '(Mt. Lebanon-Dormont)': range(101, 104, 1),
+      'Dormont::N': [105],
+      '(Dormont-Glenbury)': range(106, 113, 1),
+      'Glenbury::N': [114],
+      '(Glenbury-Overbrook)': range(115, 122, 1),
+      'Overbrook::W': [123],
+      '(Overbrook-Inglewood)': range(124, 131, 1),
+      'Inglewood::W': [132],
+      '(Inglewood-Central)': range(133, 140, 1),
+      'Central::W': [141],
+      '(Central-FGZ)': range(142, 150, 1),
+      '(FGZ-South Bank)': [29, 30],
+      'South Bank': [31],
+      '(South Bank-Central)': range(32, 38, 1),
+      'Central::E': [39],
+      '(Central-Inglewood)': range(40, 47, 1),
+      'Inglewood::E': [48],
+      '(Inglewood-Overbrook)': range(49, 56, 1),
+      'Overbrook::E': [57],
+      'J': range(58, 62, 1),
+      '(FGZ-Whited)': range(28, 23, 1),
+      'Whited::E': [22],
+      '(Whited-UNKNOWN)': range(21, 17, 1),
+      'UNKNOWN::E': [16],
+      '(Unknown-ACDe)': range(15, 13, 1),
+      '(ACDe-Edgebrook)': range(12, 10, 1),
+      'Edgebrook': [9],
+      '(Edgebrook-Pioneer)': range(8, 3, 1),
+      'Pioneer': [2],
+      '(Pioneer-ACDw)': [1],
+      '(ACDw-UNKNOWN)': [13, 14, 15],
+      'UNKNOWN::W': [16],
+      '(UNKNOWN-Whited)': range(17, 21, 1),
+      'Whited::W': [20],
+      '(Whited-FGZ)': range(23, 28, 1)
     };
 
     this.initCy();
   }
 
+  // With list of stations, generate a route/path of blocks to go to meet station ordering
+  generateYardRoute(line, stations) {
+    const windowedSlice = function(arr, size) {
+      let result = [];
+      arr.some((el, i) => {
+        if (i + size > arr.length) return true;
+        result.push(arr.slice(i, i + size));
+      });
+      return result;
+    };
+
+    // Route, but it's my arbitrary segment definitions
+    let segment_route = [];
+
+    // Get initial route out of yard
+    let route = this.getInterstationRoute(line, '(yard-exit)', stations[0]);
+    segment_route = segment_route.concat(...route);
+
+    let previous_segment = route.at(-1);
+    for(let station_pair of windowedSlice(stations, 2)) {
+      // Get best route from previous stop segment to next station
+      let route = this.getInterstationRoute(line, previous_segment, station_pair[1]);
+
+      // Add to segment-routes
+      segment_route = segment_route.concat(...route);
+
+      // Keep track of where the last segment-route left off
+      previous_segment = route.at(-1);
+    }
+
+    return this.resolveSegmentRoutes(this.route_green_lookup, segment_route);
+  }
+
+  resolveSegmentRoutes(route_lookup, segment_route) {
+    let block_route = [];
+    for(let segment of segment_route)
+      block_route = block_route.concat(route_lookup[segment]);
+
+    return block_route;
+  }
+
+  // from_station must be an exact section-routing edge
+  getInterstationRoute(line, from_station, to_station) {
+    const goal_stops = this.cy[line].$(`edge[id ^= '${to_station}']`)
+    const routable_graph = this.cy[line];
+
+    const starting_node = routable_graph.$(`edge[id ^= '${from_station}']`).source();
+
+    const routes = goal_stops.map( (edge) => {
+      const edge_points_to = edge.targets();
+
+      if(edge_points_to.length > 1) {
+        console.warning('Warning: router goal edge has multiple targets, code isn\'t expecting this.');
+      } else if (edge_points_to.length === 0) {
+        console.error('Error: router goal edge doesn\'t point to anything. Not routing.');
+        return undefined;
+      }
+
+      const goal_node = edge_points_to[0];
+      const goal_node_id = goal_node.data('id');
+      const to_dst_route = routable_graph.elements().aStar({
+        root: starting_node,
+        goal: `node[id = '${goal_node_id}']`,
+        weight: (edge) => {
+          return 1; // TODO: Cost
+          // return edge.data('length') / edge.data('speed_limit'); // Minimize time in blocks
+        },
+        directed: true
+      });
+
+      return to_dst_route;
+    });
+
+    // Find minimum cost route
+    let min = Infinity;
+    let i_best_route = -1;
+    for (const i in routes) {
+      if(routes[i].distance < min) {
+        i_best_route = i
+        min = routes[i].distance;
+      }
+    }
+
+    const best_route = routes[i_best_route].path
+      .filter( (elem) => {
+        return elem.group() === "edges";
+      })
+      .map( (elem) => {
+        return elem.data('id');
+      });
+
+    return best_route;
+  }
+
   componentDidMount() { }
 
   initCy() {
-    for(const line in TrackModel.lines) {
+    for(const line in TrackModel) {
       this.cy[line] = cytoscape({
-        elements: TrackModel.lines[line]
+        elements: TrackModel[line]
       });
     }
   }
 
   getBlocks(line) {
-    if(this.cy[line])
-      return new Set(this.cy[line].filter('edge[block_id]').map( (elem) => {
-        return elem.data('block_id');
-      }));
-    else
-      return new Set([]);
+    const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
+
+    switch(line) {
+      case 'green':
+        return range(1, 150, 1);
+      case 'red':
+        return range(1, 76, 1);
+      default:
+        return [];
+    }
   }
 
   /**
@@ -184,6 +339,8 @@ class CTCOffice extends React.Component {
    */
   getStartingBlockQuery(line) {
     switch(line) {
+      case 'green':
+        return `node[id = 'JKy']`;
       default:
         console.warn(`Unimplemented line '${line}' for starting block query detected`);
         return 'oops';
@@ -194,9 +351,7 @@ class CTCOffice extends React.Component {
 
   // Major TODO: when a block that's part of another train's route changes occupancy state, recalculate route for that other train and relay that to Track Controller
   dispatchTrain(line, destination_block_id, eta, do_circle_back) {
-    // TODO: Use ETA
-
-    console.log(line, destination_block_id, eta, do_circle_back);
+    // TODO: Update to use section router
 
     // Build route
     // Run A* over the graph complement to route between edges and not nodes
@@ -530,8 +685,6 @@ class CTCOffice extends React.Component {
                   multiple
                   type="file"
                   onChange={(ev) => {
-                    console.log(ev);
-
                     return;
                   }}
                 />

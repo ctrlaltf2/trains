@@ -1,5 +1,5 @@
-y JKy (yard-enter)
-y IJy (yard-exit)
+y JKy (yard-exit)
+IJy y (yard-enter)
 JKy 65 (yard-Glenbury)
 65 66 Glenbury::S
 66 73 (Glenbury-Dormont)
