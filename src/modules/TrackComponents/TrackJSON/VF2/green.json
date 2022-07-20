@@ -874,7 +874,6 @@
     "Block Length (m)": "100",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "40",
-    "Infrastructure": "SWITCH (77-76; 77-101)",
     "ELEVATION (M)": "0",
     "CUMALTIVE ELEVATION (M)": "0.5",
     "seconds to traverse block": "9.0"
@@ -886,7 +885,7 @@
     "Block Length (m)": "300",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "70",
-    "Infrastructure": "STATION; MT LEBANON",
+    "Infrastructure": "STATION; MT LEBANON; SWITCH (77-76; 77-101)",
     "Station Side": "Left/Right",
     "ELEVATION (M)": "0",
     "CUMALTIVE ELEVATION (M)": "0.5",
