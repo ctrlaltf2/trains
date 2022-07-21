@@ -191,8 +191,6 @@ class TrainModel extends React.Component {
       // ...
       // Do some physics updates shit here w/ elapsed time
 
-
-
       // ...
 
       this.previous_time = payload.timestamp;
@@ -210,7 +208,6 @@ class TrainModel extends React.Component {
       this.changeTemp();
 
       // this.calculate();
-
     }, 1000); // update every second
   }
 
@@ -359,7 +356,6 @@ class TrainModel extends React.Component {
     window.electronAPI.sendTrainControllerMessage({
       'type': 'signalPickupFailure',
       'signalPickupFailure': this.state.signalPickupStatus,
-
     });
   }
 
