@@ -220,7 +220,6 @@ class CTCOffice extends React.Component {
       '(Whited-South Bank)': range(23, 31, 1),
     };
 
-
     this.stations = {
       'green': {
         '57': 'Overbrook',
@@ -263,7 +262,6 @@ class CTCOffice extends React.Component {
 
   checkShouldDispatch() {
     const deleted = [];
-    console.log(this.pendingDispatches);
     for(const pendingTimestamp_ of Array.from(Object.keys(this.pendingDispatches))) {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
 
