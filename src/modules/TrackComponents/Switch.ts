@@ -1,5 +1,6 @@
 export class Switch {
   private _position: number;
+  private _positionBool: boolean;
 
   constructor(
     public swBlock: number,
@@ -21,6 +22,7 @@ export class Switch {
     } else {
       this._position = this.outBlockLow;
     }
+    this._positionBool = b;
   }
 
   setPosition(to_block: number) {
@@ -33,5 +35,9 @@ export class Switch {
 
   get position() {
     return this._position;
+  }
+
+  get positionBool() {
+    return this._positionBool;
   }
 }
