@@ -133,12 +133,12 @@ class TrackController extends React.Component {
     // }));
 
     // Load PLC for testing purposes
-    // this.controllers[0].setPLC(SW13);
-    // this.controllers[1].setPLC(SW29);
-    // this.controllers[2].setPLC(SW57);
-    // this.controllers[3].setPLC(SW63);
-    // this.controllers[4].setPLC(SW76);
-    // this.controllers[5].setPLC(SW85);
+    this.controllers[0].setPLC(SW13);
+    this.controllers[1].setPLC(SW29);
+    this.controllers[2].setPLC(SW57);
+    this.controllers[3].setPLC(SW63);
+    this.controllers[4].setPLC(SW76);
+    this.controllers[5].setPLC(SW85);
 
     // Functions for testing
     this.toggle = this.toggle.bind(this);
