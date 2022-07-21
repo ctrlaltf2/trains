@@ -82,7 +82,6 @@ class TrackModel extends React.Component {
     //  function to load in new files
     window.electronAPI.subscribeFileMessage((_event, payload) => {
       try {
-        // console.log(payload.payload);
         this.state.TrackJSON = JSON.parse(payload.payload); //  assigns the value of the JSON data to the JSON var
         // call other function
         this.loadNewTrackModel();
@@ -186,49 +185,53 @@ class TrackModel extends React.Component {
 
   //  Load Track Block Info
   loadNewTrackModel = (event) => {
+    //  try to console log the trackObject
+    // console.log(this.state.TrackJSON.Green);
     //  clear the track model
     this.state.blocks = [];
     //  load the TrackJSON object's properties into the blocks array
-    const tempTrackObj = {};
+    const tempTrackObj = this.state.TrackJSON.Green;
 
-    for (let i = 0; i < this.state.TrackJSON.Track.length; i++) {
+    for (let i = 0; i < tempTrackObj.length; i++) {
       // console.log('i = ', i);
-
-      const temp = this.state.TrackJSON.Track[i]; // gets the info from object at index i
-      tempTrackObj.Line = temp.Line;
-      tempTrackObj.Section = temp.Section;
-      tempTrackObj.BlockNumber = temp['Block Number'];
-      tempTrackObj.BlockLength = temp['Block Length (m)'];
-      tempTrackObj.BlockGrade = temp['Block Grade (%)'];
-      tempTrackObj.SpeedLimit = temp['Speed Limit (Km/Hr)'];
-      tempTrackObj.Infrastructure = temp.Infrastructure;
-      tempTrackObj.Elevation = temp['ELEVATION (M)'];
-      tempTrackObj.CumElevation = temp['CUMALTIVE ELEVATION (M)'];
-
-      // this.state.blocks.push(tempTrackObj);
+      const temp = tempTrackObj[i]; // gets the info from object at index i
+      // console.log(temp);
+      // tempTrackObj.Line = temp.Line;
+      // tempTrackObj.Section = temp.Section;
+      // tempTrackObj.BlockNumber = temp['Block Number'];
+      // tempTrackObj.BlockLength = temp['Block Length (m)'];
+      // tempTrackObj.BlockGrade = temp['Block Grade (%)'];
+      // tempTrackObj.SpeedLimit = temp['Speed Limit (Km/Hr)'];
+      // tempTrackObj.Infrastructure = temp.Infrastructure;
+      // tempTrackObj.Elevation = temp['ELEVATION (M)'];
+      // tempTrackObj.CumElevation = temp['CUMALTIVE ELEVATION (M)'];
       this.state.blocks.push({
-        Line: temp.Line,
+        Line: 'Green',
         Section: temp.Section,
         BlockNumber: temp['Block Number'],
         BlockLength: temp['Block Length (m)'],
         BlockGrade: temp['Block Grade (%)'],
         SpeedLimit: temp['Speed Limit (Km/Hr)'],
         Infrastructure: temp.Infrastructure,
+        StationSide: temp['Station Side'],
         Elevation: temp['ELEVATION (M)'],
         CumElevation: temp['CUMALTIVE ELEVATION (M)'],
+        PrevBlock: temp.Prev,
+        NextBlock: temp.Next,
+        Oneway: temp.Oneway,
       });
 
       // console.log('tempTrackObj: ', tempTrackObj);
-      // console.log('Blocks array at index i: ', blocks[i]);
+      // console.log('Blocks array at index i: ', this.state.blocks[i]);
     }
 
+    //  try to console log blocks
+    // console.log('blocks: ', this.state.blocks);
     // console.log('blocks array: ', blocks);
     // eslint-disable-next-line react/no-access-state-in-setstate
-    const temp = this.state.TrackJSON.Track[0].Line;
 
     //  set line Name -- any index of the file will work as the line is same throughout
-    this.setState({ lineName: temp });
-
+    this.state.lineName = this.state.blocks[0].Line;
     //  set envionment temp by calling function
     this.generateTrackModelEVtemp();
 
@@ -326,9 +329,8 @@ class TrackModel extends React.Component {
     const beaconMessage =
       this.state.blocks[this.state.blockIndex - 1].Infrastructure;
 
-    if (beaconMessage == null) {
-      this.state.beacon = 'No Station';
-    } else if (beaconMessage.includes('STATION')) {
+    this.state.beacon = 'No Station';
+    if (beaconMessage.includes('STATION')) {
       //  capture the string after station until ';' or end of string
       const firstInd = beaconMessage.indexOf(';');
       const mess = beaconMessage.substring(firstInd + 1);
@@ -339,7 +341,7 @@ class TrackModel extends React.Component {
         this.state.beacon = mess2;
       }
     }
-    // console.log(this.state.beacon);
+    console.log('beacon: ', this.state.beacon);
   };
 
   //  check if the track heaters should turn on
