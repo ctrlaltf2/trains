@@ -81,6 +81,11 @@ class CTCOffice extends React.Component {
       console.log(payload);
     });
 
+    window.electronAPI.subscribeTimerMessage( (_event, payload) => {
+      this.now = payload.timestamp;
+      this.checkShouldDispatch();
+    });
+
     this.state = {
       UIMode: UIState.Main,
       isDispatchModalOpen: false,
@@ -149,6 +154,7 @@ class CTCOffice extends React.Component {
 
     this.systemMapRef = React.createRef();
     this.pendingDispatches = {}; // timestamp to send off
+    this.pendingAuthorities = {}; // timestamp to send
 
     // Off-screen cytoscape element for routing algos and other shenanigans
     // Indexed by line
@@ -255,6 +261,34 @@ class CTCOffice extends React.Component {
     this.inferTrainMovement('green', '20', true);
   }
 
+  checkShouldDispatch() {
+    const deleted = [];
+    console.log(this.pendingDispatches);
+    for(const pendingTimestamp_ of Array.from(Object.keys(this.pendingDispatches))) {
+      const pendingTimestamp = parseFloat(pendingTimestamp_);
+
+      console.log(this.now, pendingTimestamp);
+      if(this.now < pendingTimestamp) {
+        const payload = {
+          type: 'dispatch',
+          value: this.pendingDispatches[pendingTimestamp]
+        };
+
+        console.log('Sending dispatch message of ', payload);
+
+        window.electronAPI.sendTrackControllerMessage(payload);
+
+        deleted.push(pendingTimestamp_);
+
+        ++this.nextTrainID;
+      }
+    }
+
+    for(const delete_ of deleted) {
+      delete this.pendingDispatches[delete_];
+    }
+  }
+
   // With list of stations, generate a route/path of blocks to go to meet station ordering
   generateYardRoute(line, stations, return_last = false) {
     const windowedSlice = function(arr, size) {
@@ -333,7 +367,11 @@ class CTCOffice extends React.Component {
     return found;
   };
 
-  manualDispatch(line, station, eta_ms) {
+  manualDispatch(line, station, eta_str) {
+    const [hh, mm] = eta_str.split(':');
+    const eta_ms = parseInt(hh) * 60 * 60 * 1000 + parseInt(mm) * 60 * 1000;
+    console.log(eta_ms);
+
     const { route, last_segment } = this.generateYardRoute(line, [station], true);
     const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]), [10*1000]);
 
@@ -365,8 +403,25 @@ class CTCOffice extends React.Component {
     final_auth_table[0].wait_next_authority = 0;
 
     // TODO: Dump to authority table used to send to trains and such
-    console.log([].concat(authority_table, return_authority_table));
-    console.log([].concat(route, return_block_path));
+    const total_auth  = [].concat(authority_table, return_authority_table);
+    const total_route = [].concat(route, return_block_path);
+
+    const pain = new Train( // constant pain from trains
+      this.nextTrainID,
+      line,
+      'unused - refactor',
+      75,
+      1, // TODO: Settle on a good authority
+      total_route
+    );
+
+    pain.auth_table = total_auth;
+
+    this.pendingDispatches[leave_time] = pain;
+
+    ++this.nextTrainID;
+
+    console.log('Dispatch pending: ', pain, ' at ', leave_time, 'ms.');
   }
 
   getAuthorityTable(line, block_route, blocks_stopped_at = [], stop_times = []) {
@@ -670,7 +725,7 @@ class CTCOffice extends React.Component {
   }
 
   scheduleAuthoritySend(authority, delay) {
-
+    
   }
 
   updateSwitchPosition(line, switch_identifier, new_direction) {
@@ -1144,6 +1199,7 @@ class CTCOffice extends React.Component {
                   {
                     (lineSelection && blockSelection) ?
                       <TextField margin="none" size="small" label="ETA" type="time" variant="standard" onChange={(ev) => {
+                        console.log(ev.target.value);
                         this.setState({
                           enteredETA: ev.target.value
                         });
@@ -1157,7 +1213,7 @@ class CTCOffice extends React.Component {
                     <Button id="dispatchCommitBtn" variant="contained" onClick={() => {
                       this.manualDispatch(lineSelection, blockSelection, enteredETA);
                       this.setState({
-                        isDispatchModalOpen: !isDispatchModalOpen
+                        isDispatchModalOpen: isDispatchModalOpen
                       });
                     }}>
                       Commit
