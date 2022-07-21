@@ -9,13 +9,16 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
+const fs = require('fs');
+
 import * as Modules from './modules';
+import Timer from './Timer';
 
 export default class AppUpdater {
   constructor() {
@@ -58,8 +61,9 @@ const activeModules = [
   'TrackController',
   'TrackModel',
   'TrainModel',
-  'TrainControllerHW',
-  'TrainControllerSW',
+  // 'TrainControllerHW',
+  //'TrainControllerSW',
+  'Timer',
 ];
 
 const createWindow = async (moduleName: string) => {
@@ -75,17 +79,34 @@ const createWindow = async (moduleName: string) => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
-  let moduleWindow = new BrowserWindow({
-    show: false,
-    width: 1024,
-    height: 728,
-    icon: getAssetPath('icon.png'),
-    webPreferences: {
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
-    },
-  });
+  let moduleWindow;
+  if(moduleName === Modules.TIMER) {
+    moduleWindow = new BrowserWindow({
+      show: false,
+      width: 350,
+      height: 250,
+      icon: getAssetPath('icon.png'),
+      webPreferences: {
+        preload: app.isPackaged
+          ? path.join(__dirname, 'preload.js')
+          : path.join(__dirname, '../../.erb/dll/preload.js'),
+      },
+    });
+  } else {
+    moduleWindow = new BrowserWindow({
+      show: false,
+      width: 1024,
+      height: 728,
+      icon: getAssetPath('icon.png'),
+      webPreferences: {
+        preload: app.isPackaged
+          ? path.join(__dirname, 'preload.js')
+          : path.join(__dirname, '../../.erb/dll/preload.js'),
+      },
+    });
+  }
+
+
   moduleWindows[moduleName] = moduleWindow;
 
   moduleWindow.loadURL(`${resolveHtmlPath('index.html')}#${moduleName}`);
@@ -131,6 +152,8 @@ app.on('window-all-closed', () => {
   }
 });
 
+const t = new Timer(100, 8 * 60 * 60 * 1000);
+
 app
   .whenReady()
   .then(() => {
@@ -162,6 +185,63 @@ app
     Object.values(Modules.ALL_MODULES).forEach(moduleName => {
       ipcMain.on(moduleName, (_event, payload) => {
         moduleWindows[moduleName].webContents.send(moduleName, payload);
+      });
+    });
+
+    ipcMain.on('timer::pause', (_event, payload) => {
+      // TODO: Message validation
+      console.log('timer::pause', payload)
+      t.pause(payload);
+    });
+
+    ipcMain.on('timer::time-multiplier', (_event, payload) => {
+      // TODO: Message validation
+      console.log('timer::time-multiplier', payload)
+      t.setTimeScalar(payload);
+    });
+
+    t.onClock((timestamp) => {
+      activeModules.forEach(moduleName => {
+        moduleWindows[moduleName].webContents.send(Modules.TIMER, {
+          timestamp: timestamp,
+        });
+      });
+    });
+
+    t.start();
+
+    ipcMain.on('file', (_event, tag) => {
+      dialog.showOpenDialog({
+        properties: ['openFile']
+      })
+      .then((response) => {
+        if(!response.canceled) {
+          _event.sender.send('file', response.filePaths[0]);
+
+          fs.readFile(response.filePaths[0], 'utf8', (err, data) => {
+            if(err) {
+              _event.sender.send('file', {
+                tag: tag,
+                status: 'error',
+                payload: err
+              });
+
+              return;
+            }
+
+            _event.sender.send('file', {
+              tag: tag,
+              status: 'success',
+              payload: data
+            });
+          });
+        } else {
+          _event.sender.send('file', {
+            tag: tag,
+            status: 'error',
+            payload: 'cancelled'
+          });
+        }
       });
     });
   })
