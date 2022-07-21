@@ -83,7 +83,7 @@ class TrainModel extends React.Component {
           this.setState({brakeStatus: payload.brakeFailure});
           break;
         case 'engineFailure':
-          this.setState({engineStatus: payload.engineFailure});
+          this.setState({trainEngineStatus: payload.engineFailure});
           break;
         case 'temperature':
           this.setState({temperature: payload.temperature});
@@ -96,7 +96,7 @@ class TrainModel extends React.Component {
     // Send temperature to train model
     window.electronAPI.sendTrainControllerMessage({
       'type': 'engineFailure',
-      'engineFailure': this.state.engineStatus,
+      'engineFailure': this.state.trainEngineStatus,
      /* 'type': 'engineStatus',
       'engineStatus': this.state.engineStatus,
       'type': 'signalPickupStatus',
@@ -289,6 +289,10 @@ class TrainModel extends React.Component {
     this.setState((prevState) => ({
       trainEngineStatus: !prevState.trainEngineStatus,
     }));
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'engineFailure',
+      'engineFailure': this.state.trainEngineStatus,
+    });
   }
 
   toggleBrakeStatus() {
