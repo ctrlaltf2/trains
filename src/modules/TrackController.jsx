@@ -366,66 +366,115 @@ class TrackController extends React.Component {
           }
         }
 
-      //   // Transit light logic
-      //   for (let j = 0; j < controller.plc.lightLogic.length; j++) {
-      //     // Run 3x for vitality
-      //     status = [true, true, true];
-      //     for (let vitality = 0; vitality < 3; vitality++) {
-      //       for (
-      //         let k = 0;
-      //         k < controller.plc.lightLogic[j].green.length;
-      //         k++
-      //       ) {
-      //         // AND
-      //         if (controller.plc.lightLogic[j].green[k] === '&&') {
-      //         }
-      //         // NOT
-      //         else if (controller.plc.lightLogic[j].green[k].includes('!')) {
-      //           if (
-      //             this.state.blocks[
-      //               parseInt(
-      //                 controller.plc.lightLogic[j].green[k].substring(1)
-      //               ) - 1
-      //             ].occupancy
-      //           ) {
-      //             status[vitality] = false;
-      //           }
-      //         }
-      //         // Regular
-      //         else {
-      //           if (
-      //             !this.state.blocks[
-      //               parseInt(controller.plc.lightLogic[j].green[k]) - 1
-      //             ].occupancy
-      //           ) {
-      //             status[vitality] = false;
-      //           }
-      //         }
-      //       }
-      //     }
-      //     // console.log(status);
-      //     // Vitality check before setting light position
-      //     if (status.every((val) => val === true)) {
-      //       window.electronAPI.sendCTCMessage({
-      //         type: 'lights',
-      //         line: this.state.blocks[
-      //           parseInt(controller.plc.lightLogic[j].block) - 1
-      //         ].line,
-      //         id: parseInt(controller.plc.lightLogic[j].block) - 1,
-      //         value:
-      //           this.state.blocks[
-      //             parseInt(controller.plc.lightLogic[j].block) - 1
-      //           ].transitLight,
-      //       });
-      //       this.state.blocks[
-      //         parseInt(controller.plc.lightLogic[j].block) - 1
-      //       ].transitLight = 'green';
-      //     } else {
-      //       this.state.blocks[
-      //         parseInt(controller.plc.lightLogic[j].block) - 1
-      //       ].transitLight = 'red';
-      //     }
-      //   }
+        //   // Transit light logic
+        for (let j = 0; j < controller.plc.lightLogic.length; j++) {
+          // Run 3x for vitality
+          status = [true, true, true];
+          for (let vitality = 0; vitality < 3; vitality++) {
+            for (
+              let k = 0;
+              k < controller.plc.lightLogic[j].green.length;
+              k++
+            ) {
+              // AND
+              if (controller.plc.lightLogic[j].green[k] === '&&') {
+              }
+              // NOT
+              else if (controller.plc.lightLogic[j].green[k].includes('!')) {
+                if (
+                  this.state.blocks[
+                    parseInt(
+                      controller.plc.lightLogic[j].green[k].substring(1)
+                    ) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = false;
+                }
+              }
+              // Regular
+              else {
+                if (
+                  !this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].green[k]) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = false;
+                }
+              }
+            }
+          }
+          // console.log(status);
+          // Vitality check before setting light position
+          if (status.every((val) => val === true)) {
+            let temp =
+              this.state.blocks[
+                parseInt(controller.plc.lightLogic[j].block) - 1
+              ].transitLight == 'red';
+
+            this.state.blocks[
+              parseInt(controller.plc.lightLogic[j].block) - 1
+            ].transitLight = 'green';
+
+            if (temp) {
+              window.electronAPI.sendCTCMessage({
+                type: 'lights',
+                line: this.state.blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].line,
+                id: parseInt(controller.plc.lightLogic[j].block),
+                value:
+                  this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].block) - 1
+                  ].transitLight,
+              });
+              window.electronAPI.sendTrackModelMessage({
+                type: 'lights',
+                line: this.state.blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].line,
+                id: parseInt(controller.plc.lightLogic[j].block),
+                value:
+                  this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].block) - 1
+                  ].transitLight,
+              });
+            }
+          } else {
+            let temp =
+              this.state.blocks[
+                parseInt(controller.plc.lightLogic[j].block) - 1
+              ].transitLight == 'green';
+
+            this.state.blocks[
+              parseInt(controller.plc.lightLogic[j].block) - 1
+            ].transitLight = 'red';
+
+            if (temp) {
+              window.electronAPI.sendCTCMessage({
+                type: 'lights',
+                line: this.state.blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].line,
+                id: parseInt(controller.plc.lightLogic[j].block),
+                value:
+                  this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].block) - 1
+                  ].transitLight,
+              });
+              window.electronAPI.sendTrackModelMessage({
+                type: 'lights',
+                line: this.state.blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].line,
+                id: parseInt(controller.plc.lightLogic[j].block),
+                value:
+                  this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].block) - 1
+                  ].transitLight,
+              });
+            }
+          }
+        }
       });
 
       this.setState((prevState) => ({
@@ -466,10 +515,20 @@ class TrackController extends React.Component {
 
   // Toggles switch
   setSwitch() {
-    if (this.state.blocks[this.state.currBlock.id - 1].switch.position == this.state.blocks[this.state.currBlock.id - 1].switch.outBlockHigh){
-      this.state.blocks[this.state.currBlock.id - 1].switch.setPosition(this.state.blocks[this.state.currBlock.id - 1].switch.outBlockLow);
-    } else if (this.state.blocks[this.state.currBlock.id - 1].switch.position == this.state.blocks[this.state.currBlock.id - 1].switch.outBlockLow){
-      this.state.blocks[this.state.currBlock.id - 1].switch.setPosition(this.state.blocks[this.state.currBlock.id - 1].switch.outBlockHigh);
+    if (
+      this.state.blocks[this.state.currBlock.id - 1].switch.position ==
+      this.state.blocks[this.state.currBlock.id - 1].switch.outBlockHigh
+    ) {
+      this.state.blocks[this.state.currBlock.id - 1].switch.setPosition(
+        this.state.blocks[this.state.currBlock.id - 1].switch.outBlockLow
+      );
+    } else if (
+      this.state.blocks[this.state.currBlock.id - 1].switch.position ==
+      this.state.blocks[this.state.currBlock.id - 1].switch.outBlockLow
+    ) {
+      this.state.blocks[this.state.currBlock.id - 1].switch.setPosition(
+        this.state.blocks[this.state.currBlock.id - 1].switch.outBlockHigh
+      );
     }
 
     this.setState((prevState) => ({
