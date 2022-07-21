@@ -221,11 +221,11 @@ class TrainControllerSW extends React.Component {
       this.temperature = event.target.value;
     }
 
-    // // Send temperature to train model
-    // window.electronAPI.sendTrainModelMessage({
-    //   'type': 'temperature',
-    //   'temperature': this.state.temperature,
-    // });
+    // Send temperature to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'temperature',
+      'temperature': this.temperature,
+    });
 
   }
 
