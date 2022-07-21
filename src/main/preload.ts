@@ -25,9 +25,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendTrainModelMessage:          (payload) => ipcRenderer.send(Modules.TRAIN_MODEL, payload),
   requestTrainModelMessage:       (payload) => ipcRenderer.invoke(Modules.TRAIN_MODEL, payload),
 
-  sendTrainControllerSWMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
-  requestTrainControllerSWMessage:  (payload) => ipcRenderer.invoke(Modules.TRAIN_CONTROLLER_SW, payload),
-
-  sendTrainControllerHWMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
-  requestTrainControllerHWMessage:  (payload) => ipcRenderer.invoke(Modules.TRAIN_CONTROLLER_SW, payload),
+  sendTrainControllerMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER, payload),
 });

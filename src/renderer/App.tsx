@@ -26,7 +26,7 @@ const Main = () => {
     case 'TrainModel':
       moduleToRender = (<TrainModel/>);
       break;
-    case 'TrainControllerSW':
+    case 'TrainController':
       moduleToRender = (<TrainControllerSW/>);
       break;
     case 'TrainControllerHW':

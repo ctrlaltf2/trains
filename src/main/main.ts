@@ -59,7 +59,7 @@ const activeModules = [
   // 'TrackModel',
   'TrainModel',
   // 'TrainControllerHW',
-  'TrainControllerSW',
+  'TrainController',
 ];
 
 const createWindow = async (moduleName: string) => {
