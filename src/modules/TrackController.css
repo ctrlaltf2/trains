@@ -1,0 +1,44 @@
+.small {
+  padding-top: 1rem;
+  height: 10vh;
+}
+
+.centered {
+  text-align: center;
+  padding: 1rem;
+  align-content: center;
+}
+
+.text-centered {
+  text-align: center;
+  padding-top: 2rem;
+
+  align-content: center;
+}
+
+.left {
+  padding: 1rem;
+}
+
+.metrics {
+  padding-left: 1rem;
+}
+
+.right {
+  text-align: right;
+  padding: 1rem;
+}
+
+.button {
+  display: inline-flex;
+  flex-grow: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 18px;
+  border-radius: 16px;
+  height: 28px;
+  min-width: 50px;
+  width: auto;
+  padding: 0 16px;
+  margin-bottom: 1 rem;
+}
