@@ -70,6 +70,10 @@ class TrackModel extends React.Component {
       // beacon
       beacon: 'defaultBeacon',
 
+      //  train failures
+      BrakeFailure,
+      EngineFailure,
+
       // if information has problem might need blocks: blocks
       //  is an array of blocks, one block has block info for the track
       blocks,
@@ -117,24 +121,26 @@ class TrackModel extends React.Component {
       //  anything inside here is a property of the object you are sending
       //  example 'type': 'closure'
       type: 'trackModelStatus',
-      TrackSignalPickup: '',
+      TrackSignalPickup: this.state.recievingTrackCircuit,
       RailStatus: this.state.railStatus,
       TrackPowerStatus: this.state.trackPower,
       SpeedLimit: this.state.speedLimit,
-      TrainEngineFailure: '',
-      BrakeFailure: '',
+      TrainEngineFailure: this.state.EngineFailure,
+      BrakeFailure: this.state.BrakeFailure,
       Throughput: '',
-      TrackBlockOccupancy: '',
+      TrackBlocks: this.state.blocks,
     });
 
     //  function to send message to the Train Model
     window.electronAPI.sendTrainModelMessage({
       //  anything here is a property of the object you are sending
+      type: 'trackModelStatus',
       TransitLightStatus: '',
       MaintenanceMode: '',
       CommandedSpeed: '',
       Authority: '',
       Beacon: this.state.beacon,
+      UndergroundBlocks: this.state.blocks.Underground,
     });
 
     //  function prototypes
