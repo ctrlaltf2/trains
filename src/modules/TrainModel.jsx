@@ -79,12 +79,6 @@ class TrainModel extends React.Component {
         case 'currentSpeed':
           this.setState({currentSpeed: payload.currentSpeed});
           break;
-        case 'brakeFailure':
-          this.setState({brakeStatus: payload.brakeFailure});
-          break;
-        case 'engineFailure':
-          this.setState({trainEngineStatus: payload.engineFailure});
-          break;
         case 'temperature':
           this.setState({temperature: payload.temperature});
           break;
@@ -196,9 +190,12 @@ class TrainModel extends React.Component {
       // Do some physics updates shit here w/ elapsed time
 
 
+
+
       // ...
 
       this.previous_time = payload.timestamp;
+
     })
 
   };
@@ -209,7 +206,7 @@ class TrainModel extends React.Component {
       this.calculateLength();
       this.calculateMass();
       this.changeTemp();
-      if(this.state.setSpeed !== this.state.currentSpeed) this.calculate();
+      // this.calculate();
     }, 1000); // update every second
   }
 
@@ -217,6 +214,46 @@ class TrainModel extends React.Component {
    handlePowerCommandChange(event) {
     this.setState({powerCommand: event.target.value })
   }
+
+  // calculate
+  /* calculate() {
+    // calculate force
+    this.setState(prevState => ({force: prevState.powerCommand * 1000 / prevState.currentSpeed}));  // conversion of kW to W
+
+
+    // calculate acceleration Acceleration Limit: 0.5 m/s^2     Deceleration Limit(service brake): -1.2 m/s^2    Deceleration Limit(e brake): -2.73 m/s^2
+    this.setState(prevState => ({acceleration: this.state.force / (prevState.totalMass * 907.185)})); // conversion of tons to kg
+
+    // if acceleration is above accelerationLimit
+    if(this.state.acceleration > this.state.accelerationLimit && !this.state.emergencyBrake && !this.state.serviceBrake) {
+      this.setState(prevState => ({acceleration: this.state.accelerationLimit}));
+    }
+
+    // if serviceBrake is true
+    if(!this.state.emergencyBrake && this.state.serviceBrake) {
+      this.setState(prevState => ({acceleration: this.state.serviceDecelLimit}));
+    }
+
+    // if eBrake is true
+    if(this.state.emergencyBrake && !this.state.serviceBrake) {
+      this.setState(prevState => ({acceleration: this.state.eDecelLimit}));
+    }
+
+    // if serviceBrake and eBrake is true, cancel out serviceBrake
+    if(this.state.emergencyBrake && this.state.serviceBrake) {
+      this.setState(prevState => ({acceleration: this.state.eDecelLimit}));
+    }
+
+
+    // calculate velocity
+    this.setState(prevState => ({ currentSpeed: prevState.currentSpeed +  (time_elapsed_ms / 2) * (this.state.acceleration + prevState.acceleration) }));
+
+
+    // calculate position
+    this.setState(prevState => ({intermediatePosition: this.state.currentSpeed * time_elapsed_ms}));
+    this.setState(prevState => ({position: prevState.position + this.state.intermediatePosition}));
+
+  } */
 
   // update temp at interval
    updateTemp() {
@@ -254,13 +291,6 @@ class TrainModel extends React.Component {
     }));
   }
 
-  // calculate
-  calculate() {
-    this.setState(prevState => ({force: prevState.powerCommand * 1000 / prevState.currentSpeed}));  // conversion of kW to W
-    this.setState(prevState => ({acceleration: this.state.force / (prevState.totalMass * 907.185)})); // conversion of tons to kg
-    // this.setState(prevState => ({currentSpeed: prevState.acceleration / prevState.T}));
-    // this.setState(prevState => ({position: prevState.currentSpeed / prevState.T}));
-  }
 
   // toggle functions including failure and brake statuses, and test UI
   toggleTrainEngineStatus() {
@@ -301,6 +331,24 @@ class TrainModel extends React.Component {
 
   resetAll() {
     this.setState({trainEngineStatus: true, brakeStatus: true, signalPickupStatus: true});
+
+    // Send engine failure to train controller
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'engineFailure',
+      'engineFailure': this.state.trainEngineStatus,
+    });
+
+    // Send brake failure to train controller
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'brakeFailure',
+      'brakeFailure': this.state.brakeStatus,
+    });
+
+    // Send signal pickup failure to train controller
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'signalPickupFailure',
+      'signalPickupFailure': this.state.signalPickupStatus,
+    });
   }
 
   toggle() {

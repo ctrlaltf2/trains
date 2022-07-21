@@ -431,7 +431,6 @@ class TrainControllerSW extends React.Component {
   authorityStop(){ // Call this function when authority hits 0
       this.setState({brakeStatus: true});
       this.setSpeed = 0;
-
   }
 
   toggleAutomatic(){ // Toggles between automatic mode and manual mode
