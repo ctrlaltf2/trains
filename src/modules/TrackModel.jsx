@@ -28,7 +28,7 @@ import './TrackBlock.js';
 import blueTrackImg from './BlueTrack.jpg';
 import blueTrackJson from './blueLineTrackModel.json';
 import { array } from 'prop-types';
-import { PortableWifiOffRounded } from '@mui/icons-material';
+import { ContactPageSharp, PortableWifiOffRounded } from '@mui/icons-material';
 
 // variables
 const darkMode = createTheme({
@@ -158,6 +158,7 @@ class TrackModel extends React.Component {
     this.testUIEnvtempFun = this.testUIEnvtempFun.bind(this);
     this.testUITrackHeaterStatusFun =
       this.testUITrackHeaterStatusFun.bind(this);
+    this.isBlockUnderground = this.isBlockUnderground.bind(this);
     this.generateBeacon = this.generateBeacon.bind(this);
   }
 
@@ -185,26 +186,13 @@ class TrackModel extends React.Component {
 
   //  Load Track Block Info
   loadNewTrackModel = (event) => {
-    //  try to console log the trackObject
-    // console.log(this.state.TrackJSON.Green);
     //  clear the track model
     this.state.blocks = [];
     //  load the TrackJSON object's properties into the blocks array
     const tempTrackObj = this.state.TrackJSON.Green;
 
     for (let i = 0; i < tempTrackObj.length; i++) {
-      // console.log('i = ', i);
       const temp = tempTrackObj[i]; // gets the info from object at index i
-      // console.log(temp);
-      // tempTrackObj.Line = temp.Line;
-      // tempTrackObj.Section = temp.Section;
-      // tempTrackObj.BlockNumber = temp['Block Number'];
-      // tempTrackObj.BlockLength = temp['Block Length (m)'];
-      // tempTrackObj.BlockGrade = temp['Block Grade (%)'];
-      // tempTrackObj.SpeedLimit = temp['Speed Limit (Km/Hr)'];
-      // tempTrackObj.Infrastructure = temp.Infrastructure;
-      // tempTrackObj.Elevation = temp['ELEVATION (M)'];
-      // tempTrackObj.CumElevation = temp['CUMALTIVE ELEVATION (M)'];
       this.state.blocks.push({
         Line: 'Green',
         Section: temp.Section,
@@ -220,14 +208,7 @@ class TrackModel extends React.Component {
         NextBlock: temp.Next,
         Oneway: temp.Oneway,
       });
-
-      // console.log('tempTrackObj: ', tempTrackObj);
-      // console.log('Blocks array at index i: ', this.state.blocks[i]);
     }
-
-    //  try to console log blocks
-    // console.log('blocks: ', this.state.blocks);
-    // console.log('blocks array: ', blocks);
     // eslint-disable-next-line react/no-access-state-in-setstate
 
     //  set line Name -- any index of the file will work as the line is same throughout
@@ -237,9 +218,9 @@ class TrackModel extends React.Component {
 
     //  call the function to check if the heaters are needed
     this.checkTrackHeaters();
-    // } catch (error) {
-    //   console.log('that didnt work', error);
-    // }
+
+    //  check if each block is underground, store in blocks
+    this.isBlockUnderground();
   };
 
   loadFile = (event) => {
@@ -249,9 +230,7 @@ class TrackModel extends React.Component {
   handleSwitchChange = (event) => {
     let { myValue } = event.currentTarget.dataset;
     let index = this.state.blockIndex;
-    // console.log(`switch value: ${myValue}`);
     if (index === '5') {
-      // console.log(`reacehed if statement: ${index}`);
       if (myValue === '0') {
         //  make engaged
         this.setState({ switchPos: 'engaged' });
@@ -263,7 +242,7 @@ class TrackModel extends React.Component {
   };
 
   failTrackPower = (event) => {
-    //check the state of track power and change it
+    //  check the state of track power and change it
     if (this.state.trackPower === 'functional') {
       this.setState({ trackPower: 'broken' });
     } else {
@@ -325,7 +304,6 @@ class TrackModel extends React.Component {
 
   //  function shall retrieve beacon information from JSON data in the blocks
   generateBeacon = () => {
-    // console.log(this.state.blockIndex, ' - block index');
     const beaconMessage =
       this.state.blocks[this.state.blockIndex - 1].Infrastructure;
 
@@ -365,6 +343,17 @@ class TrackModel extends React.Component {
     console.log('beacon: ', this.state.beacon);
   };
 
+  //  function shall check if the blocks are underground
+  isBlockUnderground = () => {
+    for (let ind = 0; ind < this.state.TrackJSON.Green.length; ind++) {
+      const infas = this.state.blocks[ind].Infrastructure;
+      this.state.blocks[ind].Underground = false;
+      if (infas.includes('UNDERGROUND'))
+        this.state.blocks[ind].Underground = true;
+    }
+    console.log(this.state.blocks);
+  };
+
   //  check if the track heaters should turn on
   checkTrackHeaters = () => {
     if (this.state.enviornmentTemp < 32)
@@ -374,9 +363,7 @@ class TrackModel extends React.Component {
 
   //  handle the select change
   handleChange = (event) => {
-    // this.setState({ blockIndex: event.target.value });
     this.state.blockIndex = event.target.value;
-    // console.log('the block index is: ', event.target.value);
     this.loadBlockInfo(event.target.value);
   };
 
