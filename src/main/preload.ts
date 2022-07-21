@@ -20,15 +20,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendTrackControllerMessage:     (payload) => ipcRenderer.send(Modules.TRACK_CONTROLLER, payload),
   sendTrackModelMessage:          (payload) => ipcRenderer.send(Modules.TRACK_MODEL, payload),
   sendTrainModelMessage:          (payload) => ipcRenderer.send(Modules.TRAIN_MODEL, payload),
-  sendTrainControllerSWMessage:   (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
-  sendTrainControllerHWMessage:   (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
 
-  sendTrainControllerHWMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER_SW, payload),
-  requestTrainControllerHWMessage:  (payload) => ipcRenderer.invoke(Modules.TRAIN_CONTROLLER_SW, payload),
+  sendTrainControllerMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER, payload),
 
   sendTimePause:          (doPause) => ipcRenderer.send('timer::pause', doPause),
   sendTimeFastForward:    (timeScalar) => ipcRenderer.send('timer::time-multiplier', timeScalar),
 
   openFileDialog: (tag) => ipcRenderer.send('file', tag)
-
 });
