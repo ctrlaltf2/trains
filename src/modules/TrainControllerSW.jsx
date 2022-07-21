@@ -121,7 +121,6 @@ class TrainControllerSW extends React.Component {
     this.error_kprev = 0;
     this.totalMass = 0;
     this.passengers = 8;
-    this.setSpeed = 0;
     this.currentSpeed = 0;
     this.commandedSpeed = 0;
     this.suggestedSpeed = 0;
@@ -175,9 +174,9 @@ class TrainControllerSW extends React.Component {
       this.setState({currentSpeedUI: this.currentSpeed});
       this.setState({commandedSpeedUI: this.commandedSpeed});
       this.setState({suggestedSpeedUI: this.suggestedSpeed});
-      this.setState({authority: this.authority});
-      this.setState({stationName: this.stationName});
-    }, 400)
+      this.setState({authorityUI: this.authority});
+      this.setState({stationNameUI: this.stationName});
+    }, 100)
 
     const interval = setInterval(() => {
 
@@ -249,23 +248,23 @@ class TrainControllerSW extends React.Component {
   }
 
   setDesiredSpeed(event){
-
-    console.log('setDesiredSpeed:', event, this.state.commandedSpeed);
-    if(event.target.value < 0){
-      this.setSpeed = 0;
-    }
-    else if (event.target.value > 70){
-      this.setSpeed = 70;
-    }
-    else if (event.target.value <= this.state.commandedSpeed){
-      this.setSpeed = event.target.value;
-    }
+    // console.log('setDesiredSpeed:', event.target.value, this.state.commandedSpeed);
+    if(this.state.automaticMode == false){
+      if(event.target.value < 0){
+        this.setSpeed = 0;
+      }
+      else if (event.target.value > 70){
+        this.setSpeed = 70;
+      }
+      else{
+        this.setSpeed = event.target.value;
+      }
     // Send speed set by the driver to train model
     // window.electronAPI.sendTrainModelMessage({
     //   'type': 'setSpeed',
     //   'setSpeed': this.state.setSpeed,
     // });
-
+    }
   }
 
   // Test UI Functions
