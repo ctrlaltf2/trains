@@ -7,6 +7,7 @@ import TrackModel from '../modules/TrackModel';
 import TrainModel from '../modules/TrainModel';
 import TrainControllerHW from '../modules/TrainControllerHW';
 import TrainControllerSW from '../modules/TrainControllerSW';
+import Timer from '../modules/Timer';
 
 const Main = () => {
   const activeModule = window.location.hash.slice(1);
@@ -31,6 +32,9 @@ const Main = () => {
       break;
     case 'TrainControllerHW':
       moduleToRender = (<TrainControllerHW/>);
+      break;
+    case 'Timer':
+      moduleToRender = (<Timer/>);
       break;
     default:
       moduleToRender = (<p>Invalid module render selected!</p>);

@@ -14,8 +14,12 @@ export class Switch {
     this._position = outBlockLow;
   }
 
-  set position(sw: number) {
-    this._position = sw;
+  set position(b) {
+    if (b) {
+      this._position = this.outBlockHigh;
+    } else {
+      this._position = this.outBlockLow;
+    }
   }
 
   get position() {
