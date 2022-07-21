@@ -69,14 +69,27 @@ class TrackController extends React.Component {
       switch (payload.type) {
         case 'trackModelStatus':
           // TODO
+          // window.electronAPI.sendCTCMessage({
+          //   type: 'occupancy',
+          //   line: this.state.blocks[].line,
+          //   block_id: ,
+          //   value: ,
+          // });
+          // window.electronAPI.sendCTCMessage({
+          //   type: 'throughput',
+          //   line: this.state.blocks[].line,
+          //   value: ,
+          // });
           break;
-        case 'dispatch train':
+        case 'authority':
+          // TODO Add other line
+          this.state.blocks[payload.block].authority = payload.authority;
+          break;
+        case 'dispatch':
           // TODO
           break;
         case 'closure':
-          break;
-        case 'timing':
-          console.log(Date.now() - payload.value);
+          // MMode ?
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -350,6 +363,12 @@ class TrackController extends React.Component {
           // console.log(status);
           // Vitality check before setting light position
           if (status.every((val) => val === true)) {
+            window.electronAPI.sendCTCMessage({
+              type: 'lights',
+              line: this.state.blocks[parseInt(controller.plc.lightLogic[j].block) - 1].line,
+              id: parseInt(controller.plc.lightLogic[j].block) - 1,
+              value: this.state.blocks[parseInt(controller.plc.lightLogic[j].block) - 1].transitLight,
+            });
             this.state.blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
             ].transitLight = 'green';
