@@ -70,19 +70,17 @@ class TrackModel extends React.Component {
       personsAtStation: 10,
 
       TrackJSON: '',
-      IPC_Recieved_Message: '',
+      TransitLightStatus: 'Red',
 
       // beacon
       beacon: 'defaultBeacon',
-
-      //  train failures
-      BrakeFailure: '',
-      EngineFailure: '',
 
       // if information has problem might need blocks: blocks
       //  is an array of blocks, one block has block info for the track
       blocks,
       currBlock: 1, //  Block that the train model is currently entering
+
+      Authority: 0,
 
       testUISpeedLimit: 30,
       testUIEnvtemp: 80,
@@ -96,34 +94,39 @@ class TrackModel extends React.Component {
         // call other function
         this.loadNewTrackModel();
       } catch (error) {
-        // console.log(error);
+        console.log(error);
       }
 
       //  testing
-      // console.log('Line: ', this.state.TrackJSON.Track[0].Line);
     });
 
     //  Function to recieve messages from other modules via IPC communication
     window.electronAPI.subscribeTrackModelMessage((_event, payload) => {
       console.log('IPC:Track Model: ', payload);
       switch (payload.type) {
-        case 'trackControllerStatus':
-          //  store the information
+        case 'switch':
+          this.state.Authority = payload.payload;
           break;
+        case 'light':
+          this.state.TransitLightStatus = payload.value;
+          break;
+        case 'authority':
+          break;
+
         case 'trainModelStatus':
           //  call the update block occupancy function
           this.updateBlockOccupancy(payload.payload);
           break;
         default:
-          console.log('Unknown payload type recieved: ', payload.type);
+        // console.log('Unknown payload type recieved: ', payload.type);
       }
 
-      try {
-        //  store the message payload in the recieved message var
-        this.state.IPC_Recieved_Message = payload.payload;
-      } catch (error) {
-        console.log(error);
-      }
+      // try {
+      //   //  store the message payload in the recieved message var
+      //   this.state.IPC_Recieved_Message = payload.payload;
+      // } catch (error) {
+      //   console.log(error);
+      // }
     });
 
     //  function to send message to the Track Controller
@@ -135,19 +138,16 @@ class TrackModel extends React.Component {
       RailStatus: this.state.railStatus,
       TrackPowerStatus: this.state.trackPower,
       SpeedLimit: this.state.speedLimit,
-      TrainEngineFailure: this.state.EngineFailure,
-      BrakeFailure: this.state.BrakeFailure,
       Throughput: '',
-      TrackBlocks: this.state.blocks,
+      // TrackBlocks: this.state.blocks,
     });
 
     //  function to send message to the Train Model
     window.electronAPI.sendTrainModelMessage({
       //  anything here is a property of the object you are sending
       type: 'trackModelStatus',
-      TransitLightStatus: '',
-      MaintenanceMode: '',
-      CommandedSpeed: '',
+      TransitLightStatus: this.state.TransitLightStatus,
+      CommandedSpeed: this.state.blocks[this.state.currBlock].speedLimit,
       Authority: '',
       Beacon: this.state.beacon,
       UndergroundBlocks: this.state.blocks.Underground,
@@ -360,7 +360,7 @@ class TrackModel extends React.Component {
       beac += `-${dir}`;
       this.state.beacon = beac;
     }
-    console.log('beacon: ', this.state.beacon);
+    // console.log('beacon: ', this.state.beacon);
   };
 
   //  function shall check if the blocks are underground
@@ -371,7 +371,7 @@ class TrackModel extends React.Component {
       if (infas.includes('UNDERGROUND'))
         this.state.blocks[ind].Underground = true;
     }
-    console.log(this.state.blocks);
+    // console.log(this.state.blocks);
   };
 
   //  send leaving yard info
@@ -380,14 +380,14 @@ class TrackModel extends React.Component {
   };
 
   //  update block occupancy
-  updateBlockOccupancy = () => {
+  updateBlockOccupancy = (payload) => {
     //  need to get the payload message and upate the block occupancy
     const interval = setInterval(() => {
       if (payload.Enter !== null)
         this.state.blocks[this.state.currBlock].Occupied = true;
       if (payload.Leave !== null)
         this.state.blocks[this.state.currBlock].Occupied = false;
-    });
+    }, 10000);
   };
 
   //  check if the track heaters should turn on
@@ -714,11 +714,11 @@ class TrackModel extends React.Component {
                   <div>Track Line: {this.state.lineName}</div>
                 </Grid>
                 <Grid item xs={12}>
-                  <img
+                  {/* <img
                     src={blueTrackImg}
                     sx={{ width: 400, height: 400 }}
                     alt="Blue Track"
-                  />
+                  /> */}
                 </Grid>
                 <Grid item xs={12}>
                   <FormControl
