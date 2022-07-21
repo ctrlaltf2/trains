@@ -302,13 +302,13 @@ class CTCOffice extends React.Component {
 
       if(blocks_stopped_at.includes(block.toString()))
         auth_0.push({block_route_i: i, type: 'stop'});
-      else if(control_points.includes(block))
+      else if(control_points.includes(block)) {
         auth_0.push({block_route_i: i, type: 'control'});
+      }
     }
 
     // Main algorithm: On authority drop to 0, send next authority and pop off internal train object
-    
-
+    // -- Get authority: this is distance between each auth_0 point
     return auth_0;
   }
 
@@ -333,8 +333,6 @@ class CTCOffice extends React.Component {
         final_stop_list.push(block_id);
       }
     }
-
-    console.log(final_stop_list);
 
     return final_stop_list;
   }
