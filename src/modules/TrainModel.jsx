@@ -83,7 +83,7 @@ class TrainModel extends React.Component {
           this.setState({brakeStatus: payload.brakeFailure});
           break;
         case 'engineFailure':
-          this.setState({engineStatus: payload.engineFailure});
+          this.setState({trainEngineStatus: payload.engineFailure});
           break;
         case 'temperature':
           this.setState({temperature: payload.temperature});
@@ -91,40 +91,6 @@ class TrainModel extends React.Component {
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
-    });
-
-    // Send temperature to train model
-    window.electronAPI.sendTrainControllerMessage({
-      'type': 'engineFailure',
-      'engineFailure': this.state.engineStatus,
-     /* 'type': 'engineStatus',
-      'engineStatus': this.state.engineStatus,
-      'type': 'signalPickupStatus',
-      'signalPickupStatus': this.state.signalPickupStatus,
-      'type': 'currentSpeed',
-      'currentSpeed': this.state.currentSpeed,
-      'type': 'emergencyBrake',
-      'emergencyBrake': this.state.emergencyBrake,
-      'type': 'internalTemp',
-      'internalTemp': this.state.internalTemp,
-      'type': 'exteriorTrainLights',
-      'exteriorTrainLights': this.state.exteriorTrainLights,
-      'type': 'interiorTrainLights',
-      'interiorTrainLights': this.state.interiorTrainLights,
-      'type': 'leftDoors',
-      'leftDoors': this.state.leftDoors,
-      'type': 'rightDoors',
-      'rightDoors': this.state.rightDoors,
-      'type': 'beacon',
-      'beacon': this.state.beacon,
-      'type': 'authority',
-      'authority': this.state.authority,
-      'type': 'commandedSpeed',
-      'commandedSpeed': this.state.commandedSpeed,
-      'type': 'maintenenceMode',
-      'maintenenceMode': this.state.maintenenceMode, */
-
-
     });
 
 
@@ -289,18 +255,36 @@ class TrainModel extends React.Component {
     this.setState((prevState) => ({
       trainEngineStatus: !prevState.trainEngineStatus,
     }));
+
+    // Send engine failure to train controller
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'engineFailure',
+      'engineFailure': this.state.trainEngineStatus,
+    });
   }
 
   toggleBrakeStatus() {
     this.setState((prevState) => ({
       brakeStatus: !prevState.brakeStatus,
     }));
+
+    // Send brake failure to train controller
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'brakeFailure',
+      'brakeFailure': this.state.brakeStatus,
+    });
   }
 
   toggleSignalPickupStatus() {
     this.setState((prevState) => ({
       signalPickupStatus: !prevState.signalPickupStatus,
     }));
+
+    // Send signal pickup failure to train controller
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'signalPickupFailure',
+      'signalPickupFailure': this.state.signalPickupStatus,
+    });
   }
 
   resetAll() {
