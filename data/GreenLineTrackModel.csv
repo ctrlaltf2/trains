@@ -1,0 +1,154 @@
+Line,Section,Block Number,Block Length (m),Block Grade (%),Speed Limit (Km/Hr),Infrastructure,Station Side,ELEVATION (M),CUMALTIVE ELEVATION (M),seconds to traverse block,Prev,Next,Oneway
+Green,A,1,100,0.5,45,,,0.5,0.5,8.0,13,2,rev
+Green,A,2,100,1,45,STATION; PIONEER,Left,1,1.5,8.0,1,3,rev
+Green,A,3,100,1.5,45,,,1.5,3,8.0,2,4,rev
+Green,B,4,100,2,45,,,2,5,8.0,3,5,rev
+Green,B,5,100,3,45,,,3,8,8.0,4,6,rev
+Green,B,6,100,4,45,,,4,12,8.0,5,7,rev
+Green,C,7,100,5,45,,,5,17,8.0,6,8,rev
+Green,C,8,100,0,45,,,0,17,8.0,7,9,rev
+Green,C,9,100,-5,45,STATION; EDGEBROOK,Left,-5,12,8.0,8,10,rev
+Green,C,10,100,-4.5,45,,,-4.5,7.5,8.0,9,11,rev
+Green,C,11,100,-4,45,,,-4,3.5,8.0,10,12,rev
+Green,C,12,100,-3,45,SWITCH (12-13; 1-13),,-3,0.5,8.0,11,13,rev
+Green,D,13,150,0,70,,,0,0.5,7.7,12,14,
+Green,D,14,150,0,70,,,0,0.5,7.7,13,15,
+Green,D,15,150,0,70,,,0,0.5,7.7,14,16,
+Green,D,16,150,0,70,STATION,Left/Right,0,0.5,7.7,15,17,
+Green,E,17,150,0,60,,,0,0.5,9.0,16,18,
+Green,E,18,150,0,60,,,0,0.5,9.0,17,19,
+Green,E,19,150,0,60,RAILWAY CROSSING,,0,0.5,9.0,18,20,
+Green,E,20,150,0,60,,,0,0.5,9.0,19,21,
+Green,F,21,300,0,70,,,0,0.5,15.4,20,22,
+Green,F,22,300,0,70,STATION; WHITED,Left/Right,0,0.5,15.4,21,23,
+Green,F,23,300,0,70,,,0,0.5,15.4,22,24,
+Green,F,24,300,0,70,,,0,0.5,15.4,23,25,
+Green,F,25,200,0,70,,,0,0.5,10.3,24,26,
+Green,F,26,100,0,70,,,0,0.5,5.1,25,27,
+Green,F,27,50,0,30,,,0,0.5,6.0,26,28,
+Green,F,28,50,0,30,,,0,0.5,6.0,27,29,
+Green,G,29,50,0,30,SWITCH (29-30; 29-150),,0,0.5,6.0,28,30,fwd
+Green,G,30,50,0,30,,,0,0.5,6.0,29,31,fwd
+Green,G,31,50,0,30,STATION; SOUTH BANK,Left,0,0.5,6.0,30,32,fwd
+Green,G,32,50,0,30,,,0,0.5,6.0,31,33,fwd
+Green,H,33,50,0,30,,,0,0.5,6.0,32,34,fwd
+Green,H,34,50,0,30,,,0,0.5,6.0,33,35,fwd
+Green,H,35,50,0,30,,,0,0.5,6.0,34,36,fwd
+Green,I,36,50,0,30,UNDERGROUND,,0,0.5,6.0,35,37,fwd
+Green,I,37,50,0,30,UNDERGROUND,,0,0.5,6.0,36,38,fwd
+Green,I,38,50,0,30,UNDERGROUND,,0,0.5,6.0,37,39,fwd
+Green,I,39,50,0,30,STATION; CENTRAL; UNDERDROUND,Right,0,0.5,6.0,38,40,fwd
+Green,I,40,50,0,30,UNDERGROUND,,0,0.5,6.0,39,41,fwd
+Green,I,41,50,0,30,UNDERGROUND,,0,0.5,6.0,40,42,fwd
+Green,I,42,50,0,30,UNDERGROUND,,0,0.5,6.0,41,43,fwd
+Green,I,43,50,0,30,UNDERGROUND,,0,0.5,6.0,42,44,fwd
+Green,I,44,50,0,30,UNDERGROUND,,0,0.5,6.0,43,45,fwd
+Green,I,45,50,0,30,UNDERGROUND,,0,0.5,6.0,44,46,fwd
+Green,I,46,50,0,30,UNDERGROUND,,0,0.5,6.0,45,47,fwd
+Green,I,47,50,0,30,UNDERGROUND,,0,0.5,6.0,46,48,fwd
+Green,I,48,50,0,30,STATION; INGLEWOOD; UNDERGROUND,Right,0,0.5,6.0,47,49,fwd
+Green,I,49,50,0,30,UNDERGROUND,,0,0.5,6.0,48,50,fwd
+Green,I,50,50,0,30,UNDERGROUND,,0,0.5,6.0,49,51,fwd
+Green,I,51,50,0,30,UNDERGROUND,,0,0.5,6.0,50,52,fwd
+Green,I,52,50,0,30,UNDERGROUND,,0,0.5,6.0,51,53,fwd
+Green,I,53,50,0,30,UNDERGROUND,,0,0.5,6.0,52,54,fwd
+Green,I,54,50,0,30,UNDERGROUND,,0,0.5,6.0,53,55,fwd
+Green,I,55,50,0,30,UNDERGROUND,,0,0.5,6.0,54,56,fwd
+Green,I,56,50,0,30,UNDERGROUND,,0,0.5,6.0,55,57,fwd
+Green,I,57,50,0,30,STATION; OVERBROOK; UNDERGROUND,Right,0,0.5,6.0,56,58,fwd
+Green,J,58,50,0,30,SWITCH TO YARD (57-yard),,0,0.5,6.0,57,59,fwd
+Green,J,59,50,0,30,,,0,0.5,6.0,58,60,fwd
+Green,J,60,50,0,30,,,0,0.5,6.0,59,61,fwd
+Green,J,61,50,0,30,,,0,0.5,6.0,60,62,fwd
+Green,J,62,50,0,30,SWITCH FROM YARD (Yard-63),,0,0.5,6.0,61,63,fwd
+Green,K,63,100,0,70,,,0,0.5,5.1,62,64,fwd
+Green,K,64,100,0,70,,,0,0.5,5.1,63,65,fwd
+Green,K,65,200,0,70,STATION; GLENBURY,Right,0,0.5,10.3,64,66,fwd
+Green,K,66,200,0,70,,,0,0.5,10.3,65,67,fwd
+Green,K,67,100,0,40,,,0,0.5,9.0,66,68,fwd
+Green,K,68,100,0,40,,,0,0.5,9.0,67,69,fwd
+Green,L,69,100,0,40,,,0,0.5,9.0,68,70,fwd
+Green,L,70,100,0,40,,,0,0.5,9.0,69,71,fwd
+Green,L,71,100,0,40,,,0,0.5,9.0,70,72,fwd
+Green,L,72,100,0,40,,,0,0.5,9.0,71,73,fwd
+Green,L,73,100,0,40,STATION; DORMONT,Right,0,0.5,9.0,72,74,fwd
+Green,M,74,100,0,40,,,0,0.5,9.0,73,75,fwd
+Green,M,75,100,0,40,,,0,0.5,9.0,74,76,fwd
+Green,M,76,100,0,40,SWITCH (76-77;77-101),,0,0.5,9.0,75,77,fwd
+Green,N,77,300,0,70,STATION; MT LEBANON,Left/Right,0,0.5,15.4,76,78,
+Green,N,78,300,0,70,,,0,0.5,15.4,77,79,
+Green,N,79,300,0,70,,,0,0.5,15.4,78,80,
+Green,N,80,300,0,70,,,0,0.5,15.4,79,81,
+Green,N,81,300,0,70,,,0,0.5,15.4,80,82,
+Green,N,82,300,0,70,,,0,0.5,15.4,81,83,
+Green,N,83,300,0,70,,,0,0.5,15.4,82,84,
+Green,N,84,300,0,70,,,0,0.5,15.4,83,85,
+Green,N,85,300,0,70,SWITCH (85-86; 100-85),,0,0.5,15.4,84,86,
+Green,O,86,100,0,25,,,0,0.5,14.4,85,87,fwd
+Green,O,87,86.6,0,25,,,0,0.5,12.5,86,88,fwd
+Green,O,88,100,0,25,STATION; POPLAR,Left,0,0.5,14.4,87,89,fwd
+Green,P,89,75,-0.5,25,,,-0.375,0.125,10.8,88,90,fwd
+Green,P,90,75,-1,25,,,-0.75,-0.625,10.8,89,91,fwd
+Green,P,91,75,-2,25,,,-1.5,-2.125,10.8,90,92,fwd
+Green,P,92,75,0,25,,,0,-2.125,10.8,91,93,fwd
+Green,P,93,75,2,25,,,1.5,-0.625,10.8,92,94,fwd
+Green,P,94,75,1,25,,,0.75,0.125,10.8,93,95,fwd
+Green,P,95,75,0.5,25,,,0.375,0.5,10.8,94,96,fwd
+Green,P,96,75,0,25,STATION;   CASTLE SHANNON,Left,0,0.5,10.8,95,97,fwd
+Green,P,97,75,0,25,,,0,0.5,10.8,96,98,fwd
+Green,Q,98,75,0,25,,,0,0.5,10.8,97,99,fwd
+Green,Q,99,75,0,25,,,0,0.5,10.8,98,100,fwd
+Green,Q,100,75,0,25,,,0,0.5,10.8,99,86,fwd
+Green,R,101,35,0,26,,,0,0.5,4.8,77,102,fwd
+Green,S,102,100,0,28,,,0,0.5,12.9,101,103,fwd
+Green,S,103,100,0,28,,,0,0.5,12.9,102,104,fwd
+Green,S,104,80,0,28,,,0,0.5,10.3,103,105,fwd
+Green,T,105,100,0,28,STATION; DORMONT,Right,0,0.5,12.9,104,106,fwd
+Green,T,106,100,0,28,,,0,0.5,12.9,105,107,fwd
+Green,T,107,90,0,28,,,0,0.5,11.6,106,108,fwd
+Green,T,108,100,0,28,,,0,0.5,12.9,107,109,fwd
+Green,T,109,100,0,28,,,0,0.5,12.9,108,110,fwd
+Green,U,110,100,0,30,,,0,0.5,12.0,109,111,fwd
+Green,U,111,100,0,30,,,0,0.5,12.0,110,112,fwd
+Green,U,112,100,0,30,,,0,0.5,12.0,111,113,fwd
+Green,U,113,100,0,30,,,0,0.5,12.0,112,114,fwd
+Green,U,114,162,0,30,STATION; GLENBURY,Right,0,0.5,19.4,113,115,fwd
+Green,U,115,100,0,30,,,0,0.5,12.0,114,116,fwd
+Green,U,116,100,0,30,,,0,0.5,12.0,115,117,fwd
+Green,V,117,50,0,15,,,0,0.5,12.0,116,118,fwd
+Green,V,118,50,0,15,,,0,0.5,12.0,117,119,fwd
+Green,V,119,40,0,15,,,0,0.5,9.6,118,120,fwd
+Green,V,120,50,0,15,,,0,0.5,12.0,119,121,fwd
+Green,V,121,50,0,15,,,0,0.5,12.0,120,122,fwd
+Green,W,122,50,0,20,UNDERGROUND,,0,0.5,9.0,121,123,fwd
+Green,W,123,50,0,20,STATION; OVERBROOK; UNDERGROUND,Right,0,0.5,9.0,122,124,fwd
+Green,W,124,50,0,20,UNDERGROUND,,0,0.5,9.0,123,125,fwd
+Green,W,125,50,0,20,UNDERGROUND,,0,0.5,9.0,124,126,fwd
+Green,W,126,50,0,20,UNDERGROUND,,0,0.5,9.0,125,127,fwd
+Green,W,127,50,0,20,UNDERGROUND,,0,0.5,9.0,126,128,fwd
+Green,W,128,50,0,20,UNDERGROUND,,0,0.5,9.0,127,129,fwd
+Green,W,129,50,0,20,UNDERGROUND,,0,0.5,9.0,128,130,fwd
+Green,W,130,50,0,20,UNDERGROUND,,0,0.5,9.0,129,131,fwd
+Green,W,131,50,0,20,UNDERGROUND,,0,0.5,9.0,130,132,fwd
+Green,W,132,50,0,20,STATION; INGLEWOOD; UNDERGROUND,Left,0,0.5,9.0,131,133,fwd
+Green,W,133,50,0,20,UNDERGROUND,,0,0.5,9.0,132,134,fwd
+Green,W,134,50,0,20,UNDERGROUND,,0,0.5,9.0,133,135,fwd
+Green,W,135,50,0,20,UNDERGROUND,,0,0.5,9.0,134,136,fwd
+Green,W,136,50,0,20,UNDERGROUND,,0,0.5,9.0,135,137,fwd
+Green,W,137,50,0,20,UNDERGROUND,,0,0.5,9.0,136,138,fwd
+Green,W,138,50,0,20,UNDERGROUND,,0,0.5,9.0,137,139,fwd
+Green,W,139,50,0,20,UNDERGROUND,,0,0.5,9.0,138,140,fwd
+Green,W,140,50,0,20,UNDERGROUND,,0,0.5,9.0,139,141,fwd
+Green,W,141,50,0,20,STATION; CENTRAL; UNDERDROUND,Right,0,0.5,9.0,140,142,fwd
+Green,W,142,50,0,20,UNDERGROUND,,0,0.5,9.0,141,143,fwd
+Green,W,143,50,0,20,UNDERGROUND,,0,0.5,9.0,142,144,fwd
+Green,X,144,50,0,20,,,0,0.5,9.0,143,145,fwd
+Green,X,145,50,0,20,,,0,0.5,9.0,144,146,fwd
+Green,X,146,50,0,20,,,0,0.5,9.0,145,147,fwd
+Green,Y,147,50,0,20,,,0,0.5,9.0,146,148,fwd
+Green,Y,148,184,0,20,,,0,0.5,33.1,147,149,fwd
+Green,Y,149,40,0,20,,,0,0.5,7.2,148,150,fwd
+Green,Z,150,35,0,20,,,0,0.5,6.3,149,29,fwd
+,,,,,,,,,,,,,
+,,,,,,,,,,4.846153846,,,
+,,,,,,,,,,4.038461538,,,
