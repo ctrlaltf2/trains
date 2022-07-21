@@ -152,7 +152,7 @@ app.on('window-all-closed', () => {
   }
 });
 
-const t = new Timer(100, 8 * 60 * 60 * 1000);
+const t = new Timer(75, 8 * 60 * 60 * 1000);
 
 app
   .whenReady()
