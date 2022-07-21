@@ -88,6 +88,18 @@ class TrainModel extends React.Component {
         case 'temperature':
           this.setState({temperature: payload.temperature});
           break;
+        case 'leftDoor':
+          this.setState({leftDoors: payload.leftDoor});
+          break;
+        case 'rightDoor':
+          this.setState({rightDoors: payload.rightDoor});
+          break;
+        case 'trainLights':
+          this.setState({exteriorTrainLights: payload.trainLights});
+          break;
+        case 'cabinLights':
+          this.setState({interiorTrainLights: payload.cabinLights});
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -107,7 +119,7 @@ class TrainModel extends React.Component {
       temperature: 80, // for testing
       crewCount: 0,
       passengerCount: 0,
-      exteriorTrainLights: false,
+      exteriorTrainLights: true,
       interiorTrainLights: true,
       leftDoors: false,
       rightDoors: false,

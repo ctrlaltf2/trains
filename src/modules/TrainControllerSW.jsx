@@ -85,6 +85,7 @@ class TrainControllerSW extends React.Component {
       under: false, // Variable for if the train is underground
       rightPlatform: false, // Used to check if right doors should open
       leftPlatform: false, // Used to check if left doors should open
+      announcementsOnOff: false,
 
       // Service Brake, Emergency Brake, and failure toggles
       emergencyButton: false,
@@ -143,6 +144,7 @@ class TrainControllerSW extends React.Component {
     this.underground = this.underground.bind(this);
     this.platformSide = this.platformSide.bind(this);
     this.announcements = this.announcements.bind(this);
+    this.authorityStop = this.authorityStop.bind(this);
 
     // Failures
     this.brakeFailure = this.brakeFailure.bind(this);
@@ -167,7 +169,12 @@ class TrainControllerSW extends React.Component {
 
   componentDidMount(){ // This acts as the Main program - where the functions are called
     setInterval( () => {
-      this.setState({powerUI: this.power});
+      if(this.power >= this.maxPower){
+        this.setState({powerUI: this.maxPower});
+      }
+      else{
+        this.setState({powerUI: this.power});
+      }
       this.setState({k_i_UI: this.k_i});
       this.setState({setSpeedUI: this.setSpeed});
       this.setState({temperatureUI: this.temperature});
@@ -193,6 +200,10 @@ class TrainControllerSW extends React.Component {
             this.setState({emergencyButton: false});
             this.setSpeed = this.suggestedSpeed;
           }
+        }
+
+        if(this.authority == 0){
+          this.authorityStop();
         }
       }
 
@@ -260,11 +271,12 @@ class TrainControllerSW extends React.Component {
       else{
         this.setSpeed = event.target.value;
       }
-    // Send speed set by the driver to train model
-    // window.electronAPI.sendTrainModelMessage({
-    //   'type': 'setSpeed',
-    //   'setSpeed': this.state.setSpeed,
-    // });
+
+      // // Send speed set by the driver to train model
+      // window.electronAPI.sendTrainModelMessage({
+      //   'type': 'setSpeed',
+      //   'setSpeed': this.state.setSpeed,
+      // });
     }
   }
 
@@ -413,6 +425,12 @@ class TrainControllerSW extends React.Component {
   }
 
   announcements(){
+
+  }
+
+  authorityStop(){ // Call this function when authority hits 0
+      this.setState({brakeStatus: true});
+      this.setSpeed = 0;
 
   }
 
@@ -758,7 +776,7 @@ class TrainControllerSW extends React.Component {
               </Item>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Power: {this.state.powerUI} Kilowatts</Item>
+              <Item>Power: {this.state.powerUI / 1000} Kilowatts</Item>
             </Grid>
             <Grid item xs={3} md={3}>
                 <label>
@@ -782,7 +800,7 @@ class TrainControllerSW extends React.Component {
               <Item>Suggested Speed: {this.state.suggestedSpeedUI} MPH</Item>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Authority: {this.state.authorityUI} Miles</Item>
+              <Item>Authority: {this.state.authorityUI} Blocks</Item>
             </Grid>
             <Grid item xs={5} md={2}>
               <Item>Next Stop: {this.state.stationNameUI} </Item>
