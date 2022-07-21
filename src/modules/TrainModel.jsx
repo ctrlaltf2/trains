@@ -21,6 +21,7 @@ import {ButtonGroup,
         } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import SelectInput from '@mui/material/Select/SelectInput';
+import { FlareSharp } from '@mui/icons-material';
 
 const theme = createTheme({
   palette: {
@@ -135,6 +136,7 @@ class TrainModel extends React.Component {
       brakeStatus: true,
       testSystem: false,
       emergencyBrake: false,
+      serviceBrake: false,
       beaconReceived: true,
       beacon: '',
       internalTemp: 70,
@@ -155,18 +157,22 @@ class TrainModel extends React.Component {
       carMass: 40.9, // tons
       personMass: 0.088, // tons
       // kgToTons: 0.00110231
-      currentSpeed: 17.8816, // ms
+      currentSpeed: 17.8816, // m/s
       authority: 0,
       commandedSpeed: 0, // block speed limit
       suggestedSpeed: 0, // from CTC
-      power: 0,
-      acceleration: 0, // mss
-      powerCommand: 100, // kw
+      power: 0, // W
+      acceleration: 0, // m/s^2
+      powerCommand: 100000, // W
       setSpeed: 50,
       force: 0,
       T: 2000,
       maintenenceMode: 0,
-
+      accelerationLimit: 0.5, // m/s^2
+      serviceDecelLimit: -1.2, // m/s^2
+      eDecelLimit: -2.73, // m/s^2
+      intermediatePosition: 0,
+      position: 0,
 
       /*
       currentSpeed: 0,
@@ -217,6 +223,45 @@ class TrainModel extends React.Component {
       // ...
       // Do some physics updates shit here w/ elapsed time
 
+      // calculate
+    function calculate() {
+      // calculate force
+      this.setState(prevState => ({force: prevState.powerCommand * 1000 / prevState.currentSpeed}));  // conversion of kW to W
+
+
+      // calculate acceleration Acceleration Limit: 0.5 m/s^2     Deceleration Limit(service brake): -1.2 m/s^2    Deceleration Limit(e brake): -2.73 m/s^2
+      this.setState(prevState => ({acceleration: this.state.force / (prevState.totalMass * 907.185)})); // conversion of tons to kg
+
+      // if acceleration is above accelerationLimit
+      if(this.state.acceleration > this.state.accelerationLimit && !this.state.emergencyBrake && !this.state.serviceBrake) {
+        this.setState(prevState => ({acceleration: this.state.accelerationLimit}));
+      }
+
+      // if serviceBrake is true
+      if(!this.state.emergencyBrake && this.state.serviceBrake) {
+        this.setState(prevState => ({acceleration: this.state.serviceDecelLimit}));
+      }
+
+      // if eBrake is true
+      if(this.state.emergencyBrake && !this.state.serviceBrake) {
+        this.setState(prevState => ({acceleration: this.state.eDecelLimit}));
+      }
+
+      // if serviceBrake and eBrake is true, cancel out serviceBrake
+      if(this.state.emergencyBrake && this.state.serviceBrake) {
+        this.setState(prevState => ({acceleration: this.state.eDecelLimit}));
+      }
+
+
+      // calculate velocity
+      this.setState(prevState => ({ currentSpeed: prevState.currentSpeed +  (time_elapsed_ms / 2) * (this.state.acceleration + prevState.acceleration) }));
+
+
+      // calculate position
+      this.setState(prevState => ({intermediatePosition: this.state.currentSpeed * time_elapsed_ms}));
+      this.setState(prevState => ({position: prevState.position + this.state.intermediatePosition}));
+
+    }
 
       // ...
 
@@ -237,7 +282,7 @@ class TrainModel extends React.Component {
 
    // test UI powerCommand
    handlePowerCommandChange(event) {
-    this.setState({powerCommand: event.target.value })
+    this.setState({powerCommand: event.target.value * 1000})
   }
 
   // update temp at interval
@@ -276,13 +321,9 @@ class TrainModel extends React.Component {
     }));
   }
 
-  // calculate
-  calculate() {
-    this.setState(prevState => ({force: prevState.powerCommand * 1000 / prevState.currentSpeed}));  // conversion of kW to W
-    this.setState(prevState => ({acceleration: this.state.force / (prevState.totalMass * 907.185)})); // conversion of tons to kg
-    // this.setState(prevState => ({currentSpeed: prevState.acceleration / prevState.T}));
-    // this.setState(prevState => ({position: prevState.currentSpeed / prevState.T}));
-  }
+
+
+
 
   // toggle functions including failure and brake statuses, and test UI
   toggleTrainEngineStatus() {
@@ -367,7 +408,7 @@ class TrainModel extends React.Component {
           <Item sx={{ m: 2 }}>Current Speed: {this.state.currentSpeed.toFixed(2)} ms</Item>
         </Grid>
         <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Engine Power:  {this.state.power.toFixed(1)} kW</Item>
+          <Item sx={{ m: 2 }}>Engine Power:  {(this.state.power / 1000).toFixed(1)} kW</Item>
         </Grid>
         <Grid item xs={4}>
           <Item sx={{ m: 2 }}>Train Acceleration: {this.state.acceleration.toFixed(2)} mss</Item>
