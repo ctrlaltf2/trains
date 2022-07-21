@@ -68,7 +68,7 @@ class TrackModel extends React.Component {
       IPC_Recieved_Message: '',
 
       // beacon
-      beacon: '',
+      beacon: 'defaultBeacon',
 
       // if information has problem might need blocks: blocks
       //  is an array of blocks, one block has block info for the track
@@ -166,7 +166,6 @@ class TrackModel extends React.Component {
   loadBlockInfo = (alpha) => {
     //  generate beacon message
     this.generateBeacon();
-    console.log('beacon message: ', this.state.beacon);
 
     const curBlock = this.state.blocks[alpha]; //  get the block selected
     const blockLengthImperial = (curBlock.BlockLength * 0.000621371).toFixed(3);
@@ -187,6 +186,8 @@ class TrackModel extends React.Component {
 
   //  Load Track Block Info
   loadNewTrackModel = (event) => {
+    //  clear the track model
+    this.state.blocks = [];
     //  load the TrackJSON object's properties into the blocks array
     const tempTrackObj = {};
 
@@ -321,23 +322,24 @@ class TrackModel extends React.Component {
 
   //  function shall retrieve beacon information from JSON data in the blocks
   generateBeacon = () => {
+    // console.log(this.state.blockIndex, ' - block index');
     const beaconMessage =
-      this.state.blocks[this.state.blockIndex].Infrastructure;
-    console.log('Infrastructure: ', beaconMessage);
-    if (beaconMessage.includes('STATION')) {
+      this.state.blocks[this.state.blockIndex - 1].Infrastructure;
+
+    if (beaconMessage == null) {
+      this.state.beacon = 'No Station';
+    } else if (beaconMessage.includes('STATION')) {
       //  capture the string after station until ';' or end of string
       const firstInd = beaconMessage.indexOf(';');
-      let mess = beaconMessage.substring(firstInd + 1);
-      console.log('mess: ', mess);
-      this.setState({ beacon: mess });
+      const mess = beaconMessage.substring(firstInd + 1);
+      this.state.beacon = mess;
+      //  CHECK if the string includes other information and reduce
       if (mess.includes(';')) {
-        mess = mess.substring(0, mess.indexOf(';'));
-        console.log('mess: ', mess);
-        this.setState({ beacon: mess });
+        const mess2 = mess.substring(0, mess.indexOf(';'));
+        this.state.beacon = mess2;
       }
-    } else {
-      this.setState({ beacon: 'No Station' });
     }
+    // console.log(this.state.beacon);
   };
 
   //  check if the track heaters should turn on
@@ -349,7 +351,8 @@ class TrackModel extends React.Component {
 
   //  handle the select change
   handleChange = (event) => {
-    this.setState({ blockIndex: event.target.value });
+    // this.setState({ blockIndex: event.target.value });
+    this.state.blockIndex = event.target.value;
     // console.log('the block index is: ', event.target.value);
     this.loadBlockInfo(event.target.value);
   };
