@@ -340,6 +340,27 @@ class TrackModel extends React.Component {
         const mess2 = mess.substring(0, mess.indexOf(';'));
         this.state.beacon = mess2;
       }
+
+      //  If station is included, tell if left or right of track
+      let dir;
+      switch (this.state.blocks[this.state.blockIndex - 1].StationSide) {
+        case 'Left/Right':
+          dir = 'b';
+          break;
+        case 'Left':
+          dir = 'l';
+          break;
+        case 'Right':
+          dir = 'r';
+          break;
+        default:
+          break;
+      }
+
+      //  append the beacon
+      let beac = this.state.beacon;
+      beac += `-${dir}`;
+      this.state.beacon = beac;
     }
     console.log('beacon: ', this.state.beacon);
   };
