@@ -162,7 +162,6 @@ class CTCOffice extends React.Component {
       '(Inglewood-Central)': range(133, 140, 1),
       'Central::W': [141],
       '(Central-FGZ)': range(142, 150, 1),
-      '(FGZ-South Bank)': [30],
       'South Bank': [31],
       '(South Bank-Central)': range(32, 38, 1),
       'Central::E': [39],
@@ -184,8 +183,8 @@ class CTCOffice extends React.Component {
       '(ACDw-UNKNOWN)': [13, 14, 15],
       'UNKNOWN::W': [16],
       '(UNKNOWN-Whited)': range(17, 21, 1),
-      'Whited::W': [20],
-      '(Whited-FGZ)': range(23, 29, 1)
+      'Whited::W': [22],
+      '(Whited-South Bank)': range(23, 31, 1),
     };
 
     this.stations = {
