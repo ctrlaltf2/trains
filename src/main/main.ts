@@ -29,7 +29,7 @@ export default class AppUpdater {
 }
 
 // Dict[ModuleName: string, moduleWindow: BrowserWindow]
-const moduleWindows = {}
+const moduleWindows = {};
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -57,6 +57,15 @@ const installExtensions = async () => {
 };
 
 const activeModules = [
+<<<<<<< HEAD
+  // 'CTCOffice',
+  'TrackController',
+  'TrackModel',
+  'TrainModel',
+  //  'TrainControllerHW',
+  //  'TrainControllerSW',
+  // 'Timer',
+=======
   'CTCOffice',
   'TrackController',
   // 'TrainControllerHW',
@@ -64,6 +73,7 @@ const activeModules = [
   'TrackModel',
   'TrainModel',
   'Timer',
+>>>>>>> develop
 ];
 
 const createWindow = async (moduleName: string) => {
@@ -80,7 +90,7 @@ const createWindow = async (moduleName: string) => {
   };
 
   let moduleWindow;
-  if(moduleName === Modules.TIMER) {
+  if (moduleName === Modules.TIMER) {
     moduleWindow = new BrowserWindow({
       show: false,
       width: 350,
@@ -105,7 +115,6 @@ const createWindow = async (moduleName: string) => {
       },
     });
   }
-
 
   moduleWindows[moduleName] = moduleWindow;
 
@@ -157,7 +166,7 @@ const t = new Timer(75, 8 * 60 * 60 * 1000);
 app
   .whenReady()
   .then(() => {
-    activeModules.forEach(mod => createWindow(mod));
+    activeModules.forEach((mod) => createWindow(mod));
     /*
     for(const activeModule of activeModules)
       createWindow(activeModule); */
@@ -165,9 +174,8 @@ app
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      activeModules.forEach(mod => {
-        if(moduleWindows[mod] === undefined)
-          createWindow(mod);
+      activeModules.forEach((mod) => {
+        if (moduleWindows[mod] === undefined) createWindow(mod);
       });
     });
 
@@ -182,7 +190,7 @@ app
       3. Pattern 2: finish up async call and send data back
     */
 
-    Object.values(Modules.ALL_MODULES).forEach(moduleName => {
+    Object.values(Modules.ALL_MODULES).forEach((moduleName) => {
       ipcMain.on(moduleName, (_event, payload) => {
         moduleWindows[moduleName].webContents.send(moduleName, payload);
       });
@@ -190,18 +198,18 @@ app
 
     ipcMain.on('timer::pause', (_event, payload) => {
       // TODO: Message validation
-      console.log('timer::pause', payload)
+      console.log('timer::pause', payload);
       t.pause(payload);
     });
 
     ipcMain.on('timer::time-multiplier', (_event, payload) => {
       // TODO: Message validation
-      console.log('timer::time-multiplier', payload)
+      console.log('timer::time-multiplier', payload);
       t.setTimeScalar(payload);
     });
 
     t.onClock((timestamp) => {
-      activeModules.forEach(moduleName => {
+      activeModules.forEach((moduleName) => {
         moduleWindows[moduleName].webContents.send(Modules.TIMER, {
           timestamp: timestamp,
         });
@@ -211,38 +219,39 @@ app
     t.start();
 
     ipcMain.on('file', (_event, tag) => {
-      dialog.showOpenDialog({
-        properties: ['openFile']
-      })
-      .then((response) => {
-        if(!response.canceled) {
-          _event.sender.send('file', response.filePaths[0]);
+      dialog
+        .showOpenDialog({
+          properties: ['openFile'],
+        })
+        .then((response) => {
+          if (!response.canceled) {
+            _event.sender.send('file', response.filePaths[0]);
 
-          fs.readFile(response.filePaths[0], 'utf8', (err, data) => {
-            if(err) {
+            fs.readFile(response.filePaths[0], 'utf8', (err, data) => {
+              if (err) {
+                _event.sender.send('file', {
+                  tag: tag,
+                  status: 'error',
+                  payload: err,
+                });
+
+                return;
+              }
+
               _event.sender.send('file', {
                 tag: tag,
-                status: 'error',
-                payload: err
+                status: 'success',
+                payload: data,
               });
-
-              return;
-            }
-
+            });
+          } else {
             _event.sender.send('file', {
               tag: tag,
-              status: 'success',
-              payload: data
+              status: 'error',
+              payload: 'cancelled',
             });
-          });
-        } else {
-          _event.sender.send('file', {
-            tag: tag,
-            status: 'error',
-            payload: 'cancelled'
-          });
-        }
-      });
+          }
+        });
     });
   })
   .catch(console.log);
