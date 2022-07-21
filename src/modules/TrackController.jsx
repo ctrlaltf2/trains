@@ -220,10 +220,10 @@ class TrackController extends React.Component {
        * Train/Suggested Speed
        * Block states (switches, crossing, transit lights)
        */
-      window.electronAPI.sendTrackModelMessage({
-        type: 'blocks',
-        blocks: this.state.blocks,
-      });
+      // window.electronAPI.sendTrackModelMessage({
+      //   type: 'blocks',
+      //   blocks: this.state.blocks,
+      // });
 
       // Logic
       this.controllers.forEach((controller) => {
