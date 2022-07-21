@@ -99,6 +99,7 @@ class CTCOffice extends React.Component {
           '76-77-101': new TrackSwitch(undefined, '77', ['76', '101']),
           '29-30-150': new TrackSwitch(undefined, '29', ['30', '150']),
           '1-12-13':   new TrackSwitch(undefined, '13', [ '1',  '12']),
+          '57-58':  new TrackSwitch(undefined, '57', ['58', '152']) // TODO: Add yard
         },
         'blue': {
           '5-6-11': new TrackSwitch(undefined, '5', ['6', '11'])
@@ -137,8 +138,8 @@ class CTCOffice extends React.Component {
     const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
 
     this.route_green_lookup = {
-      '(yard-enter)': [-1],
-      '(yard-exit)': [-1],
+      '(yard-enter)': [152],
+      '(yard-exit)': [151],
       '(yard-Glenbury)': [63, 64],
       'Glenbury::S': [65],
       '(Glenbury-Dormont)': range(66, 72, 1),
@@ -211,17 +212,17 @@ class CTCOffice extends React.Component {
     }
 
     this.control_points = {
-      'green': [
-        29,
-        57,
-        150
-      ],
-      'red': []
-    }
+      'green': {
+        '57': {
+          '152': 1 // Going from 57 to 152 requires authority 1 at 57
+        }
+      },
+      'red': {}
+    };
 
     this.initCy();
 
-    this.manualDispatch('green', 'Dormont', '15:00');
+    this.manualDispatch('green', 'Overbrook', '15:00');
   }
 
   // With list of stations, generate a route/path of blocks to go to meet station ordering
@@ -266,7 +267,7 @@ class CTCOffice extends React.Component {
 
   manualDispatch(line, station, eta_ms) {
     const { route, last_segment } = this.generateYardRoute(line, [station], true);
-    const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]));
+    const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]), [10*1000]);
 
     // Generate a safe speed table (safe meaning that it's easy for train to stop, when it respects commanded speed)
     const speed_table = this.generateSpeedTable(line, route);
@@ -284,31 +285,103 @@ class CTCOffice extends React.Component {
     // And get a return path- send it at full speed who cares when it gets back to the yard
     const return_segment_path = this.getInterstationRoute(line, last_segment, '(yard-enter)');
     const return_block_path = this.resolveSegmentRoutes(this.route_green_lookup, return_segment_path);
+
     // commanded speed here == speed_limit
-    const return_authority_table = this.getAuthorityTable(line, return_block_path, []);
+    const return_authority_table = this.getAuthorityTable(line, return_block_path, [], []);
 
     console.log([].concat(authority_table, return_authority_table));
   }
 
-  getAuthorityTable(line, block_route, blocks_stopped_at = []) {
+  getAuthorityTable(line, block_route, blocks_stopped_at = [], stop_times = []) {
+    console.log(block_route);
     const control_points = this.control_points[line];
-    const authority_table = []
 
     // Get indexes in route where the train will have to drop its authority to 0 (not necessarily stop)
+    let j = 0; // TODO: Refactor
     const auth_0 = [];
     for(const i in block_route) {
       const block = block_route[i];
 
-      if(blocks_stopped_at.includes(block.toString()))
-        auth_0.push({block_route_i: i, type: 'stop'});
-      else if(control_points.includes(block)) {
-        auth_0.push({block_route_i: i, type: 'control'});
+      if(blocks_stopped_at.includes(block.toString())) {
+        const stop_time = stop_times[j];
+
+        auth_0.push({
+          block_route_i: parseInt(i),
+          type: 'stop',
+          delay: stop_time,
+          auth_there: 0
+        });
+
+        ++j;
+      }
+
+      if(Object.keys(control_points).includes(block.toString())) {
+        const next_block = block_route[parseInt(i) + 1];
+
+        if(control_points[block][next_block]) {
+          auth_0.push({
+            block_route_i: parseInt(i),
+            type: 'control',
+            delay: 0,
+            auth_there: control_points[block][next_block]
+          });
+        }
       }
     }
 
-    // Main algorithm: On authority drop to 0, send next authority and pop off internal train object
-    // -- Get authority: this is distance between each auth_0 point
-    return auth_0;
+    console.log(auth_0);
+
+    // Initialize with yard-to-first-auth-0 stop
+    const auth_table = [
+      {
+        authority: auth_0[0].block_route_i,
+        delay: 0, // Time to wait to apply authority
+      }
+    ];
+
+    j = 0;
+    for(const i_ in auth_0) {
+      const i = parseInt(i_);
+      const auth_stop = auth_0[i];
+      const auth_next_stop = auth_0[i + 1];
+
+      if(!auth_next_stop) {
+        /* yard check but its not needed?
+        console.log(typeof i, auth_0);
+        if(auth_stop.type === 'control') { // Is yard enter? TODO: Better check for that
+          auth_table.push({
+            authority: auth_stop.auth_there,
+            delay: 0
+          });
+        }*/
+
+        break;
+      }
+
+      if(auth_stop.type === 'stop') {
+        auth_table.push({
+          authority: auth_next_stop.block_route_i - auth_stop.block_route_i + 1,
+          delay: stop_times[j]
+        });
+
+        ++j;
+      }
+
+      if(auth_stop.type === 'control') {
+        auth_table.push({
+          authority: auth_stop.auth_there,
+          delay: 0
+        });
+
+        auth_table.push({
+          authority: auth_next_stop.block_route_i - auth_stop.block_route_i + 1,
+          delay: 0
+        });
+        // TODO
+      }
+    }
+
+    return auth_table;
   }
 
   getStationStops(line, route, stations) {
