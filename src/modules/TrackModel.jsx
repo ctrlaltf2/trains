@@ -28,7 +28,11 @@ import './TrackBlock.js';
 import blueTrackImg from './BlueTrack.jpg';
 import blueTrackJson from './blueLineTrackModel.json';
 import { array } from 'prop-types';
-import { ContactPageSharp, PortableWifiOffRounded } from '@mui/icons-material';
+import {
+  ContactPageSharp,
+  FastForward,
+  PortableWifiOffRounded,
+} from '@mui/icons-material';
 
 // variables
 const darkMode = createTheme({
@@ -62,6 +66,7 @@ class TrackModel extends React.Component {
       directionOfTravel: 'forwards',
       trackHeaterStatus: 'disabled',
       trainOccupancy: 25,
+      blockOccupancy: 'false',
       personsAtStation: 10,
 
       TrackJSON: '',
@@ -71,12 +76,13 @@ class TrackModel extends React.Component {
       beacon: 'defaultBeacon',
 
       //  train failures
-      BrakeFailure,
-      EngineFailure,
+      BrakeFailure: '',
+      EngineFailure: '',
 
       // if information has problem might need blocks: blocks
       //  is an array of blocks, one block has block info for the track
       blocks,
+      currBlock: 1, //  Block that the train model is currently entering
 
       testUISpeedLimit: 30,
       testUIEnvtemp: 80,
@@ -103,6 +109,10 @@ class TrackModel extends React.Component {
       switch (payload.type) {
         case 'trackControllerStatus':
           //  store the information
+          break;
+        case 'trainModelStatus':
+          //  call the update block occupancy function
+          this.updateBlockOccupancy(payload.payload);
           break;
         default:
           console.log('Unknown payload type recieved: ', payload.type);
@@ -166,6 +176,7 @@ class TrackModel extends React.Component {
       this.testUITrackHeaterStatusFun.bind(this);
     this.isBlockUnderground = this.isBlockUnderground.bind(this);
     this.generateBeacon = this.generateBeacon.bind(this);
+    this.sendYardExitInfo = this.sendYardExitInfo.bind(this);
   }
 
   //  Load's blocks information from the Track Model File - alpha = blockIndex
@@ -188,6 +199,8 @@ class TrackModel extends React.Component {
     this.setState({
       elevation: elevationImperial,
     });
+    this.state.blockOccupancy =
+      this.state.blocks[this.state.blockIndex - 1].Occupied;
   };
 
   //  Load Track Block Info
@@ -213,6 +226,7 @@ class TrackModel extends React.Component {
         PrevBlock: temp.Prev,
         NextBlock: temp.Next,
         Oneway: temp.Oneway,
+        Occupied: 'false',
       });
     }
     // eslint-disable-next-line react/no-access-state-in-setstate
@@ -358,6 +372,22 @@ class TrackModel extends React.Component {
         this.state.blocks[ind].Underground = true;
     }
     console.log(this.state.blocks);
+  };
+
+  //  send leaving yard info
+  sendYardExitInfo = () => {
+    //  send message to train model about leaving the yard
+  };
+
+  //  update block occupancy
+  updateBlockOccupancy = () => {
+    //  need to get the payload message and upate the block occupancy
+    const interval = setInterval(() => {
+      if (payload.Enter !== null)
+        this.state.blocks[this.state.currBlock].Occupied = true;
+      if (payload.Leave !== null)
+        this.state.blocks[this.state.currBlock].Occupied = false;
+    });
   };
 
   //  check if the track heaters should turn on
@@ -634,7 +664,9 @@ class TrackModel extends React.Component {
                   <div className="label">Block Occupancy</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label"> {this.state.blockOccupancy}</div>
+                  <div className="label" defaultValue="false">
+                    {this.state.blockOccupancy}
+                  </div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Track Heater Status</div>
