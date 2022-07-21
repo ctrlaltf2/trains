@@ -23,7 +23,6 @@ JKy 65 (yard-Glenbury)
 133 141 (Inglewood-Central)
 141 142 Central::W
 142 FGZ (Central-FGZ)
-FGZ 31 "(FGZ-South Bank)"
 31 32 "South Bank"
 32 39 "(South Bank-Central)"
 39 40 Central::E
@@ -46,4 +45,4 @@ ACDw 15w (ACDw-UNKNOWN)
 15w 16w UNKNOWN::W
 16w 21w (UNKNOWN-Whited)
 21w 22w Whited::W
-22w FGZ (Whited-FGZ)
+22w 31 "(Whited-South Bank)"
