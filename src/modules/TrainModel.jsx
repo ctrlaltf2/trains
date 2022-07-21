@@ -487,7 +487,6 @@ class TrainModel extends React.Component {
         </Grid>
         <Grid item xs={4}>
           <Item sx={{ m: 2 }}>Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph</Item>
-            )}
           </Grid>
 
           <Grid item xs={4}>
