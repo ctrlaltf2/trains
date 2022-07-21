@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+const TrainModel = () => {
+  return <p>Train Model</p>;
+};
+
+=======
 import { type } from 'os';
 import React, { useState } from 'react';
 import { styled } from '@mui/material/styles';
@@ -633,4 +639,5 @@ class TrainModel extends React.Component {
   };
 }
 
+>>>>>>> develop
 export default TrainModel;
