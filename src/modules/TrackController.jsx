@@ -262,11 +262,36 @@ class TrackController extends React.Component {
             }
           }
           // Vitality check before setting switch position
+          // Also send to CTC
           if (status.every((val) => val === true)) {
+            if (
+              this.state.blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position
+            ) {
+              window.electronAPI.sendCTCMessage({
+                type: 'switch',
+                line: this.state.blocks[parseInt(controller.plc.switchLogic[j].switchNumber) - 1].line,
+                root: this.state.blocks[parseInt(controller.plc.switchLogic[j].switchNumber) - 1].switch.swBlock,
+                pointing_to: this.state.blocks[parseInt(controller.plc.switchLogic[j].switchNumber) - 1].switch.position,
+              });
+            }
             this.state.blocks[
               parseInt(controller.plc.switchLogic[j].switchNumber) - 1
             ].switch.position = true;
           } else {
+            if (
+              !this.state.blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position
+            ) {
+              window.electronAPI.sendCTCMessage({
+                type: 'switch',
+                line: this.state.blocks[parseInt(controller.plc.switchLogic[j].switchNumber) - 1].line,
+                root: this.state.blocks[parseInt(controller.plc.switchLogic[j].switchNumber) - 1].switch.swBlock,
+                pointing_to: this.state.blocks[parseInt(controller.plc.switchLogic[j].switchNumber) - 1].switch.position,
+              });
+            }
             this.state.blocks[
               parseInt(controller.plc.switchLogic[j].switchNumber) - 1
             ].switch.position = false;
