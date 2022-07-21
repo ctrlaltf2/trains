@@ -176,6 +176,7 @@ class TrainControllerSW extends React.Component {
         this.setState({powerUI: this.power});
       }
       this.setState({k_i_UI: this.k_i});
+      this.setState({k_p_UI: this.k_p});
       this.setState({setSpeedUI: this.setSpeed});
       this.setState({temperatureUI: this.temperature});
       this.setState({currentSpeedUI: this.currentSpeed});
@@ -245,6 +246,12 @@ class TrainControllerSW extends React.Component {
     this.setState((prevState) => ({
       emergencyButton: !prevState.emergencyButton,
     }));
+
+    // Send emergency brake state to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'emergencyBrake',
+      'emergencyBrake': this.state.emergencyButton,
+    });
   }
 
   toggleServiceBrake(){ // Turns the service brake on/off
@@ -252,15 +259,15 @@ class TrainControllerSW extends React.Component {
       brakeStatus: !prevState.brakeStatus,
     }));
 
-    // // Send service brake state to train model
-    // window.electronAPI.sendTrainModelMessage({
-    //   'type': 'serviceBrake',
-    //   'serviceBrake': this.state.brakeStatus,
-    // });
+    // Send service brake state to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'serviceBrake',
+      'serviceBrake': this.state.brakeStatus,
+    });
   }
 
   setDesiredSpeed(event){
-    // console.log('setDesiredSpeed:', event.target.value, this.state.commandedSpeed);
+
     if(this.state.automaticMode == false){
       if(event.target.value < 0){
         this.setSpeed = 0;
@@ -271,12 +278,6 @@ class TrainControllerSW extends React.Component {
       else{
         this.setSpeed = event.target.value;
       }
-
-      // // Send speed set by the driver to train model
-      // window.electronAPI.sendTrainModelMessage({
-      //   'type': 'setSpeed',
-      //   'setSpeed': this.state.setSpeed,
-      // });
     }
   }
 
@@ -343,11 +344,9 @@ class TrainControllerSW extends React.Component {
   setKp(event){
     if(event.target.value < 0){
       this.k_p = 0;
-      this.setState({k_p_UI: 0});
     }
     else{
       this.k_p = event.target.value;
-      this.setState({k_p_UI: this.k_p});
     }
   }
 
@@ -394,10 +393,10 @@ class TrainControllerSW extends React.Component {
     this.power = ((this.k_p*this.error_k) + (this.k_i*this.cumulative_err));
 
     // Send power command to train model
-    // window.electronAPI.sendTrainModelMessage({
-    //   'type': 'power',
-    //   'power': this.state.power,
-    // });
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'power',
+      'power': this.state.power,
+    });
 
   }
 
