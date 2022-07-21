@@ -308,7 +308,7 @@ class CTCOffice extends React.Component {
         auth_0.push({
           block_route_i: parseInt(i),
           type: 'stop',
-          delay: stop_time,
+          wait_next_authority: stop_time,
           auth_there: 0
         });
 
@@ -322,7 +322,7 @@ class CTCOffice extends React.Component {
           auth_0.push({
             block_route_i: parseInt(i),
             type: 'control',
-            delay: 0,
+            wait_next_authority: 0,
             auth_there: control_points[block][next_block]
           });
         }
@@ -335,7 +335,7 @@ class CTCOffice extends React.Component {
     const auth_table = [
       {
         authority: auth_0[0].block_route_i,
-        delay: 0, // Time to wait to apply authority
+        wait_next_authority: auth_0[0].type === 'stop' ? auth_0[0].wait_next_authority : 0, // Time until next authority is applied
       }
     ];
 
@@ -351,7 +351,7 @@ class CTCOffice extends React.Component {
         if(auth_stop.type === 'control') { // Is yard enter? TODO: Better check for that
           auth_table.push({
             authority: auth_stop.auth_there,
-            delay: 0
+            wait_next_authority: 0
           });
         }*/
 
@@ -361,7 +361,7 @@ class CTCOffice extends React.Component {
       if(auth_stop.type === 'stop') {
         auth_table.push({
           authority: auth_next_stop.block_route_i - auth_stop.block_route_i + 1,
-          delay: stop_times[j]
+          wait_next_authority: stop_times[j]
         });
 
         ++j;
@@ -370,14 +370,13 @@ class CTCOffice extends React.Component {
       if(auth_stop.type === 'control') {
         auth_table.push({
           authority: auth_stop.auth_there,
-          delay: 0
+          wait_next_authority: 0
         });
 
         auth_table.push({
           authority: auth_next_stop.block_route_i - auth_stop.block_route_i + 1,
-          delay: 0
+          wait_next_authority: (auth_next_stop.type === 'stop') ? auth_next_stop.wait_next_authority : 0
         });
-        // TODO
       }
     }
 
