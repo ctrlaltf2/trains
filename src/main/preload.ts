@@ -9,21 +9,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   subscribeTrackModelMessage:       (callback) => ipcRenderer.on(Modules.TRACK_MODEL, callback),
   subscribeTrainModelMessage:       (callback) => ipcRenderer.on(Modules.TRAIN_MODEL, callback),
   subscribeTrainControllerMessage:  (callback) => ipcRenderer.on(Modules.TRAIN_CONTROLLER, callback),
+  subscribeTimerMessage:            (callback) => ipcRenderer.on(Modules.TIMER, callback),
+
+  subscribeFileMessage: (callback) => ipcRenderer.on('file', callback),
 
   // These will be called by the electron:renderer process for this module
   // send*Message:    Asynchronously send a message (no response expected)
   // receive*Message: Asynchronously send a message (and expect a response)
   sendCTCMessage:                 (payload) => ipcRenderer.send(Modules.CTC_OFFICE, payload),
-  requestCTCMessage:              (payload) => ipcRenderer.invoke(Modules.CTC_OFFICE, payload),
-
   sendTrackControllerMessage:     (payload) => ipcRenderer.send(Modules.TRACK_CONTROLLER, payload),
-  requestTrackControllerMessage:  (payload) => ipcRenderer.invoke(Modules.TRACK_CONTROLLER, payload),
-
   sendTrackModelMessage:          (payload) => ipcRenderer.send(Modules.TRACK_MODEL, payload),
-  requestTrackModelMessage:       (payload) => ipcRenderer.invoke(Modules.TRACK_MODEL, payload),
-
   sendTrainModelMessage:          (payload) => ipcRenderer.send(Modules.TRAIN_MODEL, payload),
-  requestTrainModelMessage:       (payload) => ipcRenderer.invoke(Modules.TRAIN_MODEL, payload),
 
   sendTrainControllerMessage:     (payload) => ipcRenderer.send(Modules.TRAIN_CONTROLLER, payload),
+
+  sendTimePause:          (doPause) => ipcRenderer.send('timer::pause', doPause),
+  sendTimeFastForward:    (timeScalar) => ipcRenderer.send('timer::time-multiplier', timeScalar),
+
+  openFileDialog: (tag) => ipcRenderer.send('file', tag)
 });
