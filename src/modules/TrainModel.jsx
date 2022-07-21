@@ -84,7 +84,20 @@ class TrainModel extends React.Component {
     this.toggleResetSignalPickup = this.toggleResetSignalPickup.bind(this);
     this.toggleResetTrainEngine = this.toggleResetTrainEngine.bind(this);
 
+    this.previous_time = 0;
 
+    window.electronAPI.subscribeTimerMessage( (_event, payload) => {
+      const time_elapsed_ms = payload.timestamp - this.previous_time;
+      console.log(time_elapsed_ms);
+
+      // ...
+      // Do some physics updates shit here w/ elapsed time
+
+
+      // ...
+
+      this.previous_time = payload.timestamp;
+    })
     // Handling Changes
     // this.handleSpeedChange = this.handleSpeedChange.bind(this);
     /* this.handleCommandedSpeedChange = this.handleCommandedSpeedChange.bind(this);
