@@ -28,3 +28,17 @@
   text-align: right;
   padding: 1rem;
 }
+
+.button {
+  display: inline-flex;
+  flex-grow: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 18px;
+  border-radius: 16px;
+  height: 28px;
+  min-width: 50px;
+  width: auto;
+  padding: 0 16px;
+  margin-bottom: 1 rem;
+}

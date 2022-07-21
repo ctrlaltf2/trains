@@ -1,0 +1,28 @@
+[
+  {
+    "command": "switch",
+    "arg1": "!highO",
+    "op1": "&&",
+    "arg2": "!lowO"
+  },
+  {
+    "command": "cross",
+    "arg1": "currO"
+  },
+  {
+    "command": "red",
+    "arg1": "nextO"
+  },
+  {
+    "command": "yellow",
+    "arg1": "nextnextO",
+    "op1": "&&",
+    "arg2": "!nextO"
+  },
+  {
+    "command": "green",
+    "arg1": "!nextnextO",
+    "op1": "&&",
+    "arg2": "!nextO"
+  }
+]
