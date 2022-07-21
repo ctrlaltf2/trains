@@ -24,6 +24,7 @@ import SystemMap from './CTCOffice/SystemMap';
 import Train from './CTCOffice/Train';
 import TrackSwitch from './CTCOffice/Switch';
 import TrackModel from '../../data/TrackModel-section-routing.json';
+import TrackModelInfo from '../../data/TrackModel-info.json';
 import TrackModelDisplay from '../../data/TrackModel-display.json';
 import Style from './CTCOffice/SystemMap.cy.json';
 
@@ -187,11 +188,45 @@ class CTCOffice extends React.Component {
       '(Whited-FGZ)': range(23, 29, 1)
     };
 
+    this.stations = {
+      'green': {
+        '57': 'Overbrook',
+        '65': 'Glenbury',
+        '73': 'Dormont',
+        '77': 'Mt. Lebanon',
+        '88': 'Poplar',
+        '96': 'Castle Shannon',
+        '105': 'Dormont',
+        '114': 'Glenbury',
+        '123': 'Overbrook',
+        '132': 'Inglewood',
+        '141': 'Central',
+        '31': 'South Bank',
+        '39': 'Central',
+        '48': 'Inglewood',
+        '22': 'Whited',
+        '16': 'UNKNOWN',
+        '2': 'Pioneer',
+        '9': 'Edgebrook'
+      }
+    }
+
+    this.control_points = {
+      'green': [
+        29,
+        57,
+        150
+      ],
+      'red': []
+    }
+
     this.initCy();
+
+    this.manualDispatch('green', 'Dormont', '15:00');
   }
 
   // With list of stations, generate a route/path of blocks to go to meet station ordering
-  generateYardRoute(line, stations) {
+  generateYardRoute(line, stations, return_last = false) {
     const windowedSlice = function(arr, size) {
       let result = [];
       arr.some((el, i) => {
@@ -220,7 +255,131 @@ class CTCOffice extends React.Component {
       previous_segment = route.at(-1);
     }
 
-    return this.resolveSegmentRoutes(this.route_green_lookup, segment_route);
+    if(return_last) {
+      return {
+        route: this.resolveSegmentRoutes(this.route_green_lookup, segment_route),
+        last_segment: segment_route.at(-1)
+      }
+    } else {
+      return this.resolveSegmentRoutes(this.route_green_lookup, segment_route);
+    }
+  }
+
+  manualDispatch(line, station, eta_ms) {
+    const { route, last_segment } = this.generateYardRoute(line, [station], true);
+    const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]));
+
+    // Generate a safe speed table (safe meaning that it's easy for train to stop, when it respects commanded speed)
+    const speed_table = this.generateSpeedTable(line, route);
+    const safe_speed_table = this.makeSpeedTableSafe(speed_table);
+
+    // Get travel time, used for timing dispatch at the right time
+    const travel_time_table = this.getTravelTimeTable(line, route, safe_speed_table);
+    const total_travel_time_ms = 1000 * travel_time_table.reduce( (val, sum) => {
+      return sum + val;
+    });
+
+    // actually dispatch the train once world time is > leave_time
+    const leave_time = eta_ms - total_travel_time_ms;
+
+    // And get a return path- send it at full speed who cares when it gets back to the yard
+    const return_segment_path = this.getInterstationRoute(line, last_segment, '(yard-enter)');
+    const return_block_path = this.resolveSegmentRoutes(this.route_green_lookup, return_segment_path);
+    // commanded speed here == speed_limit
+    const return_authority_table = this.getAuthorityTable(line, return_block_path, []);
+
+    console.log([].concat(authority_table, return_authority_table));
+  }
+
+  getAuthorityTable(line, block_route, blocks_stopped_at = []) {
+    const control_points = this.control_points[line];
+    const authority_table = []
+
+    // Get indexes in route where the train will have to drop its authority to 0 (not necessarily stop)
+    const auth_0 = [];
+    for(const i in block_route) {
+      const block = block_route[i];
+
+      if(blocks_stopped_at.includes(block.toString()))
+        auth_0.push({block_route_i: i, type: 'stop'});
+      else if(control_points.includes(block))
+        auth_0.push({block_route_i: i, type: 'control'});
+    }
+
+    // Main algorithm: On authority drop to 0, send next authority and pop off internal train object
+    
+
+    return auth_0;
+  }
+
+  getStationStops(line, route, stations) {
+    // Pull out all stations from route
+    const possible_stops = route.map( (block_id) => {
+      return block_id.toString();
+    }).filter( (block_id) => {
+      return Object.keys(this.stations[line]).includes(block_id);
+    })
+    .filter( (station_id) => {
+      const station_name = this.stations[line][station_id];
+      return stations.includes(station_name);
+    });
+
+    const final_stop_list = []
+    let i = 0;
+    for(const block_id of possible_stops) {
+      const station_name = this.stations[line][block_id];
+      if(stations[i] == station_name) {
+        ++i;
+        final_stop_list.push(block_id);
+      }
+    }
+
+    console.log(final_stop_list);
+
+    return final_stop_list;
+  }
+
+  getTravelTimeTable(line, route, safe_speed_table) {
+    return _.zip(route, safe_speed_table).map( (block_speed_pair) => {
+      const [block_id, speed] = block_speed_pair;
+      const block_info = TrackModelInfo[line][block_id];
+      const distance = block_info ? block_info['length'] : 50; // ¯\_(ツ)_/¯
+
+      // Speed in km/h
+      return distance / ((5.0/18) *  speed);
+    });
+  }
+
+  generateSpeedTable(line, route) {
+    return route.map( (block_id) => {
+      const block_info = TrackModelInfo[line][block_id];
+
+      if(block_info)
+        return block_info['speed_limit'];
+      else
+        return 75; // ¯\_(ツ)_/¯
+    });
+  }
+
+  // this is a mess
+  makeSpeedTableSafe(speed_table_) {
+    const speed_table = speed_table_.slice();
+    let j = 0;
+    const decreases = [0.35, 0.6]; // Values chosen by trial-and-error with real life estimates
+
+    for(let i = speed_table.length-1; i >= 0; --i) {
+      speed_table[i] = speed_table[i] * decreases[j];
+
+      ++j;
+      if(j >= decreases.length)
+        break;
+    }
+
+    return speed_table;
+  }
+
+  generateTimeTable(line, route) {
+
   }
 
   resolveSegmentRoutes(route_lookup, segment_route) {
