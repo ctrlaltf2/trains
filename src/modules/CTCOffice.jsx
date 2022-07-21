@@ -17,7 +17,6 @@ import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import cytoscape from 'cytoscape';
-const df = require('data-forge'); // TODO: make this not use require
 
 import _ from 'lodash';
 
@@ -51,7 +50,6 @@ const UIState = {
 
 class CTCOffice extends React.Component {
   constructor(props) {
-  console.log(df);
     super(props);
 
     window.electronAPI.subscribeCTCMessage( (_event, payload) => {

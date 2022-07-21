@@ -60,7 +60,7 @@ const activeModules = [
   'CTCOffice',
   'TrackController',
   'TrackModel',
-  // 'TrainModel',
+  'TrainModel',
   // 'TrainControllerHW',
   //'TrainControllerSW',
   'Timer',
