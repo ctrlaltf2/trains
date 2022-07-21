@@ -21,6 +21,7 @@ import {ButtonGroup,
         } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import SelectInput from '@mui/material/Select/SelectInput';
+import { FlashOnRounded } from '@mui/icons-material';
 
 const theme = createTheme({
   palette: {
@@ -70,9 +71,6 @@ class TrainModel extends React.Component {
                         // attribute: value
           this.setState({commandedSpeed: payload.commandedSpeed});
           break;
-        case 'suggestedSpeed':
-          this.setState({suggestedSpeed: payload.suggestedSpeed});
-          break;
         case 'authority':
           this.setState({authority: payload.authority});
           break;
@@ -81,6 +79,15 @@ class TrainModel extends React.Component {
           break;
         case 'temperature':
           this.setState({temperature: payload.temperature});
+          break;
+        case 'serviceBrake':
+          this.setState({serviceBrake: payload.serviceBrake});
+          break;
+        case 'emergencyBrake':
+          this.setState({emergencyBrake: payload.emergencyBrake});
+          break;
+        case 'power':
+          this.setState({powerCommand: payload.power});
           break;
         case 'leftDoor':
           this.setState({leftDoors: payload.leftDoor});
@@ -138,6 +145,7 @@ class TrainModel extends React.Component {
       force: 0,
       T: 2000,
       maintenenceMode: 0,
+      serviceBrake: false,
 
 
       /*
@@ -492,7 +500,16 @@ class TrainModel extends React.Component {
           <Item sx={{ m: 2 }}>Power Command: {this.state.powerCommand} kW</Item>
         </Grid>
         <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Set Speed: {this.state.setSpeed.toFixed(2)} mph</Item>
+          { this.state.serviceBrake ?
+            ( <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow'}}>
+                Service Brake: Enabled
+              </Item>
+            ) : (
+              <Item sx={{ m: 2 }}>
+                Service Brake: Disabled
+              </Item>
+            )
+          }
         </Grid>
         <Grid item xs={4}>
           <Item sx={{ m: 2 }}>Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph</Item>
