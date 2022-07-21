@@ -9,7 +9,7 @@ class Metrics extends React.Component {
   }
 
   render() {
-    const { redLine, greenLine, blueLine } = this.props;
+    const { redLine, greenLine } = this.props;
 
     return (
       <div className="metricsContainer"/>
