@@ -94,28 +94,40 @@ class TrainControllerSW extends React.Component {
       automaticMode: true,
       brakeStatus: false,
 
-      commandedSpeed: 0,
-      suggestedSpeed: 0,
-      temperature: 70,
-      authority: 10,
-      stationName: '',
+      commandedSpeedUI: 0,
+      suggestedSpeedUI: 0,
+      temperatureUI: 70,
+      authorityUI: 10,
+      stationNameUI: '',
 
       //Power & Velocity Variables
-      power: 0, // power is in kilowatts
-      maxPower: 120, // Max power of the train is 120 kilowatts
-      totalMass: 0,
-      passengers: 8,
-      cumulative_err: 0, // also known as u_k
-      error_k: 0,
-      error_kprev: 0,
-      k_p: 10000, // Proportional Gain
-      k_i: 0, // Integral Gain
-      T: 2000, // Represents the sample period of the train model
-      setSpeed: 0, // Speed set by the driver: the speech you want to approach
-      currentSpeed: 0, // The current speed of the train, also known as currentVelocity, in meters per second
+      powerUI: 0, // power is in kilowatts
+      k_p_UI: 0, // Proportional Gain
+      k_i_UI: 0, // Integral Gain
+      setSpeedUI: 0, // Speed set by the driver: the speech you want to approach
+      currentSpeedUI: 0, // The current speed of the train, also known as currentVelocity, in meters per second
       currentSpeedMPH: 0, // The current speed of the train in miles per hour
 
     };
+
+    this.k_p = 10000; // Proportional gain
+    this.k_i = 0;     // Integral gain
+    this.T = 2000;       // Sample period of the train model
+    this.setSpeed = 0;
+    this.power = 0;
+    this.maxPower = 120; // Max power of the train is 120 kilowatts
+    this.cumulative_err = 0; //u_k
+    this.error_k = 0;
+    this.error_kprev = 0;
+    this.totalMass = 0;
+    this.passengers = 8;
+    this.setSpeed = 0;
+    this.currentSpeed = 0;
+    this.commandedSpeed = 0;
+    this.suggestedSpeed = 0;
+    this.temperature = 0;
+    this.authority = 0;
+    this.stationName = '';
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
@@ -155,6 +167,18 @@ class TrainControllerSW extends React.Component {
   };
 
   componentDidMount(){ // This acts as the Main program - where the functions are called
+    setInterval( () => {
+      this.setState({powerUI: this.power});
+      this.setState({k_i_UI: this.k_i});
+      this.setState({setSpeedUI: this.setSpeed});
+      this.setState({temperatureUI: this.temperature});
+      this.setState({currentSpeedUI: this.currentSpeed});
+      this.setState({commandedSpeedUI: this.commandedSpeed});
+      this.setState({suggestedSpeedUI: this.suggestedSpeed});
+      this.setState({authority: this.authority});
+      this.setState({stationName: this.stationName});
+    }, 400)
+
     const interval = setInterval(() => {
 
       // Automatic Mode
@@ -163,11 +187,11 @@ class TrainControllerSW extends React.Component {
         // If there's a brake failure, engine failure, or signal pickup failure, decrease the speed and stop
         if (this.state.brakeFailureDisplay || this.state.engineFailureDisplay || this.state.signalPickupFailureDisplay){
           this.setState({emergencyButton: true});
-          this.setState({setSpeed: 0});
+          this.setSpeed = 0;
         }
         else{
           if(!this.state.brakeFailureDisplay && !this.state.engineFailureDisplay && !this.state.signalPickupFailureDisplay){
-            this.setState({setSpeed: this.state.suggestedSpeed});
+            this.setSpeed = this.suggestedSpeed;
           }
         }
       }
@@ -176,11 +200,11 @@ class TrainControllerSW extends React.Component {
       else{
         if((this.state.brakeStatus == true) && (this.state.currentSpeed != 0)){
           this.setState({brakeStatus: true});
-          this.setState({setSpeed: 0});
+          this.setSpeed = 0;
         }
         else if(this.state.emergencyButton && (this.state.currentSpeed != 0)){
           this.setState({emergencyButton: true});
-          this.setState({setSpeed: 0});
+          this.setSpeed = 0;
         }
       }
     },2000);
@@ -189,13 +213,13 @@ class TrainControllerSW extends React.Component {
 
   handleTemperatureChange(event) {
     if(event.target.value < 60){
-      this.setState({temperature: 60});
+      this.temperature = 60;
     }
     else if (event.target.value > 80){
-      this.setState({temperature: 80});
+      this.temperature = 80;
     }
     else{
-      this.setState({temperature: event.target.value});
+      this.temperature = event.target.value;
     }
 
     // // Send temperature to train model
@@ -228,13 +252,13 @@ class TrainControllerSW extends React.Component {
 
     console.log('setDesiredSpeed:', event, this.state.commandedSpeed);
     if(event.target.value < 0){
-      this.setState({setSpeed: 0});
+      this.setSpeed = 0;
     }
     else if (event.target.value > 70){
-      this.setState({setSpeed: 70});
+      this.setSpeed = 70;
     }
     else if (event.target.value <= this.state.commandedSpeed){
-      this.setState({setSpeed: event.target.value});
+      this.setSpeed = event.target.value;
     }
     // Send speed set by the driver to train model
     // window.electronAPI.sendTrainModelMessage({
@@ -249,14 +273,14 @@ class TrainControllerSW extends React.Component {
   handleCurrentSpeedChange(event){
     if(event.target.value > 70)
     {
-      this.setState({currentSpeed: 70});
+      this.currentSpeed = 70;
     }
     else if (event.target.value < 0)
     {
-      this.setState({currentSpeed: 0});
+      this.currentSpeed = 0;
     }
     else{
-      this.setState({currentSpeed: event.target.value});
+      this.currentSpeed = event.target.value;
     }
   }
 
@@ -264,61 +288,63 @@ class TrainControllerSW extends React.Component {
     // 70 represents top speed of train in km/h
     if(event.target.value > 70)
     {
-      this.setState({commandedSpeed: 70});
+      this.commandedSpeed = 70;
     }
     else if (event.target.value < 0)
     {
-      this.setState({commandedSpeed: 0});
+      this.commandedSpeed = 0;
     }
     else{
-      this.setState({commandedSpeed: event.target.value});
+      this.commandedSpeed = event.target.value;
     }
   }
 
   handleSuggestedSpeedChange(event){ // Changes the suggested speed
     if(event.target.value > 70)
     {
-      this.setState({suggestedSpeed: 70});
+      this.suggestedSpeed = 70;
     }
     else if (event.target.value < 0)
     {
-      this.setState({suggestedSpeed: 0});
+      this.suggestedSpeed = 0;
     }
     else{
-      this.setState({suggestedSpeed: event.target.value});
+      this.suggestedSpeed = event.target.value;
     }
   }
 
   handleAuthorityChange(event) { // Changes the authority
     if(event.target.value < 0)
     {
-      this.setState({authority: 0});
+      this.authority = 0;
     }
     else{
-      this.setState({authority: event.target.value});
+      this.authority = event.target.value;
     }
   }
 
   setStationName(event){ // Sets the station
-    this.setState({stationName: event.target.value});
+    this.stationName = event.target.value;
   }
 
   // Engineer Functions
   setKp(event){
     if(event.target.value < 0){
-      this.setState({k_p: 0});
+      this.k_p = 0;
+      this.setState({k_p_UI: 0});
     }
     else{
-      this.setState({k_p: event.target.value});
+      this.k_p = event.target.value;
+      this.setState({k_p_UI: this.k_p});
     }
   }
 
   setKi(event){
     if(event.target.value < 0){
-      this.setState({k_i: 0});
+      this.k_i = 0;
     }
     else{
-      this.setState({k_i: event.target.value});
+      this.k_i = event.target.value;
     }
   }
 
@@ -335,26 +361,25 @@ class TrainControllerSW extends React.Component {
 
   calculatePower() { // Function that calculates the current power of the train
 
+    if(this.state.automaticMode == true){
+      this.setSpeed = this.suggestedSpeed;
+    }
     // Calculate error
-    this.setState({error_kprev: this.state.error_k});
-    this.setState({error_k: Math.abs(this.state.setSpeed - this.state.currentSpeed)});
+    this.error_kprev = this.error_k;
+    this.error_k = Math.abs(this.setSpeed - this.currentSpeed);
 
     // If P_cmd < P_max, use this equation
-    if (this.state.power < this.state.maxPower){
-      this.setState({
-        cumulative_err: ((this.state.T/2000)*(this.state.error_k + this.state.error_kprev)),
-      });
+    if (this.power < this.maxPower){
+      this.cumulative_err = ((this.T/2000)*(this.error_k + this.error_kprev));
     }
 
     // If P_cmd >= P_max, use this equation
-    else if (this.state.power >= this.state.maxPower){
-      this.setState({
-        cumulative_err: this.state.cumulative_err,
-      });
+    else if (this.power >= this.maxPower){
+      this.cumulative_err = this.cumulative_err;
     }
 
     // Final Power Calculation
-    this.setState({power: ((this.state.k_p*this.state.error_k)+(this.state.k_i*this.state.cumulative_err))});
+    this.power = ((this.k_p*this.error_k) + (this.k_i*this.cumulative_err));
 
     // Send power command to train model
     // window.electronAPI.sendTrainModelMessage({
@@ -490,13 +515,13 @@ class TrainControllerSW extends React.Component {
         <Grid item xs={4} md={2}>
           <label>
             Kp:
-          <input type="number" value={this.state.k_p} onChange={this.setKp} />
+          <input type="number" value={this.state.k_p_UI} onChange={this.setKp} />
           </label>
         </Grid>
         <Grid item xs={3} md={3}>
           <label>
             Ki:
-          <input type="number" value={this.state.k_i} onChange={this.setKi} />
+          <input type="number" value={this.state.k_i_UI} onChange={this.setKi} />
           </label>
         </Grid>
         <Button variant="contained" onClick={this.toggleEngineer}>
@@ -552,31 +577,31 @@ class TrainControllerSW extends React.Component {
           <Grid item xs={4} md={4}>
               <label>
                 Commanded Speed:
-                <input type="number" value={this.state.commandedSpeed} onChange={this.handleCommandedSpeedChange} />
+                <input type="number" value={this.state.commandedSpeedUI} onChange={this.handleCommandedSpeedChange} />
               </label>
           </Grid>
           <Grid item xs={4} md={4}>
               <label>
                 Suggested Speed:
-                <input type="number" value={this.state.suggestedSpeed} onChange={this.handleSuggestedSpeedChange} />
+                <input type="number" value={this.state.suggestedSpeedUI} onChange={this.handleSuggestedSpeedChange} />
               </label>
           </Grid>
           <Grid item xs={4} md={2}>
               <label>
                 Authority:
-                <input type="number" value={this.state.authority} onChange={this.handleAuthorityChange} />
+                <input type="number" value={this.state.authorityUI} onChange={this.handleAuthorityChange} />
               </label>
           </Grid>
           <Grid item xs={4} md={2}>
               <label>
                 Current Speed:
-                <input type="number" value={this.state.currentSpeed} onChange={this.handleCurrentSpeedChange} />
+                <input type="number" value={this.state.currentSpeedUI} onChange={this.handleCurrentSpeedChange} />
               </label>
           </Grid>
           <Grid item xs={4} md={2}>
               <label>
                 Station Name:
-                <input type="text" value={this.state.stationName} onChange={this.setStationName} />
+                <input type="text" value={this.state.stationNameUI} onChange={this.setStationName} />
               </label>
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
@@ -733,34 +758,34 @@ class TrainControllerSW extends React.Component {
               </Item>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Power: {this.state.power} Kilowatts</Item>
+              <Item>Power: {this.state.powerUI} Kilowatts</Item>
             </Grid>
             <Grid item xs={3} md={3}>
                 <label>
                   Temperature:
-                  <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
+                  <input type="number" value={this.state.temperatureUI} onChange={this.handleTemperatureChange} />
                 </label>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Current Speed: {this.state.currentSpeed} MPH</Item>
+              <Item>Current Speed: {this.state.currentSpeedUI} MPH</Item>
             </Grid>
             <Grid item xs={4} md={2}>
               <label>
                 Set Desired Speed:
-                <input type="number" value={this.state.setSpeed} onChange={this.setDesiredSpeed} />
+                <input type="number" value={this.state.setSpeedUI} onChange={this.setDesiredSpeed} />
               </label>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Commanded Speed: {this.state.commandedSpeed} MPH</Item>
+              <Item>Commanded Speed: {this.state.commandedSpeedUI} MPH</Item>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Suggested Speed: {this.state.suggestedSpeed} MPH</Item>
+              <Item>Suggested Speed: {this.state.suggestedSpeedUI} MPH</Item>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Authority: {this.state.authority} Miles</Item>
+              <Item>Authority: {this.state.authorityUI} Miles</Item>
             </Grid>
             <Grid item xs={5} md={2}>
-              <Item>Next Stop: {this.state.stationName} </Item>
+              <Item>Next Stop: {this.state.stationNameUI} </Item>
             </Grid>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
               {this.state.brakeFailureDisplay ? (
