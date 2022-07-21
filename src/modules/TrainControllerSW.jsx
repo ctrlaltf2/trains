@@ -125,8 +125,8 @@ class TrainControllerSW extends React.Component {
     this.currentSpeed = 0;
     this.commandedSpeed = 0;
     this.suggestedSpeed = 0;
-    this.temperature = 0;
-    this.authority = 0;
+    this.temperature = 70;
+    this.authority = 10;
     this.stationName = '';
 
     // Toggling buttons
