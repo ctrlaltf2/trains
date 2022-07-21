@@ -20,6 +20,9 @@ class Train {
   /** List of switch positions */
   route: Switch[];
 
+  /** Authority table */
+  auth_table: any;
+
   constructor(id: string, line: string, destination_block: Block, command_speed: number, authority: number, route: Block[]) {
     this.id = id;
     this.line = line;
