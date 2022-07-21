@@ -90,7 +90,10 @@ class CTCOffice extends React.Component {
       },
       occupancy: { // occupancy[line][block_id] = is_occupied: bool
         'red': {},
-        'green': {},
+        'green': {
+          '67': true,
+          '21': true
+        },
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
         'red': {},
@@ -124,8 +127,22 @@ class CTCOffice extends React.Component {
     };
 
     this.nextTrainID = 1;
-    this.trains = [];
+    this.trains = {
+      '-1': new Train(
+        '-1',
+        'green',
+        'nodestination',
+        0,
+        29,
+        []
+      )
+    };
+    this.trainPositions = {
+      '-1': '21'
+    }; // str(train id) -> str(block_id)
+
     this.systemMapRef = React.createRef();
+    this.pendingDispatches = {}; // timestamp to send off
 
     // Off-screen cytoscape element for routing algos and other shenanigans
     // Indexed by line
@@ -133,6 +150,9 @@ class CTCOffice extends React.Component {
       'red': undefined,
       'green': undefined,
     };
+
+    // Display graphs, not the same as the systemmap ones, used for some more shenanigans
+    this.cy_display = {}
 
     // Generate section-based routing expansions
     const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
@@ -188,6 +208,7 @@ class CTCOffice extends React.Component {
       '(Whited-South Bank)': range(23, 31, 1),
     };
 
+
     this.stations = {
       'green': {
         '57': 'Overbrook',
@@ -211,6 +232,8 @@ class CTCOffice extends React.Component {
       }
     }
 
+    this.now = 0;
+
     this.control_points = {
       'green': {
         '57': {
@@ -223,6 +246,7 @@ class CTCOffice extends React.Component {
     this.initCy();
 
     this.manualDispatch('green', 'Overbrook', '15:00');
+    this.inferTrainMovement('green', '20', true);
   }
 
   // With list of stations, generate a route/path of blocks to go to meet station ordering
@@ -265,6 +289,44 @@ class CTCOffice extends React.Component {
     }
   }
 
+  isinvalidSwitchMovement(line, block_a_, block_b_) {
+    const block_a = parseInt(block_a_);
+    const block_b = parseInt(block_b_);
+    // const search_value = [parseInt(block_a), parseInt(block_b)].sort( (a, b) => a - b );
+
+    const invalid_movements = {
+      'green': [
+        [13, 1],
+        [12, 13],
+        [30, 29],
+        [29, 150],
+        [150, 30],
+        [152, 57],
+        [58, 57],
+        [63, 62],
+        [63, 151],
+        [76, 101],
+        [101, 76],
+        [101, 77],
+        [77, 76],
+        [100, 86],
+      ],
+      'red': []
+    }
+
+    // Sometimes javascript is stupid
+
+    let found = false;
+    invalid_movements[line].forEach( (elem) => {
+      const [l_a, l_b] = elem;
+      if( (block_a === l_a) && (block_b === l_b) ) {
+        found = true;
+      }
+    });
+
+    return found;
+  };
+
   manualDispatch(line, station, eta_ms) {
     const { route, last_segment } = this.generateYardRoute(line, [station], true);
     const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]), [10*1000]);
@@ -289,11 +351,19 @@ class CTCOffice extends React.Component {
     // commanded speed here == speed_limit
     const return_authority_table = this.getAuthorityTable(line, return_block_path, [], []);
 
+    // This is a hack but who cares
+    const final_auth_table = [].concat(authority_table, return_authority_table);
+    for(let i = 1; i < final_auth_table.length; ++i)
+      final_auth_table[i].wait_next_authority = final_auth_table[i - 1].wait_next_authority;
+
+    final_auth_table[0].wait_next_authority = 0;
+
+    // TODO: Dump to authority table used to send to trains and such
     console.log([].concat(authority_table, return_authority_table));
+    console.log([].concat(route, return_block_path));
   }
 
   getAuthorityTable(line, block_route, blocks_stopped_at = [], stop_times = []) {
-    console.log(block_route);
     const control_points = this.control_points[line];
 
     // Get indexes in route where the train will have to drop its authority to 0 (not necessarily stop)
@@ -328,8 +398,6 @@ class CTCOffice extends React.Component {
         }
       }
     }
-
-    console.log(auth_0);
 
     // Initialize with yard-to-first-auth-0 stop
     const auth_table = [
@@ -447,10 +515,6 @@ class CTCOffice extends React.Component {
     return speed_table;
   }
 
-  generateTimeTable(line, route) {
-
-  }
-
   resolveSegmentRoutes(route_lookup, segment_route) {
     let block_route = [];
     for(let segment of segment_route)
@@ -520,6 +584,12 @@ class CTCOffice extends React.Component {
         elements: TrackModel[line]
       });
     }
+
+    for(const line in TrackModelDisplay.lines) {
+      this.cy_display[line] = cytoscape({
+        elements: _.cloneDeep(TrackModelDisplay.lines[line])
+      });
+    }
   }
 
   getBlocks(line) {
@@ -545,6 +615,33 @@ class CTCOffice extends React.Component {
             .join('-');
   }
 
+  /**
+   * Given an occupancy change on a block, infer a train movement
+   */
+  inferTrainMovement(line, block_id, new_occupancy) {
+    const graph_model_lite = this.cy_display[line];
+
+    // Based on display graph's flow, get every possible edge source for this update (incl. switches- needs filtered for these still)
+    const all_possible_source_edges = graph_model_lite.$(`edge[block_id = '${block_id}']`).sources().incomers().edges(`edge[block_id != '${block_id}']`);
+
+    // Filter out invalid movements based on switch restrictions
+    const possible_sources = all_possible_source_edges.filter( (edge) => {
+      if(this.isinvalidSwitchMovement(line, edge, block_id))
+        return false;
+
+      return true;
+    }).map( (edge) => {
+      return edge.data('block_id');
+    });
+
+    for(const [train_id, current_block_id] of Object.entries(this.trainPositions)) {
+      if(possible_sources.includes(current_block_id))
+        return train_id;
+    }
+
+    return undefined;
+  }
+
   updateBlockOccupancy(line, block_id, is_occupied) {
     const occupancy = _.cloneDeep(this.state.occupancy);
     occupancy[line][block_id] = !!is_occupied;
@@ -552,6 +649,22 @@ class CTCOffice extends React.Component {
     this.setState({
       occupancy: occupancy,
     });
+
+    const train_id = inferTrainMovement(line, block_id, is_occupied);
+    if(train_id) {
+      // Decrement authority on train object
+      this.trains[train_id].authority--;
+
+      if(this.trains[train_id].authority == 0) {
+        const next_auth = this.trains[train_id].auth_table[0];
+        if(next_auth)
+          scheduleAuthoritySend(next_auth.authority, next_auth.wait_next_authority);
+      }
+    }
+  }
+
+  scheduleAuthoritySend(authority, delay) {
+
   }
 
   updateSwitchPosition(line, switch_identifier, new_direction) {
@@ -995,7 +1108,7 @@ class CTCOffice extends React.Component {
                         >
                           {
                             lineSelection ?
-                              Array.from(this.getBlocks(lineSelection)).map((block_id) => {
+                              Array.from(new Set(Object.values(this.stations[activeLine]))).map((block_id) => {
                                 return <MenuItem value={block_id}>{block_id}</MenuItem>;
                               })
                               :
@@ -1013,7 +1126,7 @@ class CTCOffice extends React.Component {
                         >
                           {
                             lineSelection ?
-                              Array.from(this.getBlocks(lineSelection)).map((block_id) => {
+                              Array.from(Object.values(this.stations[activeLine])).map((block_id) => {
                                 return <MenuItem value={block_id}>{block_id}</MenuItem>;
                               })
                               :
@@ -1036,7 +1149,7 @@ class CTCOffice extends React.Component {
                 {
                   (lineSelection && blockSelection && enteredETA) ?
                     <Button id="dispatchCommitBtn" variant="contained" onClick={() => {
-                      this.dispatchTrain(lineSelection, blockSelection, enteredETA, false);
+                      this.manualDispatch(lineSelection, blockSelection, enteredETA);
                       this.setState({
                         isDispatchModalOpen: !isDispatchModalOpen
                       });
