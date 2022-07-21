@@ -115,7 +115,7 @@ class TrainControllerSW extends React.Component {
     this.T = 2000;       // Sample period of the train model
     this.setSpeed = 0;
     this.power = 0;
-    this.maxPower = 120; // Max power of the train is 120 kilowatts
+    this.maxPower = 120000; // Max power of the train is 120 kilowatts
     this.cumulative_err = 0; //u_k
     this.error_k = 0;
     this.error_kprev = 0;
@@ -190,6 +190,7 @@ class TrainControllerSW extends React.Component {
         }
         else{
           if(!this.state.brakeFailureDisplay && !this.state.engineFailureDisplay && !this.state.signalPickupFailureDisplay){
+            this.setState({emergencyButton: false});
             this.setSpeed = this.suggestedSpeed;
           }
         }
