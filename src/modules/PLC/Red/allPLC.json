@@ -1,0 +1,58 @@
+[
+  {
+    "switch": "9",
+    "True": "9",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "16",
+    "True": "15 && !16-27 || 16 && !9-15 ", TODO
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "27",
+    "True": "76 && !15-27",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "32",
+    "True": "32 && !33-38",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "38",
+    "True": "71 && !32-38",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "43",
+    "True": "44 && !44-52 && 66",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  },
+  {
+    "switch": "52",
+    "True": "66 && !44-52",
+    "False": "",
+    "red": "",
+    "yellow": "",
+    "green": ""
+  }
+]
