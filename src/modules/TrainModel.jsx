@@ -61,7 +61,7 @@ class TrainModel extends React.Component {
   constructor(props, name) {
     super(props);
     this.name = name;
-    /*
+
     window.electronAPI.subscribeTrainModelMessage( (_event, payload) => {
       console.log('IPC:TrainModel: ', payload);
 
@@ -85,8 +85,8 @@ class TrainModel extends React.Component {
         case 'engineFailure':
           this.setState({engineStatus: payload.engineFailure});
           break;
-        case 'signalPickupFailure':
-          this.setState({signalPickupStatus: payload.signalPickupFailure});
+        case 'temperature':
+          this.setState({temperature: payload.temperature});
           break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
@@ -95,9 +95,9 @@ class TrainModel extends React.Component {
 
     // Send temperature to train model
     window.electronAPI.sendTrainControllerMessage({
-      'type': 'brakeStatus',
-      'brakeStatus': this.state.brakeStatus,
-      'type': 'engineStatus',
+      'type': 'engineFailure',
+      'engineFailure': this.state.engineStatus,
+     /* 'type': 'engineStatus',
       'engineStatus': this.state.engineStatus,
       'type': 'signalPickupStatus',
       'signalPickupStatus': this.state.signalPickupStatus,
@@ -122,11 +122,11 @@ class TrainModel extends React.Component {
       'type': 'commandedSpeed',
       'commandedSpeed': this.state.commandedSpeed,
       'type': 'maintenenceMode',
-      'maintenenceMode': this.state.maintenenceMode,
+      'maintenenceMode': this.state.maintenenceMode, */
 
 
     });
-    */
+
 
 
     this.state = {
@@ -155,14 +155,14 @@ class TrainModel extends React.Component {
       carMass: 40.9, // tons
       personMass: 0.088, // tons
       // kgToTons: 0.00110231
-      currentSpeed: 40,
+      currentSpeed: 17.8816, // ms
       authority: 0,
       commandedSpeed: 0, // block speed limit
       suggestedSpeed: 0, // from CTC
       power: 0,
-      acceleration: 0,
-      powerCommand: 0,
-      desiredSpeed: 50,
+      acceleration: 0, // mss
+      powerCommand: 100, // kw
+      setSpeed: 50,
       force: 0,
       T: 2000,
       maintenenceMode: 0,
@@ -205,28 +205,42 @@ class TrainModel extends React.Component {
     this.toggleBrakeStatus = this.toggleBrakeStatus.bind(this);
     this.toggleSignalPickupStatus = this.toggleSignalPickupStatus.bind(this);
     this.resetAll = this.resetAll.bind(this);
-    // this.calculateLength = this.calculateLength.bind(this);
     this.handlePowerCommandChange = this.handlePowerCommandChange.bind(this);
 
 
+    this.previous_time = 0;
+
+    window.electronAPI.subscribeTimerMessage( (_event, payload) => {
+      const time_elapsed_ms = payload.timestamp - this.previous_time;
+      console.log(time_elapsed_ms);
+
+      // ...
+      // Do some physics updates shit here w/ elapsed time
+
+
+      // ...
+
+      this.previous_time = payload.timestamp;
+    })
+
   };
+
+  // update all info my calling functions
+  componentDidMount() {
+    setInterval(() => {
+      this.calculateLength();
+      this.calculateMass();
+      this.changeTemp();
+      if(this.state.setSpeed !== this.state.currentSpeed) this.calculate();
+    }, 1000); // update every second
+  }
 
    // test UI powerCommand
    handlePowerCommandChange(event) {
     this.setState({powerCommand: event.target.value })
   }
 
-
-  // update all info my calling functions
-  updateInfo() {
-    setInterval(() => {
-      this.calculateLength();
-      this.calculateMass();
-      // if(this.state.desiredSpeed !== this.state.currentSpeed) this.calculate();
-    }, 1000); // update every second
-  }
-
-   // update temp at interval
+  // update temp at interval
    updateTemp() {
     const interval = setInterval(() => {
       if(this.state.internalTemp !== this.state.temperature) {
@@ -264,10 +278,10 @@ class TrainModel extends React.Component {
 
   // calculate
   calculate() {
-    this.setState(prevState => ({force: prevState.powerCommand / prevState.currentSpeed}));
-    this.setState(prevState => ({acceleration: prevState.force / prevState.totalMass}));
-    this.setState(prevState => ({currentSpeed: prevState.acceleration / prevState.T}));
-    this.setState(prevState => ({position: prevState.currentSpeed / prevState.T}));
+    this.setState(prevState => ({force: prevState.powerCommand * 1000 / prevState.currentSpeed}));  // conversion of kW to W
+    this.setState(prevState => ({acceleration: this.state.force / (prevState.totalMass * 907.185)})); // conversion of tons to kg
+    // this.setState(prevState => ({currentSpeed: prevState.acceleration / prevState.T}));
+    // this.setState(prevState => ({position: prevState.currentSpeed / prevState.T}));
   }
 
   // toggle functions including failure and brake statuses, and test UI
@@ -346,13 +360,13 @@ class TrainModel extends React.Component {
 
       <Grid item xs={12} container sx={{border: 1, mx: 3, p: 2}}>
         <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Current Speed: {this.state.currentSpeed.toFixed(2)} mph</Item>
+          <Item sx={{ m: 2 }}>Current Speed: {this.state.currentSpeed.toFixed(2)} ms</Item>
         </Grid>
         <Grid item xs={4}>
           <Item sx={{ m: 2 }}>Engine Power:  {this.state.power.toFixed(1)} kW</Item>
         </Grid>
         <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Train Acceleration: {this.state.acceleration.toFixed(2)} ft/hr/hr</Item>
+          <Item sx={{ m: 2 }}>Train Acceleration: {this.state.acceleration.toFixed(2)} mss</Item>
         </Grid>
 
         <Grid item xs={4}>
@@ -434,7 +448,7 @@ class TrainModel extends React.Component {
           <Item sx={{ m: 2 }}>Power Command: {this.state.powerCommand} kW</Item>
         </Grid>
         <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Desired Speed: {this.state.desiredSpeed.toFixed(2)} mph</Item>
+          <Item sx={{ m: 2 }}>Set Speed: {this.state.setSpeed.toFixed(2)} mph</Item>
         </Grid>
         <Grid item xs={4}>
           <Item sx={{ m: 2 }}>Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph</Item>
