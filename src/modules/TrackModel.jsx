@@ -24,15 +24,18 @@ import {
 import { blue, grey, red, lightGreen } from '@mui/material/colors';
 import { Box, sizing } from '@mui/system';
 import './TrackModel.css';
-import './TrackBlock.js';
-import blueTrackImg from './BlueTrack.jpg';
-import blueTrackJson from './blueLineTrackModel.json';
-import { array } from 'prop-types';
 import {
   ContactPageSharp,
   FastForward,
   PortableWifiOffRounded,
 } from '@mui/icons-material';
+import { array } from 'prop-types';
+import blueTrackImg from './BlueTrack.jpg';
+import blueTrackJson from './blueLineTrackModel.json';
+
+import { Block } from './TrackComponents/Block';
+import { Switch } from './TrackComponents/Switch';
+import { Track } from './TrackComponents/Track';
 
 // variables
 const darkMode = createTheme({
@@ -90,9 +93,9 @@ class TrackModel extends React.Component {
     //  function to load in new files
     window.electronAPI.subscribeFileMessage((_event, payload) => {
       try {
-        this.state.TrackJSON = JSON.parse(payload.payload); //  assigns the value of the JSON data to the JSON var
+        // this.state.TrackJSON = JSON.parse(payload.payload); //  assigns the value of the JSON data to the JSON var
         // call other function
-        this.loadNewTrackModel();
+        this.loadNewTrackModel(JSON.parse(payload.payload));
       } catch (error) {
         console.log(error);
       }
@@ -147,7 +150,7 @@ class TrackModel extends React.Component {
       //  anything here is a property of the object you are sending
       type: 'trackModelStatus',
       TransitLightStatus: this.state.TransitLightStatus,
-      CommandedSpeed: this.state.blocks[this.state.currBlock].speedLimit,
+      CommandedSpeed: 25,
       Authority: '',
       Beacon: this.state.beacon,
       UndergroundBlocks: this.state.blocks.Underground,
@@ -167,15 +170,15 @@ class TrackModel extends React.Component {
     this.loadBlockInfo = this.loadBlockInfo.bind(this);
     this.resetAllSettings = this.resetAllSettings.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this.generateTrackModelEVtemp = this.generateTrackModelEVtemp.bind(this);
+    // this.generateTrackModelEVtemp = this.generateTrackModelEVtemp.bind(this);
     this.checkTrackHeaters = this.checkTrackHeaters.bind(this);
     this.loadFile = this.loadFile.bind(this);
     this.testUISpeedLimitFun = this.testUISpeedLimitFun.bind(this);
     this.testUIEnvtempFun = this.testUIEnvtempFun.bind(this);
     this.testUITrackHeaterStatusFun =
       this.testUITrackHeaterStatusFun.bind(this);
-    this.isBlockUnderground = this.isBlockUnderground.bind(this);
-    this.generateBeacon = this.generateBeacon.bind(this);
+    // this.isBlockUnderground = this.isBlockUnderground.bind(this);
+    // this.generateBeacon = this.generateBeacon.bind(this);
     this.sendYardExitInfo = this.sendYardExitInfo.bind(this);
   }
 
@@ -204,49 +207,61 @@ class TrackModel extends React.Component {
   };
 
   //  Load Track Block Info
-  loadNewTrackModel = (event) => {
-    //  clear the track model
-    this.state.blocks = [];
-    //  load the TrackJSON object's properties into the blocks array
-    const tempTrackObj = this.state.TrackJSON.Green;
+  loadNewTrackModel = (trackFile) => {
+    //  instantiate new track object
+    // console.log('track file: ', trackFile);
+    const TrackObject = new Track();
+    TrackObject.loadTrack(trackFile);
 
-    for (let i = 0; i < tempTrackObj.length; i++) {
-      const temp = tempTrackObj[i]; // gets the info from object at index i
-      this.state.blocks.push({
-        Line: 'Green',
-        Section: temp.Section,
-        BlockNumber: temp['Block Number'],
-        BlockLength: temp['Block Length (m)'],
-        BlockGrade: temp['Block Grade (%)'],
-        SpeedLimit: temp['Speed Limit (Km/Hr)'],
-        Infrastructure: temp.Infrastructure,
-        StationSide: temp['Station Side'],
-        Elevation: temp['ELEVATION (M)'],
-        CumElevation: temp['CUMALTIVE ELEVATION (M)'],
-        PrevBlock: temp.Prev,
-        NextBlock: temp.Next,
-        Oneway: temp.Oneway,
-        Occupied: 'false',
-      });
-    }
+    //  set infrastructure
+    TrackObject.setInfrastructure();
+
+    //  clear the track model
+    // this.state.blocks = [];
+    // //  load the TrackJSON object's properties into the blocks array
+    // const tempTrackObj = this.state.TrackJSON.Green;
+
+    // for (let i = 0; i < tempTrackObj.length; i++) {
+    //   const temp = tempTrackObj[i]; // gets the info from object at index i
+    //   this.state.blocks.push({
+    //     Line: 'Green',
+    //     Section: temp.Section,
+    //     BlockNumber: temp['Block Number'],
+    //     BlockLength: temp['Block Length (m)'],
+    //     BlockGrade: temp['Block Grade (%)'],
+    //     SpeedLimit: temp['Speed Limit (Km/Hr)'],
+    //     Infrastructure: temp.Infrastructure,
+    //     StationSide: temp['Station Side'],
+    //     Elevation: temp['ELEVATION (M)'],
+    //     CumElevation: temp['CUMALTIVE ELEVATION (M)'],
+    //     PrevBlock: temp.Prev,
+    //     NextBlock: temp.Next,
+    //     Oneway: temp.Oneway,
+    //     Occupied: 'false',
+    //   });
+    // }
     // eslint-disable-next-line react/no-access-state-in-setstate
 
     //  set line Name -- any index of the file will work as the line is same throughout
-    this.state.lineName = this.state.blocks[0].Line;
+    console.log('line name: ', TrackObject.blocks[0].Line);
+    this.state.lineName = TrackObject.blocks[0].Line;
     //  set envionment temp by calling function
-    this.generateTrackModelEVtemp();
+    // this.generateTrackModelEVtemp();
+    const t = TrackObject.generateTrackModelEVtemp();
+    this.setState({ enviornmentTemp: t });
 
     //  call the function to check if the heaters are needed
     this.checkTrackHeaters();
 
     //  check if each block is underground, store in blocks
-    this.isBlockUnderground();
+    // this.isBlockUnderground();
   };
 
   loadFile = (event) => {
     window.electronAPI.openFileDialog('TrackModel');
   };
 
+  //  TODO
   handleSwitchChange = (event) => {
     let { myValue } = event.currentTarget.dataset;
     let index = this.state.blockIndex;
@@ -312,67 +327,67 @@ class TrackModel extends React.Component {
     }
   };
 
-  generateTrackModelEVtemp = () => {
-    const maxTemp = 110;
-    const minTemp = 0;
+  // generateTrackModelEVtemp = () => {
+  //   const maxTemp = 110;
+  //   const minTemp = 0;
 
-    //  Generates a ramdom temperature for the track model between the constraints
-    const temp1 = Math.floor(Math.random() * (maxTemp - minTemp + 1)) + minTemp;
+  //   //  Generates a ramdom temperature for the track model between the constraints
+  //   const temp1 = Math.floor(Math.random() * (maxTemp - minTemp + 1)) + minTemp;
 
-    this.setState({ enviornmentTemp: temp1 });
-  };
+  //   this.setState({ enviornmentTemp: temp1 });
+  // };
 
   //  function shall retrieve beacon information from JSON data in the blocks
-  generateBeacon = () => {
-    const beaconMessage =
-      this.state.blocks[this.state.blockIndex - 1].Infrastructure;
+  //  should be implemented in the Track Components Track Class
+  // generateBeacon = () => {
+  //   const beaconMessage =
+  //     this.state.blocks[this.state.blockIndex - 1].Infrastructure;
 
-    this.state.beacon = 'No Station';
-    if (beaconMessage.includes('STATION')) {
-      //  capture the string after station until ';' or end of string
-      const firstInd = beaconMessage.indexOf(';');
-      const mess = beaconMessage.substring(firstInd + 1);
-      this.state.beacon = mess;
-      //  CHECK if the string includes other information and reduce
-      if (mess.includes(';')) {
-        const mess2 = mess.substring(0, mess.indexOf(';'));
-        this.state.beacon = mess2;
-      }
+  //   this.state.beacon = 'No Station';
+  //   if (beaconMessage.includes('STATION')) {
+  //     //  capture the string after station until ';' or end of string
+  //     const firstInd = beaconMessage.indexOf(';');
+  //     const mess = beaconMessage.substring(firstInd + 1);
+  //     this.state.beacon = mess;
+  //     //  CHECK if the string includes other information and reduce
+  //     if (mess.includes(';')) {
+  //       const mess2 = mess.substring(0, mess.indexOf(';'));
+  //       this.state.beacon = mess2;
+  //     }
 
-      //  If station is included, tell if left or right of track
-      let dir;
-      switch (this.state.blocks[this.state.blockIndex - 1].StationSide) {
-        case 'Left/Right':
-          dir = 'b';
-          break;
-        case 'Left':
-          dir = 'l';
-          break;
-        case 'Right':
-          dir = 'r';
-          break;
-        default:
-          break;
-      }
+  //     //  If station is included, tell if left or right of track
+  //     let dir;
+  //     switch (this.state.blocks[this.state.blockIndex - 1].StationSide) {
+  //       case 'Left/Right':
+  //         dir = 'b';
+  //         break;
+  //       case 'Left':
+  //         dir = 'l';
+  //         break;
+  //       case 'Right':
+  //         dir = 'r';
+  //         break;
+  //       default:
+  //         break;
+  //     }
 
-      //  append the beacon
-      let beac = this.state.beacon;
-      beac += `-${dir}`;
-      this.state.beacon = beac;
-    }
-    // console.log('beacon: ', this.state.beacon);
-  };
+  //     //  append the beacon
+  //     let beac = this.state.beacon;
+  //     beac += `-${dir}`;
+  //     this.state.beacon = beac;
+  //   }
+  // };
 
   //  function shall check if the blocks are underground
-  isBlockUnderground = () => {
-    for (let ind = 0; ind < this.state.TrackJSON.Green.length; ind++) {
-      const infas = this.state.blocks[ind].Infrastructure;
-      this.state.blocks[ind].Underground = false;
-      if (infas.includes('UNDERGROUND'))
-        this.state.blocks[ind].Underground = true;
-    }
-    // console.log(this.state.blocks);
-  };
+  // isBlockUnderground = () => {
+  //   for (let ind = 0; ind < this.state.TrackJSON.Green.length; ind++) {
+  //     const infas = this.state.blocks[ind].Infrastructure;
+  //     this.state.blocks[ind].Underground = false;
+  //     if (infas.includes('UNDERGROUND'))
+  //       this.state.blocks[ind].Underground = true;
+  //   }
+  //   // console.log(this.state.blocks);
+  // };
 
   //  send leaving yard info
   sendYardExitInfo = () => {
@@ -561,13 +576,6 @@ class TrackModel extends React.Component {
               >
                 Load New Track Model
               </Button>
-              {/* <div className="LoadTrackModelDiv">
-                <input
-                  type="file"
-                  ref={fileInput}
-                  onClick={this.loadNewTrackModel}
-                />
-              </div> */}
             </Grid>
             <Grid item xs={4}>
               <Grid item>
@@ -713,13 +721,7 @@ class TrackModel extends React.Component {
                 <Grid item xs={12}>
                   <div>Track Line: {this.state.lineName}</div>
                 </Grid>
-                <Grid item xs={12}>
-                  {/* <img
-                    src={blueTrackImg}
-                    sx={{ width: 400, height: 400 }}
-                    alt="Blue Track"
-                  /> */}
-                </Grid>
+                <Grid item xs={12} />
                 <Grid item xs={12}>
                   <FormControl
                     fullWidth="true"
@@ -730,17 +732,12 @@ class TrackModel extends React.Component {
                     <InputLabel sx={{ fontSize: 16 }} id="select-block-label">
                       Select a Block
                     </InputLabel>
-                    {/* ISSUE COULD BE THAT i HAVE A FUNCTION ONCHANGE AND ONCLICK COULD BE CONFLICTING */}
                     <Select
                       size="medium"
-                      // sx={{ height: 16 }}
                       id="track-Block-Select-Label"
-                      // variant="filled"
                       fullWidth
-                      // multiline
                       onChange={this.handleChange}
                       value={this.state.blockIndex}
-                      // value="Hello"
                     >
                       {this.state.blocks.map((block) => (
                         <MenuItem
@@ -750,53 +747,6 @@ class TrackModel extends React.Component {
                           {String(block.BlockNumber)}
                         </MenuItem>
                       ))}
-                      {/* Want to give the user n options to chose from where n is the amount of blocks in the TrackJSON object
-                      specifically map the index of the block to the value of the select option */}
-                      {/* <MenuItem data-my-value={1} onClick={this.loadBlockInfo}>
-                        1
-                      </MenuItem>
-                      <MenuItem data-my-value={2} onClick={this.loadBlockInfo}>
-                        2
-                      </MenuItem>
-                      <MenuItem data-my-value={3} onClick={this.loadBlockInfo}>
-                        3
-                      </MenuItem>
-                      <MenuItem data-my-value={4} onClick={this.loadBlockInfo}>
-                        4
-                      </MenuItem>
-                      <MenuItem data-my-value={5} onClick={this.loadBlockInfo}>
-                        5
-                      </MenuItem>
-                      <MenuItem data-my-value={6} onClick={this.loadBlockInfo}>
-                        6
-                      </MenuItem>
-                      <MenuItem data-my-value={7} onClick={this.loadBlockInfo}>
-                        7
-                      </MenuItem>
-                      <MenuItem data-my-value={8} onClick={this.loadBlockInfo}>
-                        8
-                      </MenuItem>
-                      <MenuItem data-my-value={9} onClick={this.loadBlockInfo}>
-                        9
-                      </MenuItem>
-                      <MenuItem data-my-value={10} onClick={this.loadBlockInfo}>
-                        10
-                      </MenuItem>
-                      <MenuItem data-my-value={11} onClick={this.loadBlockInfo}>
-                        11
-                      </MenuItem>
-                      <MenuItem data-my-value={12} onClick={this.loadBlockInfo}>
-                        12
-                      </MenuItem>
-                      <MenuItem data-my-value={13} onClick={this.loadBlockInfo}>
-                        13
-                      </MenuItem>
-                      <MenuItem data-my-value={14} onClick={this.loadBlockInfo}>
-                        14
-                      </MenuItem>
-                      <MenuItem data-my-value={15} onClick={this.loadBlockInfo}>
-                        15
-                      </MenuItem> */}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -915,7 +865,6 @@ class TrackModel extends React.Component {
                     size="normal"
                     value={this.state.elevation}
                     onChange={this.changeElevation}
-                    // defaultValue="Elevation"
                   />
                 </Grid>
 
@@ -956,30 +905,6 @@ class TrackModel extends React.Component {
                     </Select>
                   </FormControl>
                 </Grid>
-
-                {/* <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }} onClick={this.resetSwitch}>
-                  Reset Switch
-                </Button>
-              </Grid> */}
-
-                {/* Profetta doesnt want to have a change beacon feature */}
-                {/* <Grid item xs={12}>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={this.changeBeacon}
-                    sx={{ fontSize: 16 }}
-                  >
-                    Stop Beacon
-                  </Button>
-                </Grid> */}
-
-                {/* <Grid item xs={6}>
-                <Button variant="contained" sx={{ fontSize: 14 }}>
-                  Reset Beacon
-                </Button>
-              </Grid> */}
               </Grid>
             </Grid>
           </Grid>
