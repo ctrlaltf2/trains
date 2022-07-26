@@ -24,26 +24,27 @@ export class Track {
       }
       this.blocks.push(
         new Block(
-          file[key].Line,
-          file[key].Section,
           file[key]['Block Number'],
+          file[key].Section,
+          file[key].Line,
           file[key]['Block Length (m)'],
           file[key]['Block Grade (%)'],
           file[key]['Speed Limit (Km/Hr)'],
-          file[key].Infrastructure,
-          file[key]['Station Side'],
           file[key]['ELEVATION (M)'],
           file[key]['CUMALTIVE ELEVATION(M)'],
-          file[key]['seconds to traverse block'],
+          file[key].Infrastructure,
+          file[key].Oneway,
+          'no underground data',
+          file[key]['Station Side'],
+          'no crossing data',
           file[key].Prev,
-          file[key].Next,
-          file[key].Oneway
+          file[key].Next
         )
       );
 
       // console.log(this.sections);
-      // console.log(this.blocks);
     }
+    console.log(this.blocks);
   }
 
   /*

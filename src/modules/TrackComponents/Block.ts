@@ -32,8 +32,10 @@ export class Block {
     public infrastructure: string = '',
     public direction: boolean = false,
     public underground: boolean = false,
+    public stationSide: string = '',
     public crossing: boolean = false,
-    public beacon: string = ''
+    public previous: number,
+    public next: number
   ) {
     this.id = id;
     this.length = length;
@@ -45,8 +47,10 @@ export class Block {
     this.direction = direction;
     this.cumElevation = cumElevation;
     this.underground = underground;
+    this.stationSide = stationSide;
     this.crossing = crossing;
-    this.beacon = beacon;
+    this.previous = previous;
+    this.next = next;
 
     // Failures
     this.brokenRailFailure = false;

@@ -185,7 +185,7 @@ class TrackModel extends React.Component {
   //  Load's blocks information from the Track Model File - alpha = blockIndex
   loadBlockInfo = (alpha) => {
     //  generate beacon message
-    this.generateBeacon();
+    // this.generateBeacon();
 
     const curBlock = this.state.blocks[alpha]; //  get the block selected
     const blockLengthImperial = (curBlock.BlockLength * 0.000621371).toFixed(3);
@@ -220,15 +220,15 @@ class TrackModel extends React.Component {
     // this.state.blocks = [];
     // //  load the TrackJSON object's properties into the blocks array
     // const tempTrackObj = this.state.TrackJSON.Green;
-
-    // for (let i = 0; i < tempTrackObj.length; i++) {
-    //   const temp = tempTrackObj[i]; // gets the info from object at index i
+    this.state.blocks = TrackObject.blocks;
+    // for (let i = 0; i < TrackObject.length; i++) {
+    //   const temp = TrackObject[i]; // gets the info from object at index i
     //   this.state.blocks.push({
-    //     Line: 'Green',
-    //     Section: temp.Section,
-    //     BlockNumber: temp['Block Number'],
-    //     BlockLength: temp['Block Length (m)'],
-    //     BlockGrade: temp['Block Grade (%)'],
+    //     Line: temp.line,
+    //     Section: temp.section,
+    //     BlockNumber: temp.id,
+    //     BlockLength: temp.length,
+    //     BlockGrade: temp.grade,
     //     SpeedLimit: temp['Speed Limit (Km/Hr)'],
     //     Infrastructure: temp.Infrastructure,
     //     StationSide: temp['Station Side'],
@@ -243,8 +243,8 @@ class TrackModel extends React.Component {
     // eslint-disable-next-line react/no-access-state-in-setstate
 
     //  set line Name -- any index of the file will work as the line is same throughout
-    console.log('line name: ', TrackObject.blocks[0].Line);
-    this.state.lineName = TrackObject.blocks[0].Line;
+    console.log('line name: ', TrackObject.blocks[0].line);
+    this.state.lineName = TrackObject.blocks[0].line;
     //  set envionment temp by calling function
     // this.generateTrackModelEVtemp();
     const t = TrackObject.generateTrackModelEVtemp();
@@ -740,11 +740,8 @@ class TrackModel extends React.Component {
                       value={this.state.blockIndex}
                     >
                       {this.state.blocks.map((block) => (
-                        <MenuItem
-                          key={block.BlockNumber}
-                          value={block.BlockNumber}
-                        >
-                          {String(block.BlockNumber)}
+                        <MenuItem key={block.id} value={block.id}>
+                          {String(block.id)}
                         </MenuItem>
                       ))}
                     </Select>
