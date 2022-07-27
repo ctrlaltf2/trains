@@ -183,12 +183,9 @@ class TrackModel extends React.Component {
   }
 
   //  Load's blocks information from the Track Model File - alpha = blockIndex
-  loadBlockInfo = (alpha) => {
-    //  generate beacon message
-    // this.generateBeacon();
-
+  loadBlockInfo = (alpha, obj = -1) => {
+    //  convert to imperials for display only
     const curBlock = this.state.blocks[alpha]; //  get the block selected
-    console.log('curBlock data', curBlock);
     const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
     const speedLimitImperial = (curBlock.spdLimit * 0.621371).toFixed(3);
     const elevationImperial = (curBlock.elevation * 3.28084).toFixed(3);
@@ -205,57 +202,35 @@ class TrackModel extends React.Component {
     });
     this.state.blockOccupancy =
       this.state.blocks[this.state.blockIndex - 1].Occupied;
+
+    //  get the switch postion and display it if it exists
+    if (obj.hasOwnProperty('switch'))
+      this.state.switchPos = obj.switch.position;
   };
 
   //  Load Track Block Info
   loadNewTrackModel = (trackFile) => {
     //  instantiate new track object
-    // console.log('track file: ', trackFile);
     const TrackObject = new Track();
     TrackObject.loadTrack(trackFile);
 
     //  set infrastructure
     TrackObject.setInfrastructure();
 
-    //  clear the track model
-    // this.state.blocks = [];
-    // //  load the TrackJSON object's properties into the blocks array
-    // const tempTrackObj = this.state.TrackJSON.Green;
+    //  load the TrackJSON object's properties into the blocks array
     this.state.blocks = TrackObject.blocks;
-    // for (let i = 0; i < TrackObject.length; i++) {
-    //   const temp = TrackObject[i]; // gets the info from object at index i
-    //   this.state.blocks.push({
-    //     Line: temp.line,
-    //     Section: temp.section,
-    //     BlockNumber: temp.id,
-    //     BlockLength: temp.length,
-    //     BlockGrade: temp.grade,
-    //     SpeedLimit: temp['Speed Limit (Km/Hr)'],
-    //     Infrastructure: temp.Infrastructure,
-    //     StationSide: temp['Station Side'],
-    //     Elevation: temp['ELEVATION (M)'],
-    //     CumElevation: temp['CUMALTIVE ELEVATION (M)'],
-    //     PrevBlock: temp.Prev,
-    //     NextBlock: temp.Next,
-    //     Oneway: temp.Oneway,
-    //     Occupied: 'false',
-    //   });
-    // }
-    // eslint-disable-next-line react/no-access-state-in-setstate
+
+    // load in the track model for the first block
+    this.loadBlockInfo(1);
 
     //  set line Name -- any index of the file will work as the line is same throughout
-    console.log('line name: ', TrackObject.blocks[0].line);
+    // console.log('line name: ', TrackObject.blocks[0].line);
     this.state.lineName = TrackObject.blocks[0].line;
-    //  set envionment temp by calling function
-    // this.generateTrackModelEVtemp();
     const t = TrackObject.generateTrackModelEVtemp();
     this.setState({ enviornmentTemp: t });
 
     //  call the function to check if the heaters are needed
     this.checkTrackHeaters();
-
-    //  check if each block is underground, store in blocks
-    // this.isBlockUnderground();
   };
 
   loadFile = (event) => {
@@ -327,68 +302,6 @@ class TrackModel extends React.Component {
       this.setState({ beaconStatus: 'functional' });
     }
   };
-
-  // generateTrackModelEVtemp = () => {
-  //   const maxTemp = 110;
-  //   const minTemp = 0;
-
-  //   //  Generates a ramdom temperature for the track model between the constraints
-  //   const temp1 = Math.floor(Math.random() * (maxTemp - minTemp + 1)) + minTemp;
-
-  //   this.setState({ enviornmentTemp: temp1 });
-  // };
-
-  //  function shall retrieve beacon information from JSON data in the blocks
-  //  should be implemented in the Track Components Track Class
-  // generateBeacon = () => {
-  //   const beaconMessage =
-  //     this.state.blocks[this.state.blockIndex - 1].Infrastructure;
-
-  //   this.state.beacon = 'No Station';
-  //   if (beaconMessage.includes('STATION')) {
-  //     //  capture the string after station until ';' or end of string
-  //     const firstInd = beaconMessage.indexOf(';');
-  //     const mess = beaconMessage.substring(firstInd + 1);
-  //     this.state.beacon = mess;
-  //     //  CHECK if the string includes other information and reduce
-  //     if (mess.includes(';')) {
-  //       const mess2 = mess.substring(0, mess.indexOf(';'));
-  //       this.state.beacon = mess2;
-  //     }
-
-  //     //  If station is included, tell if left or right of track
-  //     let dir;
-  //     switch (this.state.blocks[this.state.blockIndex - 1].StationSide) {
-  //       case 'Left/Right':
-  //         dir = 'b';
-  //         break;
-  //       case 'Left':
-  //         dir = 'l';
-  //         break;
-  //       case 'Right':
-  //         dir = 'r';
-  //         break;
-  //       default:
-  //         break;
-  //     }
-
-  //     //  append the beacon
-  //     let beac = this.state.beacon;
-  //     beac += `-${dir}`;
-  //     this.state.beacon = beac;
-  //   }
-  // };
-
-  //  function shall check if the blocks are underground
-  // isBlockUnderground = () => {
-  //   for (let ind = 0; ind < this.state.TrackJSON.Green.length; ind++) {
-  //     const infas = this.state.blocks[ind].Infrastructure;
-  //     this.state.blocks[ind].Underground = false;
-  //     if (infas.includes('UNDERGROUND'))
-  //       this.state.blocks[ind].Underground = true;
-  //   }
-  //   // console.log(this.state.blocks);
-  // };
 
   //  send leaving yard info
   sendYardExitInfo = () => {
@@ -885,7 +798,7 @@ class TrackModel extends React.Component {
                       sx={{ fontSize: 8 }}
                       variant="filled"
                       id="switch-position-select-label"
-                      value={this.switchPos}
+                      value={this.state.switchPos}
                       label="Switch Position"
                     >
                       <MenuItem
