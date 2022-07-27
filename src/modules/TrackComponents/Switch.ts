@@ -1,5 +1,6 @@
 export class Switch {
   private _position: number;
+
   private _positionBool: boolean;
 
   constructor(
