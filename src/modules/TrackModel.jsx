@@ -188,9 +188,10 @@ class TrackModel extends React.Component {
     // this.generateBeacon();
 
     const curBlock = this.state.blocks[alpha]; //  get the block selected
-    const blockLengthImperial = (curBlock.BlockLength * 0.000621371).toFixed(3);
-    const speedLimitImperial = (curBlock.SpeedLimit * 0.621371).toFixed(3);
-    const elevationImperial = (curBlock.Elevation * 3.28084).toFixed(3);
+    console.log('curBlock data', curBlock);
+    const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
+    const speedLimitImperial = (curBlock.spdLimit * 0.621371).toFixed(3);
+    const elevationImperial = (curBlock.elevation * 3.28084).toFixed(3);
 
     //  Assign values from the Blocks array to State vars
     this.setState({
