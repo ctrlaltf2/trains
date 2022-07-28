@@ -1,3 +1,4 @@
+/* eslint-disable react/sort-comp */
 /* eslint-disable no-plusplus */
 /* eslint-disable react/destructuring-assignment */
 import { Module } from 'module';
@@ -83,7 +84,7 @@ class TrackModel extends React.Component {
       blocks,
       currBlock: 1, //  Block that the train model is currently entering
 
-      Authority: 0,
+      Authority: 0, //  will be given via track controller
 
       testUISpeedLimit: 30,
       testUIEnvtemp: 80,
@@ -107,53 +108,28 @@ class TrackModel extends React.Component {
     window.electronAPI.subscribeTrackModelMessage((_event, payload) => {
       console.log('IPC:Track Model: ', payload);
       switch (payload.type) {
+        //  signals from Track Controller
         case 'switch':
           this.state.Authority = payload.payload;
           break;
         case 'light':
-          this.state.TransitLightStatus = payload.value;
+          this.state.TransitLightStatus = payload.payload;
           break;
         case 'authority':
+          this.state.Authority = payload.payload;
           break;
 
-        case 'trainModelStatus':
+        //  signals from Train Model
+        case 'signalPickupFailure':
+          this.state.TrackSignalPickup = payload.payload;
+          break;
+
+        case 'blockOccupancy':
           //  call the update block occupancy function
           this.updateBlockOccupancy(payload.payload);
           break;
         default:
-        // console.log('Unknown payload type recieved: ', payload.type);
       }
-
-      // try {
-      //   //  store the message payload in the recieved message var
-      //   this.state.IPC_Recieved_Message = payload.payload;
-      // } catch (error) {
-      //   console.log(error);
-      // }
-    });
-
-    //  function to send message to the Track Controller
-    window.electronAPI.sendTrackControllerMessage({
-      //  anything inside here is a property of the object you are sending
-      //  example 'type': 'closure'
-      type: 'trackModelStatus',
-      TrackSignalPickup: this.state.recievingTrackCircuit,
-      RailStatus: this.state.railStatus,
-      TrackPowerStatus: this.state.trackPower,
-      SpeedLimit: this.state.speedLimit,
-      Throughput: '',
-      // TrackBlocks: this.state.blocks,
-    });
-
-    //  function to send message to the Train Model
-    window.electronAPI.sendTrainModelMessage({
-      //  anything here is a property of the object you are sending
-      type: 'trackModelStatus',
-      TransitLightStatus: this.state.TransitLightStatus,
-      CommandedSpeed: 25,
-      Authority: '',
-      Beacon: this.state.beacon,
-      UndergroundBlocks: this.state.blocks.Underground,
     });
 
     //  function prototypes
@@ -180,10 +156,11 @@ class TrackModel extends React.Component {
     // this.isBlockUnderground = this.isBlockUnderground.bind(this);
     // this.generateBeacon = this.generateBeacon.bind(this);
     this.sendYardExitInfo = this.sendYardExitInfo.bind(this);
+    this.sendMessages = this.sendMessages.bind(this);
   }
 
   //  Load's blocks information from the Track Model File - alpha = blockIndex
-  loadBlockInfo = (alpha, obj = -1) => {
+  loadBlockInfo = (alpha) => {
     //  convert to imperials for display only
     const curBlock = this.state.blocks[alpha]; //  get the block selected
     const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
@@ -202,10 +179,6 @@ class TrackModel extends React.Component {
     });
     this.state.blockOccupancy =
       this.state.blocks[this.state.blockIndex - 1].Occupied;
-
-    //  get the switch postion and display it if it exists
-    if (obj.hasOwnProperty('switch'))
-      this.state.switchPos = obj.switch.position;
   };
 
   //  Load Track Block Info
@@ -231,6 +204,9 @@ class TrackModel extends React.Component {
 
     //  call the function to check if the heaters are needed
     this.checkTrackHeaters();
+
+    //  send messages to the track controller and train model
+    this.sendMessages(TrackObject);
   };
 
   loadFile = (event) => {
@@ -341,6 +317,34 @@ class TrackModel extends React.Component {
     this.setState({ switchPos: 'disengaged' });
     this.setState({ beaconStatus: 'functional' });
   };
+
+  //  need to send messages based on block info that train is entering
+  sendMessages(TrackObject) {
+    const interval = setInterval(() => {
+      //  function to send message to the Track Controller
+      // console.log('sending track model status to track controller');
+      window.electronAPI.sendTrackControllerMessage({
+        type: 'trackModelStatus',
+        TrackSignalPickup: this.state.recievingTrackCircuit,
+        RailStatus: this.state.railStatus,
+        TrackPowerStatus: this.state.trackPower,
+        SpeedLimit: this.state.speedLimit,
+        Throughput: '',
+      });
+
+      //  function to send message to the Train Model
+      // console.log('sending track model status to train model');
+      window.electronAPI.sendTrainModelMessage({
+        type: 'trackModelStatus',
+        TransitLightStatus: this.state.TransitLightStatus, //  light status of the block train is entering
+        CommandedSpeed: TrackObject.blocks[this.state.currBlock].spdLimit, // speed limit of the block train is entering
+        Authority: this.state.Authority, //  authority
+        Beacon: TrackObject.blocks[this.state.currBlock].beacon, //  beacon of the block (if exists) that train is entering
+        UndergroundBlocks: TrackObject.blocks[this.state.currBlock].underground, //  underground status of the block train is entering
+        Grade: TrackObject.blocks[this.state.currBlock].grade,
+      });
+    }, 1000);
+  }
 
   //  FUNCTIONS FOR TEST UI
   testUIEnvtempFun = (event) => {
