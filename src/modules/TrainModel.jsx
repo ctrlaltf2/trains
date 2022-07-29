@@ -72,7 +72,7 @@ class TrainModel extends React.Component {
           this.setState({ commandedSpeed: payload.CommandedSpeed });
           break;
         case 'Authority':
-          // this.setState({ authority: payload.Authority });
+          this.setState({ authority: payload.Authority });
           break;
         case 'Beacon':
           this.setState({ beacon: payload.Beacon });
