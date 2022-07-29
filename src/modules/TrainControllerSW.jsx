@@ -86,6 +86,7 @@ class TrainControllerSW extends React.Component {
       rightPlatform: false, // Used to check if right doors should open
       leftPlatform: false, // Used to check if left doors should open
       announcementsOnOff: false,
+      transitLights: '',
 
       // Service Brake, Emergency Brake, and failure toggles
       emergencyButton: false,
@@ -206,6 +207,7 @@ class TrainControllerSW extends React.Component {
         if(this.authority == 0){
           this.authorityStop();
         }
+
       }
 
       // Manual Mode
@@ -280,14 +282,6 @@ class TrainControllerSW extends React.Component {
       }
     }
 
-    // Convert from miles per hour to km/h for Train Model's calculation
-    this.setSpeedkilo = this.miles_to_meters(this.setSpeed);
-
-    // Send set speed to train model
-    window.electronAPI.sendTrainModelMessage({
-      'type': 'setSpeed',
-      'setSpeed': this.setSpeedkilo,
-    });
   }
 
   // Test UI Functions
