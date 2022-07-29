@@ -34,7 +34,7 @@ import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 import SW13 from './PLC/Green/SW13.json';
 import SW29 from './PLC/Green/SW29.json';
 import SW57 from './PLC/Green/SW57.json';
-import SW63 from './PLC/Green/SW63.json';
+import SW63 from './PLC/Green/SW62.json';
 import SW76 from './PLC/Green/SW76.json';
 import SW85 from './PLC/Green/SW85.json';
 
@@ -69,14 +69,27 @@ class TrackController extends React.Component {
       switch (payload.type) {
         case 'trackModelStatus':
           // TODO
+          // window.electronAPI.sendCTCMessage({
+          //   type: 'occupancy',
+          //   line: this.state.blocks[].line,
+          //   block_id: ,
+          //   value: ,
+          // });
+          // window.electronAPI.sendCTCMessage({
+          //   type: 'throughput',
+          //   line: this.state.blocks[].line,
+          //   value: ,
+          // });
           break;
-        case 'dispatch train':
+        case 'authority':
+          // TODO Add other line
+          this.state.blocks[payload.block].authority = payload.authority;
+          break;
+        case 'dispatch':
           // TODO
           break;
         case 'closure':
-          break;
-        case 'timing':
-          console.log(Date.now() - payload.value);
+        // MMode ?
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -119,7 +132,7 @@ class TrackController extends React.Component {
     temp.push(this.state.blocks[150]);
     this.controllers.push(new Wayside(2, temp, 29));
     this.controllers.push(new Wayside(3, this.state.blocks.slice(56, 57), 57));
-    this.controllers.push(new Wayside(4, this.state.blocks.slice(61, 62), 63));
+    this.controllers.push(new Wayside(4, this.state.blocks.slice(61, 76), 62));
     temp = this.state.blocks.slice(100, 149);
     temp.push(this.state.blocks[76]);
     this.controllers.push(new Wayside(5, temp, 77));
@@ -156,6 +169,15 @@ class TrackController extends React.Component {
     this.handleChangePLC = this.handleChangePLC.bind(this);
 
     this.reset = this.reset.bind(this);
+  }
+
+  mmMode() {
+    this.state.blocks[this.state.currBlock.id - 1].maintenanceMode =
+      !this.state.blocks[this.state.currBlock.id - 1].maintenanceMode;
+
+    this.setState((prevState) => ({
+      appSate: !prevState.appState,
+    }));
   }
 
   loadNewPLC = (event) => {
@@ -198,10 +220,10 @@ class TrackController extends React.Component {
        * Train/Suggested Speed
        * Block states (switches, crossing, transit lights)
        */
-      window.electronAPI.sendTrackModelMessage({
-        type: 'blocks',
-        blocks: this.state.blocks,
-      });
+      // window.electronAPI.sendTrackModelMessage({
+      //   type: 'blocks',
+      //   blocks: this.state.blocks,
+      // });
 
       // Logic
       this.controllers.forEach((controller) => {
@@ -262,18 +284,89 @@ class TrackController extends React.Component {
             }
           }
           // Vitality check before setting switch position
-          if (status.every((val) => val === true)) {
-            this.state.blocks[
+          // Also send to CTC/Track Model
+          if (
+            !this.state.blocks[
               parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].switch.position = true;
-          } else {
-            this.state.blocks[
-              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].switch.position = false;
+            ].maintenanceMode
+          ) {
+            if (status.every((val) => val === true)) {
+              if (
+                !this.state.blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].switch.positionBool
+              ) {
+                window.electronAPI.sendCTCMessage({
+                  type: 'switch',
+                  line: this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].line,
+                  root: this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].switch.swBlock,
+                  pointing_to:
+                    this.state.blocks[
+                      parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                    ].switch.position,
+                });
+                window.electronAPI.sendTrackModelMessage({
+                  type: 'switch',
+                  line: this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].line,
+                  root: this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].switch.swBlock,
+                  pointing_to:
+                    this.state.blocks[
+                      parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                    ].switch.position,
+                });
+              }
+              this.state.blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position = true;
+            } else {
+              if (
+                this.state.blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].switch.positionBool
+              ) {
+                window.electronAPI.sendCTCMessage({
+                  type: 'switch',
+                  line: this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].line,
+                  root: this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].switch.swBlock,
+                  pointing_to:
+                    this.state.blocks[
+                      parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                    ].switch.position,
+                });
+                window.electronAPI.sendTrackModelMessage({
+                  type: 'switch',
+                  line: this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].line,
+                  root: this.state.blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].switch.swBlock,
+                  pointing_to:
+                    this.state.blocks[
+                      parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                    ].switch.position,
+                });
+              }
+              this.state.blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position = false;
+            }
           }
         }
 
-        // Transit light logic
+        //   // Transit light logic
         for (let j = 0; j < controller.plc.lightLogic.length; j++) {
           // Run 3x for vitality
           status = [true, true, true];
@@ -313,13 +406,73 @@ class TrackController extends React.Component {
           // console.log(status);
           // Vitality check before setting light position
           if (status.every((val) => val === true)) {
+            let temp =
+              this.state.blocks[
+                parseInt(controller.plc.lightLogic[j].block) - 1
+              ].transitLight == 'red';
+
             this.state.blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
             ].transitLight = 'green';
+
+            if (temp) {
+              window.electronAPI.sendCTCMessage({
+                type: 'lights',
+                line: this.state.blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].line,
+                id: parseInt(controller.plc.lightLogic[j].block),
+                value:
+                  this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].block) - 1
+                  ].transitLight,
+              });
+              window.electronAPI.sendTrackModelMessage({
+                type: 'lights',
+                line: this.state.blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].line,
+                id: parseInt(controller.plc.lightLogic[j].block),
+                value:
+                  this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].block) - 1
+                  ].transitLight,
+              });
+            }
           } else {
+            let temp =
+              this.state.blocks[
+                parseInt(controller.plc.lightLogic[j].block) - 1
+              ].transitLight == 'green';
+
             this.state.blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
             ].transitLight = 'red';
+
+            if (temp) {
+              window.electronAPI.sendCTCMessage({
+                type: 'lights',
+                line: this.state.blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].line,
+                id: parseInt(controller.plc.lightLogic[j].block),
+                value:
+                  this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].block) - 1
+                  ].transitLight,
+              });
+              window.electronAPI.sendTrackModelMessage({
+                type: 'lights',
+                line: this.state.blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].line,
+                id: parseInt(controller.plc.lightLogic[j].block),
+                value:
+                  this.state.blocks[
+                    parseInt(controller.plc.lightLogic[j].block) - 1
+                  ].transitLight,
+              });
+            }
           }
         }
       });
@@ -360,7 +513,31 @@ class TrackController extends React.Component {
     }
   }
 
-  setSwitch(block, position) {
+  // Toggles switch
+  setSwitch() {
+    if (
+      this.state.blocks[this.state.currBlock.id - 1].switch.position ==
+      this.state.blocks[this.state.currBlock.id - 1].switch.outBlockHigh
+    ) {
+      this.state.blocks[this.state.currBlock.id - 1].switch.setPosition(
+        this.state.blocks[this.state.currBlock.id - 1].switch.outBlockLow
+      );
+    } else if (
+      this.state.blocks[this.state.currBlock.id - 1].switch.position ==
+      this.state.blocks[this.state.currBlock.id - 1].switch.outBlockLow
+    ) {
+      this.state.blocks[this.state.currBlock.id - 1].switch.setPosition(
+        this.state.blocks[this.state.currBlock.id - 1].switch.outBlockHigh
+      );
+    }
+
+    this.setState((prevState) => ({
+      appState: !prevState.appState,
+    }));
+  }
+
+  // Set specific swithc to position
+  setSwitchCTC(block, position) {
     this.state.blocks[block].switch.position(position);
 
     this.setState((prevState) => ({
@@ -373,6 +550,14 @@ class TrackController extends React.Component {
     this.setState((prevState) => ({
       appState: !prevState.appState,
     }));
+
+    window.electronAPI.sendCTCMessage({
+      'type': 'occupancy',
+      'line': this.state.currBlock.line,
+      'block_id': this.state.currBlock.id.toString(),
+      'value': this.state.currBlock.occupancy
+    });
+
     console.log(this.state.currBlock.occupancy);
   }
 
@@ -411,11 +596,11 @@ class TrackController extends React.Component {
     }));
   }
 
-  mmMode() {
-    this.setState((prevState) => ({
-      maintenanceMode: !prevState.maintenanceMode,
-    }));
-  }
+  // mmMode() {
+  //   this.setState((prevState) => ({
+  //     maintenanceMode: !prevState.maintenanceMode,
+  //   }));
+  // }
 
   // eslint-disable-next-line class-methods-use-this
   testUI() {
@@ -434,7 +619,7 @@ class TrackController extends React.Component {
           <Box sx={{ flexGrow: 1 }}>
             <Grid container spacing={12}>
               <Grid item xs={3}>
-                <div className="left">
+                <div className="centered">
                   <FormControl fullWidth>
                     <InputLabel id="select-Block">Block</InputLabel>
                     <Select
@@ -481,16 +666,16 @@ class TrackController extends React.Component {
                 </div>
               </Grid>
             </Grid>
-
             <Grid container spacing={12}>
               <Grid item xs={4}>
-                <div className="left">
-                  {this.state.blocks[
-                    this.controllers[this.state.currController].swBlock
-                  ] != undefined && this.state.maintenanceMode ? (
+                <div className="centered">
+                  {this.state.currBlock.switch != undefined &&
+                  this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
-                      label={`Switch Position: ${this.state.currBlock.switch.position}`}
+                      label={`Switch Position: ${
+                        this.state.blocks[this.currBlock.id - 1].switch.position
+                      }`}
                       color={'success'}
                       variant="outlined"
                     />
@@ -507,7 +692,8 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {this.state.maintenanceMode ? (
+                  {this.state.blocks[this.state.currBlock.id - 1]
+                    .maintenanceMode ? (
                     <Chip
                       onClick={this.mmMode}
                       label="Maintenence Mode Activated"
@@ -738,7 +924,7 @@ class TrackController extends React.Component {
   render() {
     if (this.state.testMode) return this.testUI();
 
-    const mmMode = this.maintenanceMode;
+    // const mmMode = this.maintenanceMode;
 
     return (
       <div>
@@ -755,7 +941,7 @@ class TrackController extends React.Component {
           <Box sx={{ flexGrow: 1 }}>
             <Grid container spacing={12}>
               <Grid item xs={3}>
-                <div className="left">
+                <div className="centered">
                   <FormControl fullWidth>
                     <InputLabel id="select-Block">Block</InputLabel>
                     <Select
@@ -831,12 +1017,14 @@ class TrackController extends React.Component {
 
             <Grid container spacing={12}>
               <Grid item xs={4}>
-                <div className="left">
+                <div className="centered">
                   {this.state.blocks[
                     this.controllers[this.state.currController].swBlock - 1
                   ].switch == undefined ? (
                     <div></div>
-                  ) : this.state.maintenanceMode ? (
+                  ) : this.state.blocks[
+                      this.controllers[this.state.currController].swBlock - 1
+                    ].maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
@@ -872,7 +1060,8 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {this.state.maintenanceMode ? (
+                  {this.state.blocks[this.state.currBlock.id - 1]
+                    .maintenanceMode ? (
                     <Chip
                       label="Maintenence Mode Activated"
                       color="warning"
@@ -890,7 +1079,7 @@ class TrackController extends React.Component {
               <Grid item xs>
                 <div className="right">
                   <Chip
-                    label="Transit Light"
+                    label="Light"
                     color={
                       this.state.currBlock.transitLight === 'green'
                         ? 'success'

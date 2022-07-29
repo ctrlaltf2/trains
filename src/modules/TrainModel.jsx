@@ -222,7 +222,6 @@ class TrainModel extends React.Component {
       this.calculateMass();
       this.changeTemp();
 
-
       // this.calculate();
     }, 1000); // update every second
   }
