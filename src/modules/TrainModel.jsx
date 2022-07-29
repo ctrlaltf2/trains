@@ -65,22 +65,20 @@ class TrainModel extends React.Component {
     window.electronAPI.subscribeTrainModelMessage((_event, payload) => {
       console.log('IPC:TrainModel: ', payload);
 
-
-      switch(payload.type) {
-
+      switch (payload.type) {
         // from track model
         case 'CommandedSpeed':
-                        // attribute: value
-          this.setState({commandedSpeed: payload.CommandedSpeed});
+          // attribute: value
+          this.setState({ commandedSpeed: payload.CommandedSpeed });
           break;
         case 'Authority':
-          this.setState({authority: payload.Authority});
+          // this.setState({ authority: payload.Authority });
           break;
         case 'Beacon':
-          this.setState({beacon: payload.Beacon});
+          this.setState({ beacon: payload.Beacon });
           break;
         case 'UndergroundBlocks':
-          this.setState({underground: payload.UndergroundBlocks});
+          this.setState({ underground: payload.UndergroundBlocks });
           break;
 
         // from train controller
@@ -88,31 +86,30 @@ class TrainModel extends React.Component {
           this.setState({ temperature: payload.temperature });
           break;
         case 'serviceBrake':
-          this.setState({serviceBrake: payload.serviceBrake});
+          this.setState({ serviceBrake: payload.serviceBrake });
           break;
         case 'emergencyBrake':
-          this.setState({emergencyBrake: payload.emergencyBrake});
+          this.setState({ emergencyBrake: payload.emergencyBrake });
           break;
         case 'power':
-          this.setState({powerCommand: payload.power});
+          this.setState({ powerCommand: payload.power });
           break;
         case 'leftDoor':
-          this.setState({leftDoors: payload.leftDoor});
+          this.setState({ leftDoors: payload.leftDoor });
           break;
         case 'rightDoor':
-          this.setState({rightDoors: payload.rightDoor});
+          this.setState({ rightDoors: payload.rightDoor });
           break;
         case 'trainLights':
-          this.setState({exteriorTrainLights: payload.trainLights});
+          this.setState({ exteriorTrainLights: payload.trainLights });
           break;
         case 'cabinLights':
-          this.setState({interiorTrainLights: payload.cabinLights});
+          this.setState({ interiorTrainLights: payload.cabinLights });
           break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
     });
-
 
     this.state = {
       trainEngineStatus: true,
@@ -203,11 +200,8 @@ class TrainModel extends React.Component {
       // ...
 
       this.previous_time = payload.timestamp;
-
-    })
-
-  };
-
+    });
+  }
 
   // update all info my calling functions
   componentDidMount() {
@@ -228,46 +222,63 @@ class TrainModel extends React.Component {
   // calculate
   calculate() {
     // calculate force
-    this.setState(prevState => ({force: prevState.powerCommand * 1000 / prevState.currentSpeed}));  // conversion of kW to W
-
+    this.setState((prevState) => ({
+      force: (prevState.powerCommand * 1000) / prevState.currentSpeed,
+    })); // conversion of kW to W
 
     // calculate acceleration Acceleration Limit: 0.5 m/s^2     Deceleration Limit(service brake): -1.2 m/s^2    Deceleration Limit(e brake): -2.73 m/s^2
-    this.setState(prevState => ({acceleration: this.state.force / (prevState.totalMass * 907.185)})); // conversion of tons to kg
+    this.setState((prevState) => ({
+      acceleration: this.state.force / (prevState.totalMass * 907.185),
+    })); // conversion of tons to kg
 
     // if acceleration is above accelerationLimit
-    if(this.state.acceleration > this.state.accelerationLimit && !this.state.emergencyBrake && !this.state.serviceBrake) {
-      this.setState(prevState => ({acceleration: this.state.accelerationLimit}));
+    if (
+      this.state.acceleration > this.state.accelerationLimit &&
+      !this.state.emergencyBrake &&
+      !this.state.serviceBrake
+    ) {
+      this.setState((prevState) => ({
+        acceleration: this.state.accelerationLimit,
+      }));
     }
 
     // if serviceBrake is true
-    if(!this.state.emergencyBrake && this.state.serviceBrake) {
-      this.setState(prevState => ({acceleration: this.state.serviceDecelLimit}));
+    if (!this.state.emergencyBrake && this.state.serviceBrake) {
+      this.setState((prevState) => ({
+        acceleration: this.state.serviceDecelLimit,
+      }));
     }
 
     // if eBrake is true
-    if(this.state.emergencyBrake && !this.state.serviceBrake) {
-      this.setState(prevState => ({acceleration: this.state.eDecelLimit}));
+    if (this.state.emergencyBrake && !this.state.serviceBrake) {
+      this.setState((prevState) => ({ acceleration: this.state.eDecelLimit }));
     }
 
     // if serviceBrake and eBrake is true, cancel out serviceBrake
-    if(this.state.emergencyBrake && this.state.serviceBrake) {
-      this.setState(prevState => ({acceleration: this.state.eDecelLimit}));
+    if (this.state.emergencyBrake && this.state.serviceBrake) {
+      this.setState((prevState) => ({ acceleration: this.state.eDecelLimit }));
     }
 
-
     // calculate velocity
-    this.setState(prevState => ({ currentSpeed: prevState.currentSpeed +  (this.state.T / 2) * (this.state.acceleration + prevState.acceleration) }));
+    this.setState((prevState) => ({
+      currentSpeed:
+        prevState.currentSpeed +
+        (this.state.T / 2) * (this.state.acceleration + prevState.acceleration),
+    }));
 
     // Send signal pickup failure to train controller
     window.electronAPI.sendTrainControllerMessage({
-      'type': 'currentSpeed',
-      'currentSpeed': this.state.currentSpeed,
+      type: 'currentSpeed',
+      currentSpeed: this.state.currentSpeed,
     });
 
     // calculate position
-    this.setState(prevState => ({intermediatePosition: this.state.currentSpeed * this.state.T}));
-    this.setState(prevState => ({position: prevState.position + this.state.intermediatePosition}));
-
+    this.setState((prevState) => ({
+      intermediatePosition: this.state.currentSpeed * this.state.T,
+    }));
+    this.setState((prevState) => ({
+      position: prevState.position + this.state.intermediatePosition,
+    }));
   }
 
   // update temp at interval
@@ -312,7 +323,6 @@ class TrainModel extends React.Component {
     }));
   }
 
-
   // toggle functions including failure and brake statuses, and test UI
   toggleTrainEngineStatus() {
     this.setState((prevState) => ({
@@ -321,8 +331,8 @@ class TrainModel extends React.Component {
 
     // Send engine failure to train controller
     window.electronAPI.sendTrainControllerMessage({
-      'type': 'engineFailure',
-      'engineFailure': this.state.trainEngineStatus,
+      type: 'engineFailure',
+      engineFailure: this.state.trainEngineStatus,
     });
   }
 
@@ -333,8 +343,8 @@ class TrainModel extends React.Component {
 
     // Send brake failure to train controller
     window.electronAPI.sendTrainControllerMessage({
-      'type': 'brakeFailure',
-      'brakeFailure': this.state.brakeStatus,
+      type: 'brakeFailure',
+      brakeFailure: this.state.brakeStatus,
     });
   }
 
@@ -345,43 +355,46 @@ class TrainModel extends React.Component {
 
     // Send signal pickup failure to train controller
     window.electronAPI.sendTrainControllerMessage({
-      'type': 'signalPickupFailure',
-      'signalPickupFailure': this.state.signalPickupStatus,
+      type: 'signalPickupFailure',
+      signalPickupFailure: this.state.signalPickupStatus,
     });
 
     // Send signal pickup failure to track model
     window.electronAPI.sendTrackModelMessage({
-      'type': 'signalPickupFailure',
-      'signalPickupFailure': this.state.signalPickupStatus,
+      type: 'signalPickupFailure',
+      signalPickupFailure: this.state.signalPickupStatus,
     });
   }
 
   resetAll() {
-
-    this.setState({trainEngineStatus: true, brakeStatus: true, signalPickupStatus: true});
+    this.setState({
+      trainEngineStatus: true,
+      brakeStatus: true,
+      signalPickupStatus: true,
+    });
 
     // Send engine failure to train controller
     window.electronAPI.sendTrainControllerMessage({
-      'type': 'engineFailure',
-      'engineFailure': this.state.trainEngineStatus,
+      type: 'engineFailure',
+      engineFailure: this.state.trainEngineStatus,
     });
 
     // Send brake failure to train controller
     window.electronAPI.sendTrainControllerMessage({
-      'type': 'brakeFailure',
-      'brakeFailure': this.state.brakeStatus,
+      type: 'brakeFailure',
+      brakeFailure: this.state.brakeStatus,
     });
 
     // Send signal pickup failure to train controller
     window.electronAPI.sendTrainControllerMessage({
-      'type': 'signalPickupFailure',
-      'signalPickupFailure': this.state.signalPickupStatus,
+      type: 'signalPickupFailure',
+      signalPickupFailure: this.state.signalPickupStatus,
     });
 
     // Send signal pickup failure to train controller
     window.electronAPI.sendTrackModelMessage({
-      'type': 'signalPickupFailure',
-      'signalPickupFailure': this.state.signalPickupStatus,
+      type: 'signalPickupFailure',
+      signalPickupFailure: this.state.signalPickupStatus,
     });
   }
 
@@ -492,27 +505,27 @@ class TrainModel extends React.Component {
               <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
                 Beacon: Not Received
               </Item>
-            )
-          }
-        </Grid>
+            )}
+          </Grid>
 
-        <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Power Command: {this.state.powerCommand} kW</Item>
-        </Grid>
-        <Grid item xs={4}>
-          { this.state.serviceBrake ?
-            ( <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow'}}>
+          <Grid item xs={4}>
+            <Item sx={{ m: 2 }}>
+              Power Command: {this.state.powerCommand} kW
+            </Item>
+          </Grid>
+          <Grid item xs={4}>
+            {this.state.serviceBrake ? (
+              <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
                 Service Brake: Enabled
               </Item>
             ) : (
-              <Item sx={{ m: 2 }}>
-                Service Brake: Disabled
-              </Item>
-            )
-          }
-        </Grid>
-        <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph</Item>
+              <Item sx={{ m: 2 }}>Service Brake: Disabled</Item>
+            )}
+          </Grid>
+          <Grid item xs={4}>
+            <Item sx={{ m: 2 }}>
+              Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph
+            </Item>
           </Grid>
 
           <Grid item xs={4}>

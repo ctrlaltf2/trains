@@ -336,12 +336,16 @@ class TrackModel extends React.Component {
       // console.log('sending track model status to train model');
       window.electronAPI.sendTrainModelMessage({
         type: 'trackModelStatus',
-        TransitLightStatus: this.state.TransitLightStatus, //  light status of the block train is entering
         CommandedSpeed: TrackObject.blocks[this.state.currBlock].spdLimit, // speed limit of the block train is entering
-        Authority: this.state.Authority, //  authority
+        Authority: this.state.Authority, //  authority set to 0
         Beacon: TrackObject.blocks[this.state.currBlock].beacon, //  beacon of the block (if exists) that train is entering
         UndergroundBlocks: TrackObject.blocks[this.state.currBlock].underground, //  underground status of the block train is entering
         Grade: TrackObject.blocks[this.state.currBlock].grade,
+      });
+
+      window.electronAPI.sendTrainControllerMessage({
+        type: 'TransitLightStatus',
+        TransitLightStatus: this.state.TransitLightStatus,
       });
     }, 1000);
   }
