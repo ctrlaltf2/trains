@@ -103,15 +103,11 @@
 }
 
 #redLineLabel, #redlineValue {
-  grid-row: 2;
+  grid-row: 1;
 }
 
 #greenLineLabel, #greenLineValue {
-  grid-row: 3;
-}
-
-#blueLineLabel, #blueLineValue {
-  grid-row: 1;
+  grid-row: 2;
 }
 
 #testUIButton {

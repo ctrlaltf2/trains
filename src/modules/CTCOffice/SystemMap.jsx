@@ -75,7 +75,6 @@ class SystemMap extends React.Component {
   }
 
   updateBlockOccupancyUI(oldOccupancy, newOccupancy) {
-    console.log(oldOccupancy, newOccupancy);
     // Detect changes and call cy functions accordingly
     for (const block in newOccupancy) {
       const newBlock = !oldOccupancy[block];

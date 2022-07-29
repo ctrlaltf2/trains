@@ -18,6 +18,7 @@ import {
   ThemeProvider,
 } from '@mui/material';
 import { type } from 'os';
+import './TrainControllerSW.css';
 
 const darkTheme = createTheme({
   palette: {
@@ -40,49 +41,93 @@ class TrainControllerSW extends React.Component {
     super(props);
     this.name = name;
 
+    // Module Communicaiton - Receiving Messages
+    window.electronAPI.subscribeTrainControllerMessage( (_event, payload) => {
+      console.log('IPC:TrainController: ', payload);
+
+      switch(payload.type) {
+        case 'commandedSpeed':
+          this.handleCommandedSpeedChange(payload.commandedSpeed);
+          break;
+        case 'suggestedSpeed':
+          this.handleSuggestedSpeedChange(payload.suggestedSpeed);
+          break;
+        case 'authority':
+          this.handleAuthorityChange(payload.authority);
+          break;
+        case 'currentSpeed':
+          this.handleCurrentSpeedChange(payload.currentSpeed);
+          break;
+        case 'brakeFailure':
+          this.brakeFailure(payload.brakeFailure);
+          break;
+        case 'engineFailure':
+          this.engineFailure(payload.engineFailure);
+          break;
+        case 'signalPickupFailure':
+          this.signalPickupFailure(payload.signalPickupFailure);
+          break;
+        default:
+          console.warn('Unknown payload type received: ', payload.type);
+      }
+    });
+
     this.state = {
+      // UIs
       testMode: false,
       engineerMode: false,
+
+      // Doors and Lights, as well as environment variables affecting them
+      leftDoors: true,
+      rightDoors: true,
+      trainLights: true,
+      cabinLights: true,
+      under: false, // Variable for if the train is underground
+      rightPlatform: false, // Used to check if right doors should open
+      leftPlatform: false, // Used to check if left doors should open
+      announcementsOnOff: false,
+
+      // Service Brake, Emergency Brake, and failure toggles
       emergencyButton: false,
       brakeFailureDisplay: false,
       engineFailureDisplay: false,
       signalPickupFailureDisplay: false,
       automaticMode: true,
       brakeStatus: false,
-      speed: 0,
-      commandedSpeed: 0,
-      suggestedSpeed: 0,
-      temperature: 70,
-      authority: 10,
+
+      commandedSpeedUI: 0,
+      suggestedSpeedUI: 0,
+      temperatureUI: 70,
+      authorityUI: 10,
+      stationNameUI: '',
 
       //Power & Velocity Variables
-      power: 120, // power is in kilowatts
-      powerCMD: 0, // Power command
-      maxPower: 120, // Max power of the train is 120 kilowatts
-      force: 0,
-      acceleration: 0,
-      prevAcceleration: 0, // previous acceleration of the train
-      velocity: 0,
-      calVelocity: 0, // the calculated velocity in m/s
-      friction: 0,
-      totalMass: 0,
-      trainMass: 0,
-      passengerMass: 0,
-      passengers: 0,
-      blockSlope: 0,
-      u_k: 0,
-      k_p: 10000, // Proportional Gain
-      k_i: 0, // Integral Gain
-      T: 0, // Represents the sample period of the train model
-      setSpeed: 0, // Speed set by the driver: the speech you want to approach
-      currentSpeed: 0, // The current speed of the train
+      powerUI: 0, // power is in kilowatts
+      k_p_UI: 0, // Proportional Gain
+      k_i_UI: 0, // Integral Gain
+      setSpeedUI: 0, // Speed set by the driver: the speech you want to approach
+      currentSpeedUI: 0, // The current speed of the train, also known as currentVelocity, in meters per second
+
     };
 
-    // Initializing constant variables
-    this.accelerationLim = 0.5; // medium acceleration of the train
-    this.decelerationEBrake = -2.73; // deceleration of the emergency brake
-    this.decelerationSBrake = -1.2; // deceleration of the service brake
-    this.gravity = -9.8;
+    this.k_p = 10000; // Proportional gain
+    this.k_i = 0;     // Integral gain
+    this.T = 2000;       // Sample period of the train model
+    this.setSpeed = 0;
+    this.setSpeedkilo = 0.0; // Desired speed converted to km/h for velocity calculation in Train Model
+    this.power = 0;
+    this.maxPower = 120000; // Max power of the train is 120 kilowatts
+    this.cumulative_err = 0; //u_k
+    this.error_k = 0;
+    this.error_kprev = 0;
+    this.totalMass = 0;
+    this.passengers = 8;
+    this.currentSpeed = 0;
+    this.commandedSpeed = 0;
+    this.suggestedSpeed = 0;
+    this.temperature = 70;
+    this.authority = 10;
+    this.stationName = '';
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
@@ -90,6 +135,16 @@ class TrainControllerSW extends React.Component {
     this.toggleAutomatic = this.toggleAutomatic.bind(this);
     this.emergencyBrake = this.emergencyBrake.bind(this);
     this.toggleServiceBrake = this.toggleServiceBrake.bind(this);
+    this.openLeftDoors = this.openLeftDoors.bind(this);
+    this.openRightDoors = this.openRightDoors.bind(this);
+    this.trainLightsOnOff = this.trainLightsOnOff.bind(this);
+    this.cabinLightsOnOff = this.cabinLightsOnOff.bind(this);
+
+    // Environment funcitons
+    this.underground = this.underground.bind(this);
+    this.platformSide = this.platformSide.bind(this);
+    this.announcements = this.announcements.bind(this);
+    this.authorityStop = this.authorityStop.bind(this);
 
     // Failures
     this.brakeFailure = this.brakeFailure.bind(this);
@@ -97,211 +152,308 @@ class TrainControllerSW extends React.Component {
     this.signalPickupFailure = this.signalPickupFailure.bind(this);
 
     // Handling Changes
-    this.handleSpeedChange = this.handleSpeedChange.bind(this);
+    this.handleCurrentSpeedChange = this.handleCurrentSpeedChange.bind(this);
     this.handleCommandedSpeedChange = this.handleCommandedSpeedChange.bind(this);
+    this.handleSuggestedSpeedChange = this.handleSuggestedSpeedChange.bind(this);
     this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
     this.handleTemperatureChange = this.handleTemperatureChange.bind(this);
-    this.handleSuggestedSpeedChange = this.handleSuggestedSpeedChange.bind(this);
     this.setKp = this.setKp.bind(this);
     this.setKi = this.setKi.bind(this);
+    this.setDesiredSpeed = this.setDesiredSpeed.bind(this);
+    this.setStationName = this.setStationName.bind(this);
+
+    //  Conversion functions
+    this.meters_to_miles = this.meters_to_miles.bind(this);
+    this.miles_to_meters = this.miles_to_meters.bind(this);
   };
 
-  componentDidMount(){
+  componentDidMount(){ // This acts as the Main program - where the functions are called
+    setInterval( () => {
+      if(this.power >= this.maxPower){
+        this.setState({powerUI: this.maxPower});
+      }
+      else{
+        this.setState({powerUI: this.power});
+      }
+      this.setState({k_i_UI: this.k_i});
+      this.setState({k_p_UI: this.k_p});
+      this.setState({setSpeedUI: this.setSpeed});
+      this.setState({temperatureUI: this.temperature});
+      this.setState({currentSpeedUI: this.currentSpeed});
+      this.setState({commandedSpeedUI: this.commandedSpeed});
+      this.setState({suggestedSpeedUI: this.suggestedSpeed});
+      this.setState({authorityUI: this.authority});
+      this.setState({stationNameUI: this.stationName});
+    }, 100)
+
     const interval = setInterval(() => {
 
       // Automatic Mode
       if(this.state.automaticMode){
 
-        // If there's a brake failure, decrease the speed and stop
-        if (this.state.brakeFailureDisplay){
-          if(this.state.speed == 0){
-            this.setState({speed: 0});
-          }
-          else{
-            // TODO
-          }
-        }
-
-        // If there's an engine failure, decrease the speed and stop
-        else if (this.state.engineFailureDisplay){
-          if(this.state.speed == 0){
-            this.setState({speed: 0});
-          }
-          else{
-            // TODO
-          }
-        }
-
-        // If there's a signal pickup failure, decrease the speed and stop
-        else if (this.state.signalPickupFailureDisplay){
-          if(this.state.speed == 0){
-            this.setState({speed: 0});
-          }
-          else{
-            // TODO
-          }
+        // If there's a brake failure, engine failure, or signal pickup failure, decrease the speed and stop
+        if (this.state.brakeFailureDisplay || this.state.engineFailureDisplay || this.state.signalPickupFailureDisplay){
+          this.setState({emergencyButton: true});
+          this.setSpeed = 0;
         }
         else{
-          if(!this.state.brakeFailureDisplay){
-            this.setState({speed: this.state.commandedSpeed});
+          if(!this.state.brakeFailureDisplay && !this.state.engineFailureDisplay && !this.state.signalPickupFailureDisplay){
+            this.setState({emergencyButton: false});
+            this.setSpeed = this.suggestedSpeed;
           }
-          if(!this.state.engineFailureDisplay){
-            this.setState({speed: this.state.commandedSpeed});
-          }
-          if(!this.state.signalPickupFailureDisplay){
-            this.setState({speed: this.state.commandedSpeed});
-          }
+        }
+
+        if(this.authority == 0){
+          this.authorityStop();
         }
       }
 
       // Manual Mode
       else{
-        if(this.state.brakeStatus && this.state.speed != 0){
-          // TODO
+        if((this.state.brakeStatus == true) && (this.state.currentSpeed != 0)){
+          this.setState({brakeStatus: true});
+          this.setSpeed = 0;
         }
-        else if(this.state.emergencyButton && (this.state.speed != 0)){
-          // TODO
+        else if(this.state.emergencyButton && (this.state.currentSpeed != 0)){
+          this.setState({emergencyButton: true});
+          this.setSpeed = 0;
         }
       }
-    },1000);
-  }
-  handleSpeedChange(event) {
-    // event.target.value represents the inputted speed
-    this.setState({velocity: event.target.value});
-    if(this.state.velocity == 0){
-      this.setState({force: 0});
-    }
-    else{
-       // Calculate force of the train
-      this.setState({force: (this.state.power / this.state.velocity)});
-
-      //Calculate force in the opposite direction based on slope of the track
-      this.setState((prevState) => ({
-        force: prevState.force - (this.state.friction*this.state.totalMass*this.gravity*Math.sin(this.state.blockSlope)),
-      }));
-
-      this.setState((prevState) => ({
-        force: prevState.force - (0.01*this.state.mass*gravity),
-      }));
-    }
-
-    // Calculate acceleration of the train
-    this.setState({prevAcceleration: this.state.acceleration});
-    this.setState({acceleration: this.state.force/this.state.totalMass});
-    if(this.state.acceleration > accelerationLim){
-      this.setState({acceleration: accelerationLim});
-    }
-
-    // If the emergency brake is activated and there isn't a
-    // brake failure, set the deceleration rate to -2.73
-    else if(this.state.emergencyButton && !this.state.brakeFailureDisplay){
-      this.setState({acceleration: this.state.decelerationEBrake});
-    }
-
-    // If the service brake is activated and there isn't a
-    // brake failure, set the deceleration rate to -1.2
-    else if(this.state.brakeStatus && !this.state.brakeFailureDisplay){
-      this.setState({acceleration: this.state.decelerationSBrake});
-    }
-
-    // Calculate Velocity in meters per sec
-    this.setState({calVelocity: this.state.velocity + (this.state.T/2)*(this.state.acceleration+this.state.prevAcceleration)})
-
-    // Check if speed is higher than speed limit, then set speed to speed limit
-    if(this.state.calVelocity > this.state.commandedSpeed){
-      this.setState({velocity: this.state.commandedSpeed});
-    }
-    else{
-      this.setState({velocity: this.state.calVelocity});
-    }
-
-    if(this.state.velocity < 0){
-      this.setState({velocity: 0});
-    }
-    if(this.state.velocity == 0 && this.state.acceleration < 0){
-      this.setState({acceleration: 0});
-    }
+    },2000);
   }
 
-  handleCommandedSpeedChange(event) {
-    // 43 represents top speed of train in MPH
-    if(event.target.value > 43)
-    {
-      this.setState({speed: 43});
-    }
-    else if (event.target.value < 0)
-    {
-      this.setState({speed: 0});
-    }
-    else{
-      this.setState({commandedSpeed: event.target.value});
-    }
-  }
-
-  handleSuggestedSpeedChange(event){
-    if(event.target.value > 43)
-    {
-      this.setState({suggestedSpeed: 43});
-    }
-    else if (event.target.value < 0)
-    {
-      this.setState({suggestedSpeed: 0});
-    }
-    else{
-      this.setState({suggestedSpeed: event.target.value});
-    }
-  }
-
-  handleAuthorityChange(event) {
-    if(event.target.value < 0)
-    {
-      this.setState({authority: 0});
-    }
-    else{
-      this.setState({authority: event.target.value});
-    }
-  }
 
   handleTemperatureChange(event) {
     if(event.target.value < 60){
-      this.setState({temperature: 60});
+      this.temperature = 60;
     }
     else if (event.target.value > 80){
-      this.setState({temperature: 80});
+      this.temperature = 80;
     }
     else{
-      this.setState({temperature: event.target.value});
+      this.temperature = event.target.value;
     }
+
+    // Send temperature to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'temperature',
+      'temperature': this.temperature,
+    });
+
   }
 
-  // Engineer Functions
-  setKp(event){
-    if(event.target.value < 0){
-      this.setState({k_p: 0});
-    }
-    else{
-      this.setState({k_p: event.target.value});
-    }
-  }
-
-  setKi(event){
-    if(event.target.value < 0){
-      this.setState({k_i: 0});
-    }
-    else{
-      this.setState({k_i: event.target.value});
-    }
-  }
-
-  toggleAutomatic(){ // Toggles between automatic mode and manual mode
+  emergencyBrake(){ // Toggles the emergency brake
     this.setState((prevState) => ({
-      automaticMode: !prevState.automaticMode,
+      emergencyButton: !prevState.emergencyButton,
     }));
+
+    // Send emergency brake state to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'emergencyBrake',
+      'emergencyBrake': this.state.emergencyButton,
+    });
   }
 
   toggleServiceBrake(){ // Turns the service brake on/off
     this.setState((prevState) => ({
       brakeStatus: !prevState.brakeStatus,
+    }));
+
+    // Send service brake state to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'serviceBrake',
+      'serviceBrake': this.state.brakeStatus,
+    });
+  }
+
+  setDesiredSpeed(event){
+
+    if(this.state.automaticMode == false){
+      if(event.target.value < 0){
+        this.setSpeed = 0;
+      }
+      else if (event.target.value > 70){
+        this.setSpeed = 70;
+      }
+      else{
+        this.setSpeed = event.target.value;
+      }
+    }
+
+    // Convert from miles per hour to km/h for Train Model's calculation
+    this.setSpeedkilo = this.miles_to_meters(this.setSpeed);
+
+    // Send set speed to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'setSpeed',
+      'setSpeed': this.setSpeedkilo,
+    });
+  }
+
+  // Test UI Functions
+
+  handleCurrentSpeedChange(event){
+    if(event.target.value > 70)
+    {
+      this.currentSpeed = 70;
+    }
+    else if (event.target.value < 0)
+    {
+      this.currentSpeed = 0;
+    }
+    else{
+      this.currentSpeed = event.target.value;
+    }
+
+    // Convert from km/h into miles per hour
+    this.currentSpeed = Math.round(this.meters_to_miles(this.currentSpeed));
+  }
+
+  handleCommandedSpeedChange(event) { // Changes the commanded speed
+    // 70 represents top speed of train in km/h
+    if(event.target.value > 70)
+    {
+      this.commandedSpeed = 70;
+    }
+    else if (event.target.value < 0)
+    {
+      this.commandedSpeed = 0;
+    }
+    else{
+      this.commandedSpeed = event.target.value;
+    }
+
+    // Convert from km/h into miles per hour
+    this.commandedSpeed = Math.round(this.meters_to_miles(this.commandedSpeed));
+
+  }
+
+  handleSuggestedSpeedChange(event){ // Changes the suggested speed
+    if(event.target.value > 70)
+    {
+      this.suggestedSpeed = 70;
+    }
+    else if (event.target.value < 0)
+    {
+      this.suggestedSpeed = 0;
+    }
+    else{
+      this.suggestedSpeed = event.target.value;
+    }
+
+    // Convert from km/h into miles per hour
+    this.suggestedSpeed = Math.round(this.meters_to_miles(this.suggestedSpeed));
+  }
+
+  handleAuthorityChange(event) { // Changes the authority
+    if(event.target.value < 0)
+    {
+      this.authority = 0;
+    }
+    else{
+      this.authority = event.target.value;
+    }
+  }
+
+  setStationName(event){ // Sets the station
+    this.stationName = event.target.value;
+  }
+
+  // Engineer Functions
+  setKp(event){
+    if(event.target.value < 0){
+      this.k_p = 0;
+    }
+    else{
+      this.k_p = event.target.value;
+    }
+  }
+
+  setKi(event){
+    if(event.target.value < 0){
+      this.k_i = 0;
+    }
+    else{
+      this.k_i = event.target.value;
+    }
+  }
+
+  // Conversion and calculation functions
+  // Speed comes from Train Model calculation
+
+  meters_to_miles(speed){ // 1 km/h = approx. 1.609 mph
+    return (speed / 1.609)
+  }
+
+  miles_to_meters(speed){
+    return (speed * 1.609)
+  }
+
+  calculatePower() { // Function that calculates the current power of the train
+
+    if(this.state.automaticMode == true){
+      this.setSpeed = this.suggestedSpeed;
+    }
+    // Calculate error
+    this.error_kprev = this.error_k;
+    this.error_k = Math.abs(this.setSpeed - this.currentSpeed);
+
+    // If P_cmd < P_max, use this equation
+    if (this.power < this.maxPower){
+      this.cumulative_err = ((this.T/2000)*(this.error_k + this.error_kprev));
+    }
+
+    // If P_cmd >= P_max, use this equation
+    else if (this.power >= this.maxPower){
+      this.cumulative_err = this.cumulative_err;
+    }
+
+    // Final Power Calculation
+    this.power = ((this.k_p*this.error_k) + (this.k_i*this.cumulative_err));
+
+    // Send power command to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'power',
+      'power': this.power,
+    });
+
+  }
+
+  // Environment functions
+  // For automatic mode
+
+  underground() { // Checks if the train is underground, activates lights accordingly
+    if(this.under && this.automaticMode){
+      this.setState({trainLights: true});
+    }
+    else{
+      this.setState({trainLights: false});
+    }
+  }
+
+  platformSide(){ // Checks which side the station is on and opens the respective doors
+    if(this.automaticMode == true && this.currentSpeed == 0 && this.rightPlatform == true){
+      this.setState({rightDoors: true});
+      this.setState({leftDoors: false});
+    }
+    else if (this.automaticMode = true && this.currentSpeed == 0 && this.leftPlatform == true){
+      this.setState({leftDoors: true});
+      this.setState({rightDoors: false});
+    }
+  }
+
+  announcements(){
+
+  }
+
+  authorityStop(){ // Call this function when authority hits 0
+      this.setState({brakeStatus: true});
+      this.setSpeed = 0;
+  }
+
+  toggleAutomatic(){ // Toggles between automatic mode and manual mode
+    this.setState((prevState) => ({
+      automaticMode: !prevState.automaticMode,
     }));
   }
 
@@ -317,11 +469,54 @@ class TrainControllerSW extends React.Component {
     }));
   }
 
-  emergencyBrake(){ // Toggles the emergency brake in the Test UI
+  openLeftDoors(){ // Toggles the left doors
     this.setState((prevState) => ({
-      emergencyButton: !prevState.emergencyButton,
+      leftDoors: !prevState.leftDoors,
     }));
+
+    // Send left door state to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'leftDoor',
+      'leftDoor': this.state.leftDoors,
+    });
   }
+
+  openRightDoors(){ // Toggles the right doors
+    this.setState((prevState) => ({
+      rightDoors: !prevState.rightDoors,
+    }));
+
+    // Send right door state to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'rightDoor',
+      'rightDoor': this.state.rightDoors,
+    });
+  }
+
+  trainLightsOnOff(){ // Toggles the exterior train lights on/off
+    this.setState((prevState) => ({
+      trainLights: !prevState.trainLights,
+    }));
+
+    // Send train light state to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'trainLights',
+      'trainLights': this.state.trainLights,
+    });
+  }
+
+  cabinLightsOnOff(){ // Toggles the interior train lights on/off
+    this.setState((prevState) => ({
+      cabinLights: !prevState.cabinLights,
+    }));
+
+    // Send train light state to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'cabinLights',
+      'cabinLights': this.state.cabinLights,
+    });
+  }
+
 
   brakeFailure(){ // Toggles the break failure display in the Test UI
     this.setState((prevState) => ({
@@ -341,26 +536,6 @@ class TrainControllerSW extends React.Component {
     }));
   }
 
-  calculatePower(){ // Function that calculates the current power of the train
-
-    // If P_cmd < P_max, use this equation
-    if (this.state.power < this.state.maxPower){
-      this.setState((prevState) => ({
-        u_k: (prevState.u_k + (this.state.T/2000)*(this.state.setSpeed + this.state.currentSpeed)),
-      }));
-    }
-
-    // If P_cmd >= P_max, use this equation
-    else if (this.state.power >= this.state.maxPower){
-      this.setState((prevState) => ({
-        u_k: prevState.u_k,
-      }));
-    }
-
-    // Final Power Calculation
-    this.setState({power: ((this.state.k_p*this.state.setSpeed)+(this.state.k_i*this.state.u_k))})
-  }
-
   engineerPanel(){
     return (
       <ThemeProvider theme={darkTheme}>
@@ -375,13 +550,13 @@ class TrainControllerSW extends React.Component {
         <Grid item xs={4} md={2}>
           <label>
             Kp:
-          <input type="number" value={this.state.k_p} onChange={this.setKp} />
+          <input type="number" value={this.state.k_p_UI} onChange={this.setKp} />
           </label>
         </Grid>
         <Grid item xs={3} md={3}>
           <label>
             Ki:
-          <input type="number" value={this.state.k_i} onChange={this.setKi} />
+          <input type="number" value={this.state.k_i_UI} onChange={this.setKi} />
           </label>
         </Grid>
         <Button variant="contained" onClick={this.toggleEngineer}>
@@ -410,17 +585,6 @@ class TrainControllerSW extends React.Component {
         <Grid container spacing={4}>
           <Grid item xs={5} md={5}>
             <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  onClick={this.toggleAutomatic}
-                  label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={5} md={5}>
-            <Item>
               {this.state.brakeStatus ? (
               <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
                 Service Brake Activated
@@ -445,37 +609,34 @@ class TrainControllerSW extends React.Component {
               )}
             </Item>
           </Grid>
-          <Grid item xs={4} md={2}>
-            <Item>Power: {this.state.power} kilowatts</Item>
-          </Grid>
-          <Grid item xs={3} md={3}>
+          <Grid item xs={4} md={4}>
               <label>
-                Temperature:
-                <input type="number" value={this.state.temperature} onChange={this.handleTemperatureChange} />
-              </label>
-          </Grid>
-          <Grid item xs={4} md={2}>
-              <label>
-                Speed:
-                <input type="number" value={this.state.speed} onChange={this.handleSpeedChange} />
+                Commanded Speed:
+                <input type="number" value={this.state.commandedSpeedUI} onChange={this.handleCommandedSpeedChange} />
               </label>
           </Grid>
           <Grid item xs={4} md={4}>
               <label>
-                Commanded Speed:
-                <input type="number" value={this.state.commandedSpeed} onChange={this.handleCommandedSpeedChange} />
+                Suggested Speed:
+                <input type="number" value={this.state.suggestedSpeedUI} onChange={this.handleSuggestedSpeedChange} />
               </label>
           </Grid>
           <Grid item xs={4} md={2}>
               <label>
                 Authority:
-                <input type="number" value={this.state.authority} onChange={this.handleAuthorityChange} />
+                <input type="number" value={this.state.authorityUI} onChange={this.handleAuthorityChange} />
               </label>
           </Grid>
           <Grid item xs={4} md={2}>
               <label>
-                Suggested Speed:
-                <input type="number" value={this.state.suggestedSpeed} onChange={this.handleSuggestedSpeedChange} />
+                Current Speed:
+                <input type="number" value={this.state.currentSpeedUI} onChange={this.handleCurrentSpeedChange} />
+              </label>
+          </Grid>
+          <Grid item xs={4} md={2}>
+              <label>
+                Station Name:
+                <input type="text" value={this.state.stationNameUI} onChange={this.setStationName} />
               </label>
           </Grid>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
@@ -522,8 +683,12 @@ class TrainControllerSW extends React.Component {
   }
 
   render() {
+    // Calculate power
+    this.calculatePower();
+
     if (this.state.testMode) return this.testUI();
     if (this.state.engineerMode) return this.engineerPanel();
+
 
     return (
       <ThemeProvider theme={darkTheme}>
@@ -537,142 +702,163 @@ class TrainControllerSW extends React.Component {
             </Toolbar>
           </AppBar>
         </Box>
-        <Grid container spacing={4}>
-          <Grid item xs={3} md={8}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Left Train Doors"
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={3} md={4}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Right Train Doors"
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={3} md={4}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Cabin Lights"
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={3} md={8}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  label="Train Lights"
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={5} md={5}>
-            <Item>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Switch defaultChecked />}
-                  onClick={this.toggleAutomatic}
-                  label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
-                />
-              </FormGroup>
-            </Item>
-          </Grid>
-          <Grid item xs={6} md={8}>
-            <Item>
-              {this.state.emergencyButton ? (
-              <Button variant="contained" color="error" onClick={this.emergencyBrake}>
-                Emergency Brake Activated
+        <Grid container spacing={2}>
+          <div className="left">
+              <Grid item xs={8} md={8}>
+                <Item>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={<Switch defaultChecked />}
+                      onClick={this.openLeftDoors}
+                      label={this.state.leftDoors ? "Left Doors: Closed" : "Left Doors: Open"}
+                    />
+                  </FormGroup>
+                </Item>
+              </Grid>
+            </div>
+            <div className="left">
+              <Grid item xs={8} md={4}>
+                <Item>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={<Switch defaultChecked />}
+                      onClick={this.openRightDoors}
+                      label={this.state.rightDoors ? "Right Doors: Closed" : "Right Doors: Open"}
+                    />
+                  </FormGroup>
+                </Item>
+              </Grid>
+            </div>
+            <div className="left">
+              <Grid item xs={8} md={4}>
+                <Item>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={<Switch defaultChecked />}
+                      onClick={this.trainLightsOnOff}
+                      label={this.state.trainLights ? "Train Lights: On" : "Train Lights: Off"}
+                    />
+                  </FormGroup>
+                </Item>
+              </Grid>
+            </div>
+            <div className="left">
+              <Grid item xs={8} md={8}>
+                <Item>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={<Switch defaultChecked />}
+                      onClick={this.cabinLightsOnOff}
+                      label={this.state.cabinLights ? "Cabin Lights: On" : "Cabin Lights: Off"}
+                    />
+                  </FormGroup>
+                </Item>
+              </Grid>
+            </div>
+            <Grid item xs={5} md={5}>
+              <Item>
+                <FormGroup>
+                  <FormControlLabel
+                    control={<Switch defaultChecked />}
+                    onClick={this.toggleAutomatic}
+                    label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
+                  />
+                </FormGroup>
+              </Item>
+            </Grid>
+            <Grid item xs={6} md={8}>
+              <Item>
+                {this.state.emergencyButton ? (
+                <Button variant="contained" color="error" onClick={this.emergencyBrake}>
+                  Emergency Brake Activated
+                </Button>
+                ) : (
+                <Button variant="outlined" color="error" onClick={this.emergencyBrake}>
+                  Emergency Brake Deactivated
+                </Button>
+                )}
+              </Item>
+            </Grid>
+            <Grid item xs={6} md={8}>
+              <Item>
+                {this.state.brakeStatus ? (
+                <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
+                  Service Brake Activated
+                </Button>
+                ) : (
+                <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
+                  Service Brake Deactivated
+                </Button>
+                )}
+              </Item>
+            </Grid>
+            <Grid item xs={4} md={2}>
+              <Item>Power: {this.state.powerUI / 1000} Kilowatts</Item>
+            </Grid>
+            <Grid item xs={3} md={3}>
+                <label>
+                  Temperature:
+                  <input type="number" value={this.state.temperatureUI} onChange={this.handleTemperatureChange} />
+                </label>
+            </Grid>
+            <Grid item xs={4} md={2}>
+              <Item>Current Speed: {this.state.currentSpeedUI} MPH</Item>
+            </Grid>
+            <Grid item xs={4} md={2}>
+              <label>
+                Set Desired Speed:
+                <input type="number" value={this.state.setSpeedUI} onChange={this.setDesiredSpeed} />
+              </label>
+            </Grid>
+            <Grid item xs={4} md={2}>
+              <Item>Commanded Speed: {this.state.commandedSpeedUI} MPH</Item>
+            </Grid>
+            <Grid item xs={4} md={2}>
+              <Item>Suggested Speed: {this.state.suggestedSpeedUI} MPH</Item>
+            </Grid>
+            <Grid item xs={4} md={2}>
+              <Item>Authority: {this.state.authorityUI} Blocks</Item>
+            </Grid>
+            <Grid item xs={5} md={2}>
+              <Item>Next Stop: {this.state.stationNameUI} </Item>
+            </Grid>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
+              {this.state.brakeFailureDisplay ? (
+                <Button variant="contained" color="error">
+                  Brake Status: Failing
+                </Button>
+                ) : (
+                <Button variant="contained" color="success">
+                  Brake Status: Working
+                </Button>
+                )}
+              {this.state.engineFailureDisplay ? (
+                <Button variant="contained" color="error">
+                  Engine Status: Failing
+                </Button>
+                ) : (
+                <Button variant="contained" color="success">
+                  Engine Status: Working
+                </Button>
+                )}
+              {this.state.signalPickupFailureDisplay ? (
+                <Button variant="contained" color="error">
+                  Signal Pickup Status: Broken
+                </Button>
+                ) : (
+                <Button variant="contained" color="success">
+                  Signal Pickup Status: Connected
+                </Button>
+                )}
+            </Stack>
+            <Stack spacing={2} direction="row">
+              <Button variant="contained" onClick={this.toggle}>
+                Toggle Test UI
               </Button>
-              ) : (
-              <Button variant="outlined" color="error" onClick={this.emergencyBrake}>
-                Emergency Brake Deactivated
+              <Button variant="contained" onClick={this.toggleEngineer}>
+                Toggle Engineer Panel
               </Button>
-              )}
-            </Item>
-          </Grid>
-          <Grid item xs={6} md={8}>
-            <Item>
-              {this.state.brakeStatus ? (
-              <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
-                Service Brake Activated
-              </Button>
-              ) : (
-              <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
-                Service Brake Deactivated
-              </Button>
-              )}
-            </Item>
-          </Grid>
-          <Grid item xs={4} md={2}>
-            <Item>Power: _ Watts</Item>
-          </Grid>
-          <Grid item xs={6} md={8}>
-            <Item>Temperature</Item>
-          </Grid>
-          <Grid item xs={4} md={2}>
-            <Item>Current Speed: _ MPH</Item>
-          </Grid>
-          <Grid item xs={4} md={2}>
-            <Item>Commanded Speed: _ MPH</Item>
-          </Grid>
-          <Grid item xs={4} md={2}>
-            <Item>Suggested Speed: _ MPH</Item>
-          </Grid>
-          <Grid item xs={4} md={2}>
-            <Item>Authority: _ Miles</Item>
-          </Grid>
-          <Grid item xs={5} md={2}>
-            <Item>Next Stop: _</Item>
-          </Grid>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
-            {this.state.brakeFailureDisplay ? (
-              <Button variant="contained" color="error" onClick={this.brakeFailure}>
-                Brake Status: Failing
-              </Button>
-              ) : (
-              <Button variant="contained" color="success" onClick={this.brakeFailure}>
-                Brake Status: Working
-              </Button>
-              )}
-            {this.state.engineFailureDisplay ? (
-              <Button variant="contained" color="error" onClick={this.engineFailure}>
-                Engine Status: Failing
-              </Button>
-              ) : (
-              <Button variant="contained" color="success" onClick={this.engineFailure}>
-                Engine Status: Working
-              </Button>
-              )}
-            {this.state.signalPickupFailureDisplay ? (
-              <Button variant="contained" color="error" onClick={this.signalPickupFailure}>
-                Signal Pickup Status: Broken
-              </Button>
-              ) : (
-              <Button variant="contained" color="success" onClick={this.signalPickupFailure}>
-                Signal Pickup Status: Connected
-              </Button>
-              )}
-          </Stack>
-          <Stack spacing={2} direction="row">
-            <Button variant="contained" onClick={this.toggle}>
-              Toggle Test UI
-            </Button>
-            <Button variant="contained" onClick={this.toggleEngineer}>
-              Toggle Engineer Panel
-            </Button>
-          </Stack>
+            </Stack>
         </Grid>
       </Box>
       </ThemeProvider>
