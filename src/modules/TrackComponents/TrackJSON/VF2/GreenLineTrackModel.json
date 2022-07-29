@@ -1,6 +1,6 @@
-{
-   "Green": [
+[
       {
+        "Line": "Green",
          "Section": "A",
          "Block Number": 1,
          "Block Length (m)": 100,
@@ -576,7 +576,7 @@
          "Block Length (m)": 50,
          "Block Grade (%)": 0,
          "Speed Limit (Km/Hr)": 30,
-         "Infrastructure": "STATION; CENTRAL; UNDERDROUND",
+         "Infrastructure": "STATION; CENTRAL; UNDERGROUND",
          "Station Side": "Right",
          "ELEVATION (M)": 0,
          "CUMALTIVE ELEVATION (M)": 0.5,
@@ -2106,7 +2106,7 @@
          "Block Length (m)": 50,
          "Block Grade (%)": 0,
          "Speed Limit (Km/Hr)": 20,
-         "Infrastructure": "STATION; CENTRAL; UNDERDROUND",
+         "Infrastructure": "STATION; CENTRAL; UNDERGROUND",
          "Station Side": "Right",
          "ELEVATION (M)": 0,
          "CUMALTIVE ELEVATION (M)": 0.5,
@@ -2250,5 +2250,4 @@
          "Next": 29,
          "Oneway": "fwd"
       }
-   ]
-  }
+]

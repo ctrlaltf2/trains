@@ -65,17 +65,25 @@ class TrainModel extends React.Component {
     window.electronAPI.subscribeTrainModelMessage((_event, payload) => {
       console.log('IPC:TrainModel: ', payload);
 
-      switch (payload.type) {
-        case 'commandedSpeed':
-          // attribute: value
-          this.setState({ commandedSpeed: payload.commandedSpeed });
+
+      switch(payload.type) {
+
+        // from track model
+        case 'CommandedSpeed':
+                        // attribute: value
+          this.setState({commandedSpeed: payload.CommandedSpeed});
           break;
-        case 'authority':
-          this.setState({ authority: payload.authority });
+        case 'Authority':
+          this.setState({authority: payload.Authority});
           break;
-        case 'currentSpeed':
-          this.setState({ currentSpeed: payload.currentSpeed });
+        case 'Beacon':
+          this.setState({beacon: payload.Beacon});
           break;
+        case 'UndergroundBlocks':
+          this.setState({underground: payload.UndergroundBlocks});
+          break;
+
+        // from train controller
         case 'temperature':
           this.setState({ temperature: payload.temperature });
           break;
@@ -141,9 +149,10 @@ class TrainModel extends React.Component {
       powerCommand: 100, // kw
       setSpeed: 50,
       force: 0,
-      T: 2000,
+      T: 1000,
       maintenenceMode: 0,
       serviceBrake: false,
+      underground: false,
 
       /*
       currentSpeed: 0,
@@ -249,6 +258,11 @@ class TrainModel extends React.Component {
     // calculate velocity
     this.setState(prevState => ({ currentSpeed: prevState.currentSpeed +  (this.state.T / 2) * (this.state.acceleration + prevState.acceleration) }));
 
+    // Send signal pickup failure to train controller
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'currentSpeed',
+      'currentSpeed': this.state.currentSpeed,
+    });
 
     // calculate position
     this.setState(prevState => ({intermediatePosition: this.state.currentSpeed * this.state.T}));
@@ -334,6 +348,12 @@ class TrainModel extends React.Component {
       'type': 'signalPickupFailure',
       'signalPickupFailure': this.state.signalPickupStatus,
     });
+
+    // Send signal pickup failure to track model
+    window.electronAPI.sendTrackModelMessage({
+      'type': 'signalPickupFailure',
+      'signalPickupFailure': this.state.signalPickupStatus,
+    });
   }
 
   resetAll() {
@@ -354,6 +374,12 @@ class TrainModel extends React.Component {
 
     // Send signal pickup failure to train controller
     window.electronAPI.sendTrainControllerMessage({
+      'type': 'signalPickupFailure',
+      'signalPickupFailure': this.state.signalPickupStatus,
+    });
+
+    // Send signal pickup failure to train controller
+    window.electronAPI.sendTrackModelMessage({
       'type': 'signalPickupFailure',
       'signalPickupFailure': this.state.signalPickupStatus,
     });

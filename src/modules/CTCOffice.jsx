@@ -68,10 +68,10 @@ class CTCOffice extends React.Component {
           break;
         case 'occupancy':
           // TODO: message validation
+          payload.line = payload.line.toLowerCase();
+          console.log(payload);
           this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
           break;
-        case 'timing':
-          console.log(Date.now() - payload.value);
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -702,6 +702,7 @@ class CTCOffice extends React.Component {
   }
 
   updateBlockOccupancy(line, block_id, is_occupied) {
+    console.log(line, block_id, is_occupied);
     const occupancy = _.cloneDeep(this.state.occupancy);
     occupancy[line][block_id] = !!is_occupied;
 

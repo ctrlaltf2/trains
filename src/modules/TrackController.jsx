@@ -550,6 +550,14 @@ class TrackController extends React.Component {
     this.setState((prevState) => ({
       appState: !prevState.appState,
     }));
+
+    window.electronAPI.sendCTCMessage({
+      'type': 'occupancy',
+      'line': this.state.currBlock.line,
+      'block_id': this.state.currBlock.id.toString(),
+      'value': this.state.currBlock.occupancy
+    });
+
     console.log(this.state.currBlock.occupancy);
   }
 
