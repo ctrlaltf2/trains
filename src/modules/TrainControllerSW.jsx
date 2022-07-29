@@ -107,7 +107,6 @@ class TrainControllerSW extends React.Component {
       k_i_UI: 0, // Integral Gain
       setSpeedUI: 0, // Speed set by the driver: the speech you want to approach
       currentSpeedUI: 0, // The current speed of the train, also known as currentVelocity, in meters per second
-      currentSpeedMPH: 0, // The current speed of the train in miles per hour
 
     };
 
@@ -115,6 +114,7 @@ class TrainControllerSW extends React.Component {
     this.k_i = 0;     // Integral gain
     this.T = 2000;       // Sample period of the train model
     this.setSpeed = 0;
+    this.setSpeedkilo = 0.0; // Desired speed converted to km/h for velocity calculation in Train Model
     this.power = 0;
     this.maxPower = 120000; // Max power of the train is 120 kilowatts
     this.cumulative_err = 0; //u_k
@@ -279,6 +279,15 @@ class TrainControllerSW extends React.Component {
         this.setSpeed = event.target.value;
       }
     }
+
+    // Convert from miles per hour to km/h for Train Model's calculation
+    this.setSpeedkilo = this.miles_to_meters(this.setSpeed);
+
+    // Send set speed to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'setSpeed',
+      'setSpeed': this.setSpeedkilo,
+    });
   }
 
   // Test UI Functions
@@ -295,6 +304,9 @@ class TrainControllerSW extends React.Component {
     else{
       this.currentSpeed = event.target.value;
     }
+
+    // Convert from km/h into miles per hour
+    this.currentSpeed = Math.round(this.meters_to_miles(this.currentSpeed));
   }
 
   handleCommandedSpeedChange(event) { // Changes the commanded speed
@@ -310,6 +322,10 @@ class TrainControllerSW extends React.Component {
     else{
       this.commandedSpeed = event.target.value;
     }
+
+    // Convert from km/h into miles per hour
+    this.commandedSpeed = Math.round(this.meters_to_miles(this.commandedSpeed));
+
   }
 
   handleSuggestedSpeedChange(event){ // Changes the suggested speed
@@ -324,6 +340,9 @@ class TrainControllerSW extends React.Component {
     else{
       this.suggestedSpeed = event.target.value;
     }
+
+    // Convert from km/h into miles per hour
+    this.suggestedSpeed = Math.round(this.meters_to_miles(this.suggestedSpeed));
   }
 
   handleAuthorityChange(event) { // Changes the authority
@@ -362,12 +381,12 @@ class TrainControllerSW extends React.Component {
   // Conversion and calculation functions
   // Speed comes from Train Model calculation
 
-  meters_to_miles(speed){ // 1 m/s = approx. 2.2369 mph
-    return (speed * 2.2369)
+  meters_to_miles(speed){ // 1 km/h = approx. 1.609 mph
+    return (speed / 1.609)
   }
 
   miles_to_meters(speed){
-    return (speed / 2.2369)
+    return (speed * 1.609)
   }
 
   calculatePower() { // Function that calculates the current power of the train
@@ -395,7 +414,7 @@ class TrainControllerSW extends React.Component {
     // Send power command to train model
     window.electronAPI.sendTrainModelMessage({
       'type': 'power',
-      'power': this.state.power,
+      'power': this.power,
     });
 
   }

@@ -147,7 +147,7 @@ class TrackModel extends React.Component {
       //  anything here is a property of the object you are sending
       type: 'trackModelStatus',
       TransitLightStatus: this.state.TransitLightStatus,
-      CommandedSpeed: this.state.blocks[this.state.currBlock].speedLimit,
+      CommandedSpeed: 20,
       Authority: '',
       Beacon: this.state.beacon,
       UndergroundBlocks: this.state.blocks.Underground,

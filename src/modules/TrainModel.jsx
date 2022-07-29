@@ -207,7 +207,7 @@ class TrainModel extends React.Component {
       this.calculateMass();
       this.changeTemp();
 
-      // this.calculate();
+      this.calculate();
     }, 1000); // update every second
   }
 
@@ -217,7 +217,7 @@ class TrainModel extends React.Component {
   }
 
   // calculate
-  /* calculate() {
+  calculate() {
     // calculate force
     this.setState(prevState => ({force: prevState.powerCommand * 1000 / prevState.currentSpeed}));  // conversion of kW to W
 
@@ -247,14 +247,14 @@ class TrainModel extends React.Component {
 
 
     // calculate velocity
-    this.setState(prevState => ({ currentSpeed: prevState.currentSpeed +  (time_elapsed_ms / 2) * (this.state.acceleration + prevState.acceleration) }));
+    this.setState(prevState => ({ currentSpeed: prevState.currentSpeed +  (this.state.T / 2) * (this.state.acceleration + prevState.acceleration) }));
 
 
     // calculate position
-    this.setState(prevState => ({intermediatePosition: this.state.currentSpeed * time_elapsed_ms}));
+    this.setState(prevState => ({intermediatePosition: this.state.currentSpeed * this.state.T}));
     this.setState(prevState => ({position: prevState.position + this.state.intermediatePosition}));
 
-  } */
+  }
 
   // update temp at interval
   updateTemp() {
