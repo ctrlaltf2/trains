@@ -45,9 +45,23 @@ export class PLCReader {
       } catch (e) {
         console.log(`error parsing light logic: ${e}`);
       }
-    }
+
     /*
      *  crossing logic
      */
+      try {
+        if (file[key].command.split(' ')[0] === 'crossing') {
+          // store arg and logic for switch
+          this.crossingLogic.push({
+            crossNumber: file[key].command.split(' ')[1],
+            logicTrue: file[key].True.split(' '),
+          });
+        }
+      } catch (e) {
+        console.log(`error parsing crossing logic: ${e}`);
+      }
+    }
+
+
   }
 }

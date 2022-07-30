@@ -423,7 +423,7 @@ class TrainModel extends React.Component {
       testSystem: !prevState.testSystem,
     }));
   }
-  
+
   testUI() {
     return (
       <Grid container spacing={2}>
@@ -563,7 +563,7 @@ class TrainModel extends React.Component {
         <Grid item xs={4}>
           <Item sx={{ m: 2 }}>Speed Limit: {(this.state.commandedSpeed * 0.621371).toFixed(2)} mph</Item>
         </Grid>
-      </Grid>
+
 
         <Grid item2 xs={12}>
           <BoxLabel sx={{ mx: 2, my: 0 }}>Other Information</BoxLabel>
@@ -797,7 +797,7 @@ class TrainModel extends React.Component {
               </Button>
             </Item>
           </Grid>
-        </Grid>
+        {/* </Grid> */}
       </Grid>
           <Item sx={{ m: 2 }}>Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph</Item>
           </Grid>
@@ -817,7 +817,6 @@ class TrainModel extends React.Component {
               Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph
             </Item>
           </Grid>
-        </Grid>
 
         <Grid item2 xs={12}>
           <BoxLabel sx={{ mx: 2, my: 0 }}>Other Information</BoxLabel>
@@ -1054,7 +1053,7 @@ class TrainModel extends React.Component {
             </Item>
           </Grid>
         </Grid>
-      </Grid>
+        </Grid>
     );
   }
 }

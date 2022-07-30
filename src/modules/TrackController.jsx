@@ -127,18 +127,21 @@ class TrackController extends React.Component {
     };
 
     // Wayside controllers for switches on green line
-    this.controllers.push(new Wayside(1, this.state.blocks.slice(0, 13), 13));
+    this.controllers.push(new Wayside(1, this.state.blocks.slice(0, 13), 13, 'green'));
     let temp = this.state.blocks.slice(11, 28);
     temp.push(this.state.blocks[150]);
-    this.controllers.push(new Wayside(2, temp, 29));
-    this.controllers.push(new Wayside(3, this.state.blocks.slice(56, 57), 57));
-    this.controllers.push(new Wayside(4, this.state.blocks.slice(61, 76), 62));
+    this.controllers.push(new Wayside(2, temp, 29, 'green'));
+    this.controllers.push(new Wayside(3, this.state.blocks.slice(56, 57), 57, 'green'));
+    this.controllers.push(new Wayside(4, this.state.blocks.slice(61, 76), 62, 'green'));
     temp = this.state.blocks.slice(100, 149);
     temp.push(this.state.blocks[76]);
-    this.controllers.push(new Wayside(5, temp, 77));
+    this.controllers.push(new Wayside(5, temp, 77, 'green'));
     temp = this.state.blocks.slice(76, 85);
     temp.push(this.state.blocks[99]);
-    this.controllers.push(new Wayside(6, temp, 85));
+    this.controllers.push(new Wayside(6, temp, 85, 'green'));
+
+    // Waysides for red line
+
 
     // Set default controller
     // this.setState((prevState) => ({
@@ -475,6 +478,132 @@ class TrackController extends React.Component {
             }
           }
         }
+
+        // Crossing logic
+
+        for (let j = 0; j < controller.plc.crossingLogic.length; j++) {
+          // Run 3x for vitality
+          status = [false, false, false];
+          console.log(controller.plc.crossingLogic);
+          for (let vitality = 0; vitality < 3; vitality++) {
+            for (
+              let k = 0;
+              k < controller.plc.crossingLogic[j].logicTrue.length;
+              k++
+            ) {
+              // OR
+              if (controller.plc.crossingLogic[j].logicTrue[k] === '||') {
+              }
+              // NOT
+              else if (
+                controller.plc.crossingLogic[j].logicTrue[k].includes('!')
+              ) {
+                if (
+                  !this.state.blocks[
+                    parseInt(
+                      controller.plc.crossingLogic[j].logicTrue[k].substring(1)
+                    ) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = true;
+                }
+              }
+              // Regular
+              else {
+                if (
+                  this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].logicTrue[k]) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = true;
+                }
+              }
+            }
+          }
+          // Vitality check before setting switch position
+          // Also send to CTC/Track Model
+            if (status.every((val) => val === true)) {
+              if (
+                !this.state.blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].crossing
+              ) {
+                window.electronAPI.sendCTCMessage({
+                  type: 'crossing',
+                  line: this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                  ].line,
+                  id: this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                  ].id,
+                  status:
+                    this.state.blocks[
+                      parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                    ].crossing,
+                });
+                window.electronAPI.sendTrackModelMessage({
+                  type: 'crossing',
+                  line: this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                  ].line,
+                  id: this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                  ].id,
+                  status:
+                    this.state.blocks[
+                      parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                    ].crossing,
+                });
+              }
+              this.state.blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].crossing = true;
+                          console.log(this.state.blocks[
+              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+            ].crossing);
+            } else {
+              if (
+                this.state.blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].crossing
+              ) {
+                window.electronAPI.sendCTCMessage({
+                  type: 'crossing',
+                  line: this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                  ].line,
+                  id: this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                  ].id,
+                  status:
+                    this.state.blocks[
+                      parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                    ].crossing,
+                });
+                window.electronAPI.sendTrackModelMessage({
+                  type: 'crossing',
+                  line: this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                  ].line,
+                  id: this.state.blocks[
+                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                  ].id,
+                  status:
+                    this.state.blocks[
+                      parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                    ].crossing,
+                });
+              }
+              this.state.blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].crossing = false;
+            }
+            console.log(this.state.blocks[
+              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+            ].crossing);
+
+        }
+
       });
 
       this.setState((prevState) => ({
@@ -1178,7 +1307,7 @@ class TrackController extends React.Component {
                                 ? 'Not active'
                                 : this.state.currBlock.crossing === true
                                 ? 'Active'
-                                : 'default'
+                                : ''
                             }
                             color={
                               this.state.currBlock.crossing === false
@@ -1205,7 +1334,7 @@ class TrackController extends React.Component {
                                 ? 'Not active'
                                 : this.state.currBlock.crossing === true
                                 ? 'Active'
-                                : 'default'
+                                : ''
                             }
                             color={
                               this.state.currBlock.crossing === false

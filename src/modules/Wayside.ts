@@ -10,11 +10,12 @@ export class Wayside {
   public id;
 
 
-  constructor(id, blocks, swBlock) {
+  constructor(id, blocks, swBlock, line) {
     // Load track into controller
     this.id = id;
     this.blocks = blocks;
     this.swBlock = swBlock;
+    this.line = line;
   }
 
   // Parse plc file when changed or uploaded
