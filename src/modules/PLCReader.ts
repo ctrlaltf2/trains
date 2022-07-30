@@ -46,9 +46,9 @@ export class PLCReader {
         console.log(`error parsing light logic: ${e}`);
       }
 
-    /*
-     *  crossing logic
-     */
+      /*
+       *  crossing logic
+       */
       try {
         if (file[key].command.split(' ')[0] === 'crossing') {
           // store arg and logic for switch
@@ -61,7 +61,5 @@ export class PLCReader {
         console.log(`error parsing crossing logic: ${e}`);
       }
     }
-
-
   }
 }

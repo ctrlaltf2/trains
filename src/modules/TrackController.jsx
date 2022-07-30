@@ -204,30 +204,6 @@ class TrackController extends React.Component {
   // Always keep status of blocks ----- executes PLC logic
   componentDidMount() {
     const interval = setInterval(() => {
-      // /*
-      //  * Send CTC:
-      //  *
-      //  * Authority Changes
-      //  * Failures
-      //  * Block states (switches, crossing, transit lights)
-      //  */
-      // window.electronAPI.sendCTCMessage({
-      //   type: 'blocks',
-      //   blocks: this.state.blocks,
-      // });
-
-      /*
-       * Send to track model:
-       *
-       * Authority
-       * Train/Suggested Speed
-       * Block states (switches, crossing, transit lights)
-       */
-      // window.electronAPI.sendTrackModelMessage({
-      //   type: 'blocks',
-      //   blocks: this.state.blocks,
-      // });
-
       // Logic
       this.controllers.forEach((controller) => {
         var status = [];
