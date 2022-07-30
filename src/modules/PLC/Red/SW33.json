@@ -1,0 +1,18 @@
+[
+  {
+    "command": "switch 27",
+    "True": "76 && !15 && !16 && !17 && !18 && !19 && !20 && !21 && !22 && !23 && !24 && !25 && !26 && !27"
+  },
+  {
+    "command": "light ",
+    "green": ""
+  },
+  {
+    "command": "light ",
+    "green": ""
+  },
+  {
+    "command": "light ",
+    "green": ""
+  }
+]

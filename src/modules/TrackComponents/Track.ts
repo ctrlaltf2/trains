@@ -120,7 +120,7 @@ export class Track {
         }
       }
       if (this.blocks[i].infrastructure.includes('CROSSING')) {
-        this.blocks[i].crossing = true;
+        this.blocks[i].crossing = false;
       }
     }
   }
