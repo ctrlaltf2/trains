@@ -69,7 +69,7 @@ class CTCOffice extends React.Component {
         case 'occupancy':
           // TODO: message validation
           payload.line = payload.line.toLowerCase();
-          console.log(payload);
+          // console.log(payload);
           this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
           break;
         default:
@@ -78,7 +78,7 @@ class CTCOffice extends React.Component {
     });
 
     window.electronAPI.subscribeFileMessage( (_event, payload) => {
-      console.log(payload);
+      // console.log(payload);
     });
 
     window.electronAPI.subscribeTimerMessage( (_event, payload) => {
@@ -265,7 +265,6 @@ class CTCOffice extends React.Component {
     for(const pendingTimestamp_ of Array.from(Object.keys(this.pendingDispatches))) {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
 
-      console.log(this.now, pendingTimestamp);
       if(this.now < pendingTimestamp) {
         const payload = {
           type: 'dispatch',
@@ -419,7 +418,7 @@ class CTCOffice extends React.Component {
 
     ++this.nextTrainID;
 
-    console.log('Dispatch pending: ', pain, ' at ', leave_time, 'ms.');
+    // console.log('Dispatch pending: ', pain, ' at ', leave_time, 'ms.');
   }
 
   getAuthorityTable(line, block_route, blocks_stopped_at = [], stop_times = []) {
