@@ -471,337 +471,342 @@ class TrainModel extends React.Component {
     // the "0.621371" means converting km/hr --> mph
 
     return (
-      <Grid container spacing={2}>
-        <Grid item2 xs={12}>
-          <BoxLabel sx={{ mx: 2, my: 0 }}>Train Information</BoxLabel>
-        </Grid>
-
-        <Grid item xs={12} container sx={{ border: 1, mx: 3, p: 2 }}>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Current Speed: {(this.state.currentSpeed * 0.621371).toFixed(2)} mph
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Engine Power: {this.state.power.toFixed(1)} kW
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Train Acceleration: {this.state.acceleration.toFixed(2)} mss
-            </Item>
+      <Grid>
+        <Grid container spacing={2}>
+          <Grid item2 xs={12}>
+            <BoxLabel sx={{ mx: 2, my: 0 }}>Train Information</BoxLabel>
           </Grid>
 
-          <Grid item xs={4}>
-            {this.state.emergencyBrake ? (
-              <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
-                Emergency Brake: Enabled
-              </Item>
-            ) : (
-              <Item sx={{ m: 2 }}>Emergency Brake: Disabled</Item>
-            )}
-          </Grid>
-
-          <Grid item xs={4}>
-            {this.state.brakeStatus ? (
-              <Item sx={{ m: 2 }}>Brake Status: Working</Item>
-            ) : (
-              <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
-                Brake Status: Failing
-              </Item>
-            )}
-          </Grid>
-          <Grid item xs={4}>
-            {this.state.trainEngineStatus ? (
-              <Item sx={{ m: 2 }}>Train Engine Status: Working</Item>
-            ) : (
-              <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
-                Train Engine Status: Failing
-              </Item>
-            )}
-          </Grid>
-
-          <Grid item xs={4}>
-            {this.state.signalPickupStatus ? (
-              <Item sx={{ m: 2 }}>Signal Pickup Status: Working</Item>
-            ) : (
-              <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
-                Signal Pickup Status: Failing
-              </Item>
-            )}
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>Authority: {this.state.authority} blocks</Item>
-          </Grid>
-          <Grid item xs={4}>
-            {this.state.beaconReceived ? (
-              <Item sx={{ m: 2 }}>Beacon: Received</Item>
-            ) : (
-              <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
-                Beacon: Not Received
-              </Item>
-            )
-          }
-        </Grid>
-
-        <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Power Command: {this.state.powerCommand} kW</Item>
-        </Grid>
-        <Grid item xs={4}>
-          { this.state.serviceBrake ?
-            ( <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow'}}>
-                Service Brake: Enabled
-              </Item>
-            ) : (
+          <Grid item xs={12} container sx={{ border: 1, mx: 3, p: 2 }}>
+            <Grid item xs={4}>
               <Item sx={{ m: 2 }}>
-                Service Brake: Disabled
+                Current Speed: {(this.state.currentSpeed * 0.621371).toFixed(2)} mph
               </Item>
-            )
-          }
-        </Grid>
-        <Grid item xs={4}>
-          <Item sx={{ m: 2 }}>Speed Limit: {(this.state.commandedSpeed * 0.621371).toFixed(2)} mph</Item>
-        </Grid>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Engine Power: {this.state.power.toFixed(1)} kW
+              </Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Train Acceleration: {this.state.acceleration.toFixed(2)} mss
+              </Item>
+            </Grid>
 
-
-        <Grid item2 xs={12}>
-          <BoxLabel sx={{ mx: 2, my: 0 }}>Other Information</BoxLabel>
-        </Grid>
-
-        <Grid item xs={12} container sx={{ border: 1, mx: 3, p: 2 }}>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Internal Temperature: {this.state.internalTemp} F
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>Crew Count: {this.state.crewCount}</Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Passenger Count: {this.state.passengerCount}
-            </Item>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Exterior Train Lights: {this.state.exteriorTrainLights ? 'On' : 'Off'}
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Interior Train Lights: {this.state.interiorTrainLights ? 'On' : 'Off'}
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Left Train Doors: {this.state.leftDoors ? 'Open' : 'Closed'}
-            </Item>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Right Train Doors: {this.state.rightDoors ? 'Open' : 'Closed'}
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              {' '}
-              Train Length: {this.state.length.toFixed(1)} ft
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Train Height: {this.state.height.toFixed(1)} ft
-            </Item>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Train Width: {this.state.width.toFixed(1)} ft
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>
-              Train Mass: {this.state.totalMass.toFixed(1)} tons
-            </Item>
-          </Grid>
-          <Grid item xs={4}>
-            <Item sx={{ m: 2 }}>Train Cars: {this.state.numCars} </Item>
-          </Grid>
-        </Grid>
-
-        <Grid item2 xs={12}>
-          <BoxLabel sx={{ mx: 2, my: 0 }}>System Status</BoxLabel>
-        </Grid>
-
-        <Grid item xs={12} container sx={{ border: 1, mx: 3, p: 2 }}>
-          <Grid item xs={3}>
-            <Item sx={{ margin: 1 }}>
-              {this.state.trainEngineStatus ? (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="error"
-                  onClick={this.toggleTrainEngineStatus}
-                >
-                  Break Train Engine
-                </Button>
+            <Grid item xs={4}>
+              {this.state.emergencyBrake ? (
+                <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
+                  Emergency Brake: Enabled
+                </Item>
               ) : (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="inherit"
-                >
-                  Break Train Engine
-                </Button>
+                <Item sx={{ m: 2 }}>Emergency Brake: Disabled</Item>
               )}
-            </Item>
-          </Grid>
-          <Grid item xs={3}>
-            <Item sx={{ margin: 1 }}>
-              {this.state.trainEngineStatus ? (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="inherit"
-                >
-                  Reset Train Engine
-                </Button>
-              ) : (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="inherit"
-                  onClick={this.toggleTrainEngineStatus}
-                >
-                  Reset Train Engine
-                </Button>
-              )}
-            </Item>
-          </Grid>
+            </Grid>
 
-          <Grid item xs={3}>
-            <Item sx={{ margin: 1 }}>
+            <Grid item xs={4}>
               {this.state.brakeStatus ? (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="error"
-                  onClick={this.toggleBrakeStatus}
-                >
-                  Break Brakes
-                </Button>
+                <Item sx={{ m: 2 }}>Brake Status: Working</Item>
               ) : (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="inherit"
-                >
-                  Break Brakes
-                </Button>
+                <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
+                  Brake Status: Failing
+                </Item>
               )}
-            </Item>
-          </Grid>
-          <Grid item xs={3}>
-            <Item sx={{ margin: 1 }}>
-              {this.state.brakeStatus ? (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="inherit"
-                >
-                  Reset Brakes
-                </Button>
+            </Grid>
+            <Grid item xs={4}>
+              {this.state.trainEngineStatus ? (
+                <Item sx={{ m: 2 }}>Train Engine Status: Working</Item>
               ) : (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="inherit"
-                  onClick={this.toggleBrakeStatus}
-                >
-                  Reset Brakes
-                </Button>
+                <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
+                  Train Engine Status: Failing
+                </Item>
               )}
-            </Item>
-          </Grid>
+            </Grid>
 
-          <Grid item xs={3}>
-            <Item sx={{ margin: 1 }}>
+            <Grid item xs={4}>
               {this.state.signalPickupStatus ? (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="error"
-                  onClick={this.toggleSignalPickupStatus}
-                >
-                  Break Signal Pickup
-                </Button>
+                <Item sx={{ m: 2 }}>Signal Pickup Status: Working</Item>
               ) : (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="inherit"
-                >
-                  Break Signal Pickup
-                </Button>
+                <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
+                  Signal Pickup Status: Failing
+                </Item>
               )}
-            </Item>
-          </Grid>
-          <Grid item xs={3}>
-            <Item sx={{ margin: 1 }}>
-              {this.state.signalPickupStatus ? (
-                <Button
-                  sx={{ fontSize: 14, fontWeight: 'bold' }}
-                  variant="contained"
-                  color="inherit"
-                >
-                  Reset Signal Pickup
-                </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>Authority: {this.state.authority} blocks</Item>
+            </Grid>
+            <Grid item xs={4}>
+              {this.state.beaconReceived ? (
+                <Item sx={{ m: 2 }}>Beacon: Received</Item>
               ) : (
+                <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow' }}>
+                  Beacon: Not Received
+                </Item>
+              )
+              }
+            </Grid>
+
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>Power Command: {this.state.powerCommand} kW</Item>
+            </Grid>
+            <Grid item xs={4}>
+              { this.state.serviceBrake ?
+                  ( <Item sx={{ m: 2 }} style={{ backgroundColor: 'yellow'}}>
+                    Service Brake: Enabled
+                  </Item>
+                  ) : (
+                    <Item sx={{ m: 2 }}>
+                      Service Brake: Disabled
+                    </Item>
+                  )
+              }
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>Speed Limit: {(this.state.commandedSpeed * 0.621371).toFixed(2)} mph</Item>
+            </Grid>
+          </Grid>
+
+          <Grid item2 xs={12}>
+            <BoxLabel sx={{ mx: 2, my: 0 }}>Other Information</BoxLabel>
+          </Grid>
+
+          <Grid item xs={12} container sx={{ border: 1, mx: 3, p: 2 }}>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Internal Temperature: {this.state.internalTemp} F
+              </Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>Crew Count: {this.state.crewCount}</Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Passenger Count: {this.state.passengerCount}
+              </Item>
+            </Grid>
+
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Exterior Train Lights: {this.state.exteriorTrainLights ? 'On' : 'Off'}
+              </Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Interior Train Lights: {this.state.interiorTrainLights ? 'On' : 'Off'}
+              </Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Left Train Doors: {this.state.leftDoors ? 'Open' : 'Closed'}
+              </Item>
+            </Grid>
+
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Right Train Doors: {this.state.rightDoors ? 'Open' : 'Closed'}
+              </Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                {' '}
+                Train Length: {this.state.length.toFixed(1)} ft
+              </Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Train Height: {this.state.height.toFixed(1)} ft
+              </Item>
+            </Grid>
+
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Train Width: {this.state.width.toFixed(1)} ft
+              </Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>
+                Train Mass: {this.state.totalMass.toFixed(1)} tons
+              </Item>
+            </Grid>
+            <Grid item xs={4}>
+              <Item sx={{ m: 2 }}>Train Cars: {this.state.numCars} </Item>
+            </Grid>
+          </Grid>
+
+          <Grid item2 xs={12}>
+            <BoxLabel sx={{ mx: 2, my: 0 }}>System Status</BoxLabel>
+          </Grid>
+
+          <Grid item xs={12} container sx={{ border: 1, mx: 3, p: 2 }}>
+            <Grid item xs={3}>
+              <Item sx={{ margin: 1 }}>
+                {this.state.trainEngineStatus ? (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="error"
+                    onClick={this.toggleTrainEngineStatus}
+                  >
+                    Break Train Engine
+                  </Button>
+                ) : (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                  >
+                    Break Train Engine
+                  </Button>
+                )}
+              </Item>
+            </Grid>
+            <Grid item xs={3}>
+              <Item sx={{ margin: 1 }}>
+                {this.state.trainEngineStatus ? (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                  >
+                    Reset Train Engine
+                  </Button>
+                ) : (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                    onClick={this.toggleTrainEngineStatus}
+                  >
+                    Reset Train Engine
+                  </Button>
+                )}
+              </Item>
+            </Grid>
+
+            <Grid item xs={3}>
+              <Item sx={{ margin: 1 }}>
+                {this.state.brakeStatus ? (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="error"
+                    onClick={this.toggleBrakeStatus}
+                  >
+                    Break Brakes
+                  </Button>
+                ) : (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                  >
+                    Break Brakes
+                  </Button>
+                )}
+              </Item>
+            </Grid>
+            <Grid item xs={3}>
+              <Item sx={{ margin: 1 }}>
+                {this.state.brakeStatus ? (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                  >
+                    Reset Brakes
+                  </Button>
+                ) : (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                    onClick={this.toggleBrakeStatus}
+                  >
+                    Reset Brakes
+                  </Button>
+                )}
+              </Item>
+            </Grid>
+
+            <Grid item xs={3}>
+              <Item sx={{ margin: 1 }}>
+                {this.state.signalPickupStatus ? (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="error"
+                    onClick={this.toggleSignalPickupStatus}
+                  >
+                    Break Signal Pickup
+                  </Button>
+                ) : (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                  >
+                    Break Signal Pickup
+                  </Button>
+                )}
+              </Item>
+            </Grid>
+            <Grid item xs={3}>
+              <Item sx={{ margin: 1 }}>
+                {this.state.signalPickupStatus ? (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                  >
+                    Reset Signal Pickup
+                  </Button>
+                ) : (
+                  <Button
+                    sx={{ fontSize: 14, fontWeight: 'bold' }}
+                    variant="contained"
+                    color="inherit"
+                    onClick={this.toggleSignalPickupStatus}
+                  >
+                    Reset Signal Pickup
+                  </Button>
+                )}
+              </Item>
+            </Grid>
+
+            <Grid item xs={3}>
+              <Item sx={{ margin: 1 }}>
                 <Button
                   sx={{ fontSize: 14, fontWeight: 'bold' }}
                   variant="contained"
-                  color="inherit"
-                  onClick={this.toggleSignalPickupStatus}
+                  color="success"
+                  onClick={this.resetAll}
                 >
-                  Reset Signal Pickup
+                  Reset All
                 </Button>
-              )}
+              </Item>
+            </Grid>
+
+            <Grid item xs={3}>
+              <Item sx={{ margin: 1 }}>
+                <Button
+                  sx={{ fontSize: 14, fontWeight: 'bold', margin: 0 }}
+                  variant="contained"
+                  color="primary"
+                  onClick={this.toggle}
+                >
+                  Test System
+                </Button>
+              </Item>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        <Grid>
+          <Grid item xs={4}>
+            <Item sx={{ m: 2 }}>
+              Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph
             </Item>
           </Grid>
-
-          <Grid item xs={3}>
-            <Item sx={{ margin: 1 }}>
-              <Button
-                sx={{ fontSize: 14, fontWeight: 'bold' }}
-                variant="contained"
-                color="success"
-                onClick={this.resetAll}
-              >
-                Reset All
-              </Button>
-            </Item>
-          </Grid>
-
-          <Grid item xs={3}>
-            <Item sx={{ margin: 1 }}>
-              <Button
-                sx={{ fontSize: 14, fontWeight: 'bold', margin: 0 }}
-                variant="contained"
-                color="primary"
-                onClick={this.toggle}
-              >
-                Test System
-              </Button>
-            </Item>
-          </Grid>
-        {/* </Grid> */}
-      </Grid>
-          <Item sx={{ m: 2 }}>Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph</Item>
-          </Grid>
-
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>
               Power Command: {this.state.powerCommand} kW
@@ -817,6 +822,7 @@ class TrainModel extends React.Component {
               Speed Limit: {this.state.commandedSpeed.toFixed(2)} mph
             </Item>
           </Grid>
+        </Grid>
 
         <Grid item2 xs={12}>
           <BoxLabel sx={{ mx: 2, my: 0 }}>Other Information</BoxLabel>
@@ -828,9 +834,11 @@ class TrainModel extends React.Component {
               Internal Temperature: {this.state.internalTemp} F
             </Item>
           </Grid>
+
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>Crew Count: {this.state.crewCount}</Item>
           </Grid>
+
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>
               Passenger Count: {this.state.passengerCount}
@@ -843,12 +851,14 @@ class TrainModel extends React.Component {
               {this.state.exteriorTrainLights ? 'On' : 'Off'}
             </Item>
           </Grid>
+
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>
               Interior Train Lights:{' '}
               {this.state.interiorTrainLights ? 'On' : 'Off'}
             </Item>
           </Grid>
+
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>
               Left Train Doors: {this.state.leftDoors ? 'Open' : 'Closed'}
@@ -860,12 +870,14 @@ class TrainModel extends React.Component {
               Right Train Doors: {this.state.rightDoors ? 'Open' : 'Closed'}
             </Item>
           </Grid>
+
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>
               {' '}
               Train Length: {this.state.length.toFixed(1)} ft
             </Item>
           </Grid>
+
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>
               Train Height: {this.state.height.toFixed(1)} ft
@@ -877,11 +889,13 @@ class TrainModel extends React.Component {
               Train Width: {this.state.width.toFixed(1)} ft
             </Item>
           </Grid>
+
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>
               Train Mass: {this.state.totalMass.toFixed(1)} tons
             </Item>
           </Grid>
+
           <Grid item xs={4}>
             <Item sx={{ m: 2 }}>Train Cars: {this.state.numCars} </Item>
           </Grid>
@@ -914,6 +928,7 @@ class TrainModel extends React.Component {
               )}
             </Item>
           </Grid>
+
           <Grid item xs={3}>
             <Item sx={{ margin: 1 }}>
               {this.state.trainEngineStatus ? (
@@ -959,6 +974,7 @@ class TrainModel extends React.Component {
               )}
             </Item>
           </Grid>
+
           <Grid item xs={3}>
             <Item sx={{ margin: 1 }}>
               {this.state.brakeStatus ? (
@@ -1004,6 +1020,7 @@ class TrainModel extends React.Component {
               )}
             </Item>
           </Grid>
+
           <Grid item xs={3}>
             <Item sx={{ margin: 1 }}>
               {this.state.signalPickupStatus ? (
@@ -1053,7 +1070,7 @@ class TrainModel extends React.Component {
             </Item>
           </Grid>
         </Grid>
-        </Grid>
+      </Grid>
     );
   }
 }
