@@ -127,21 +127,21 @@ class TrackController extends React.Component {
     };
 
     // Wayside controllers for switches on green line
-    this.controllers.push(new Wayside(1, this.state.blocks.slice(0, 13), 13, 'green'));
-    let temp = this.state.blocks.slice(11, 28);
-    temp.push(this.state.blocks[150]);
+    this.controllers.push(new Wayside(1, this.tracks[0].blocks.slice(0, 13), 13, 'green'));
+    let temp = this.tracks[0].blocks.slice(11, 28);
+    temp.push(this.tracks[0].blocks[150]);
     this.controllers.push(new Wayside(2, temp, 29, 'green'));
-    this.controllers.push(new Wayside(3, this.state.blocks.slice(56, 57), 57, 'green'));
-    this.controllers.push(new Wayside(4, this.state.blocks.slice(61, 76), 62, 'green'));
-    temp = this.state.blocks.slice(100, 149);
-    temp.push(this.state.blocks[76]);
+    this.controllers.push(new Wayside(3, this.tracks[0].blocks.slice(56, 57), 57, 'green'));
+    this.controllers.push(new Wayside(4, this.tracks[0].blocks.slice(61, 76), 62, 'green'));
+    temp = this.tracks[0].blocks.slice(100, 149);
+    temp.push(this.tracks[0].blocks[76]);
     this.controllers.push(new Wayside(5, temp, 77, 'green'));
-    temp = this.state.blocks.slice(76, 85);
-    temp.push(this.state.blocks[99]);
+    temp = this.tracks[0].blocks.slice(76, 85);
+    temp.push(this.tracks[0].blocks[99]);
     this.controllers.push(new Wayside(6, temp, 85, 'green'));
 
     // Waysides for red line
-
+    
 
     // Set default controller
     // this.setState((prevState) => ({
@@ -188,8 +188,15 @@ class TrackController extends React.Component {
   };
 
   handleLineChange(event) {
+    if (this.currTrack.id === 'green') {
+      this.tracks[0].blocks = this.state.blocks;
+    } else if (this.currTrack.id === 'red') {
+      this.tracks[1].blocks = this.state.blocks;
+    }
+
     this.currTrack = this.tracks[event.target.value - 1];
     this.state.blocks = this.currTrack.blocks;
+
     this.setState((prevState) => ({
       appSate: !prevState.appState,
     }));
@@ -749,7 +756,7 @@ class TrackController extends React.Component {
               <Grid item xs={3}>
                 <div className="centered">
                   <FormControl fullWidth>
-                    <InputLabel id="select-Block">Line</InputLabel>
+                    <InputLabel id="select-line">Line</InputLabel>
                     <Select
                       labelId="select-Line"
                       id="select-Line"
@@ -1216,49 +1223,6 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs="auto">
                 <TableContainer className="metrics">
-                  {/* <Table
-                    sx={{ minWidth: 'auto' }}
-                    size="small"
-                    aria-label="table"
-                  > */}
-                  {/* <TableHead>
-                      <TableRow>
-                        <TableCell>Train Metrics</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">Suggested Speed</TableCell>
-                        <TableCell align="right">
-                          {this.state.currBlock.suggSpeed}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow
-                        sx={{
-                          '&:last-child td, &:last-child th': { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th">Authority</TableCell>
-                        <TableCell align="right">
-                          <Chip
-                            label={String(this.state.currBlock.authority)}
-                            color={
-                              this.state.currBlock.authority === false
-                                ? 'error'
-                                : this.state.currBlock.authority === true
-                                ? 'success'
-                                : 'default'
-                            }
-                            variant="filled"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table> */}
                   <Table
                     sx={{ minWidth: 'auto' }}
                     size="small"
