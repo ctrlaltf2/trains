@@ -121,6 +121,7 @@
       "./.erb/scripts/check-build-exists.ts",
       "./src/test_mock_preload.js"
     ],
+    "setupFilesAfterEnv": ["./node_modules/jest-enzyme/lib/index.js"],
     "testEnvironment": "jsdom",
     "testEnvironmentOptions": {
       "url": "http://localhost/"
@@ -135,14 +136,16 @@
   "dependencies": {
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
-    "@picocss/pico": "^1.5.2",
     "@mui/icons-material": "^5.8.4",
     "@mui/material": "^5.8.6",
+    "@picocss/pico": "^1.5.2",
     "cytoscape": "^3.21.2",
     "cytoscape-dagre": "^2.4.0",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.7",
     "electron-updater": "^5.0.1",
+    "enzyme": "^3.11.0",
+    "jest-enzyme": "^7.1.2",
     "lodash": "^4.17.21",
     "prop-types": "^15.8.1",
     "react": "^18.1.0",
