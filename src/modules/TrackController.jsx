@@ -141,12 +141,23 @@ class TrackController extends React.Component {
     this.controllers.push(new Wayside(6, temp, 85, 'green'));
 
     // Waysides for red line
-
-
-    // Set default controller
-    // this.setState((prevState) => ({
-    //   currController: this.controllers[0],
-    // }));
+    this.controllers.push(new Wayside(1, this.tracks[1].blocks.slice(9,15), 9, 'red'));
+    this.controllers.push(new Wayside(2, this.tracks[1].blocks.slice(15,27), 16, 'red'));
+    temp = this.tracks[1].blocks.slice(15, 27);
+    temp.push(this.tracks[1].blocks[76]);
+    this.controllers.push(new Wayside(3, temp, 27, 'red'));
+    temp = this.tracks[1].blocks.slice(72, 76);
+    temp.push(this.tracks[1].blocks[33]);
+    this.controllers.push(new Wayside(4, temp, 33, 'red'));
+    temp = this.tracks[1].blocks.slice(32, 38);
+    temp.push(this.tracks[1].blocks[71]);
+    this.controllers.push(new Wayside(5, temp, 38, 'red'));
+    temp = this.tracks[1].blocks.slice(67, 71);
+    temp.push(this.tracks[1].blocks[44]);
+    this.controllers.push(new Wayside(6, temp, 44, 'red'));
+    temp = this.tracks[1].blocks.slice(44, 52);
+    temp.push(this.tracks[1].blocks[66]);
+    this.controllers.push(new Wayside(7, temp, 52, 'red'));
 
     // Load PLC for testing purposes
     this.controllers[0].setPLC(SW13);
@@ -188,10 +199,13 @@ class TrackController extends React.Component {
   };
 
   handleLineChange(event) {
-    if (this.currTrack.id === 'green') {
+    if (this.currTrack.line === 'green') {
       this.tracks[0].blocks = this.state.blocks;
-    } else if (this.currTrack.id === 'red') {
+      console.log('red');
+    } else if (this.currTrack.line === 'red') {
       this.tracks[1].blocks = this.state.blocks;
+      console.log('green');
+
     }
 
     this.currTrack = this.tracks[event.target.value - 1];
@@ -1104,7 +1118,7 @@ class TrackController extends React.Component {
                       label="Controller"
                       onChange={this.handleChangeController}
                     >
-                      {this.controllers.map((controller) => (
+                      {this.controllers.filter((con) => con.line === this.currTrack.line).map((controller) => (
                         <MenuItem key={+controller.id} value={+controller.id}>
                           {String(controller.id)}
                         </MenuItem>
