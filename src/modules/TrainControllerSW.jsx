@@ -18,7 +18,6 @@ import {
   ThemeProvider,
 } from '@mui/material';
 import { type } from 'os';
-import './TrainControllerSW.css';
 
 const darkTheme = createTheme({
   palette: {
@@ -97,7 +96,9 @@ class TrainControllerSW extends React.Component {
       brakeStatus: false,
 
       commandedSpeedUI: 0,
+      commandedSpeedUI_MPH: 0,
       suggestedSpeedUI: 0,
+      suggestedSpeedUI_MPH: 0,
       temperatureUI: 70,
       authorityUI: 10,
       stationNameUI: '',
@@ -108,6 +109,7 @@ class TrainControllerSW extends React.Component {
       k_i_UI: 0, // Integral Gain
       setSpeedUI: 0, // Speed set by the driver: the speech you want to approach
       currentSpeedUI: 0, // The current speed of the train, also known as currentVelocity, in meters per second
+      currentSpeedUI_MPH: 0,
 
     };
 
@@ -181,8 +183,14 @@ class TrainControllerSW extends React.Component {
       this.setState({setSpeedUI: this.setSpeed});
       this.setState({temperatureUI: this.temperature});
       this.setState({currentSpeedUI: this.currentSpeed});
+      // Convert from km/h into miles per hour
+      this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))});
       this.setState({commandedSpeedUI: this.commandedSpeed});
+      // Convert from km/h into miles per hour
+      this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))});
       this.setState({suggestedSpeedUI: this.suggestedSpeed});
+      this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))});
+      // Speed exceeds 43 by 1, need to change it
       this.setState({authorityUI: this.authority});
       this.setState({stationNameUI: this.stationName});
     }, 100)
@@ -274,8 +282,8 @@ class TrainControllerSW extends React.Component {
       if(event.target.value < 0){
         this.setSpeed = 0;
       }
-      else if (event.target.value > 70){
-        this.setSpeed = 70;
+      else if (event.target.value > 43){
+        this.setSpeed = 43;
       }
       else{
         this.setSpeed = event.target.value;
@@ -298,9 +306,6 @@ class TrainControllerSW extends React.Component {
     else{
       this.currentSpeed = event.target.value;
     }
-
-    // Convert from km/h into miles per hour
-    this.currentSpeed = Math.round(this.meters_to_miles(this.currentSpeed));
   }
 
   handleCommandedSpeedChange(event) { // Changes the commanded speed
@@ -317,9 +322,6 @@ class TrainControllerSW extends React.Component {
       this.commandedSpeed = event.target.value;
     }
 
-    // Convert from km/h into miles per hour
-    this.commandedSpeed = Math.round(this.meters_to_miles(this.commandedSpeed));
-
   }
 
   handleSuggestedSpeedChange(event){ // Changes the suggested speed
@@ -335,8 +337,6 @@ class TrainControllerSW extends React.Component {
       this.suggestedSpeed = event.target.value;
     }
 
-    // Convert from km/h into miles per hour
-    this.suggestedSpeed = Math.round(this.meters_to_miles(this.suggestedSpeed));
   }
 
   handleAuthorityChange(event) { // Changes the authority
@@ -796,7 +796,7 @@ class TrainControllerSW extends React.Component {
                 </label>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Current Speed: {this.state.currentSpeedUI} MPH</Item>
+              <Item>Current Speed: {this.state.currentSpeedUI_MPH} MPH</Item>
             </Grid>
             <Grid item xs={4} md={2}>
               <label>
@@ -805,10 +805,10 @@ class TrainControllerSW extends React.Component {
               </label>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Commanded Speed: {this.state.commandedSpeedUI} MPH</Item>
+              <Item>Commanded Speed: {this.state.commandedSpeedUI_MPH} MPH</Item>
             </Grid>
             <Grid item xs={4} md={2}>
-              <Item>Suggested Speed: {this.state.suggestedSpeedUI} MPH</Item>
+              <Item>Suggested Speed: {this.state.suggestedSpeedUI_MPH} MPH</Item>
             </Grid>
             <Grid item xs={4} md={2}>
               <Item>Authority: {this.state.authorityUI} Blocks</Item>
