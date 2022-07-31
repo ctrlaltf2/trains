@@ -110,8 +110,6 @@ class TrackController extends React.Component {
     this.trackRed.setInfrastructure();
     this.tracks.push(this.trackRed);
 
-    console.log(this.tracks);
-
     // console.log(this.trackRed.sections);
     this.currTrack = this.tracks[0];
 
