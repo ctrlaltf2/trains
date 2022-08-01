@@ -5,13 +5,37 @@ import CTCOffice from '../modules/CTCOffice';
 test('CTC exists', () => {
   const CTC = new CTCOffice();
 
-  expect(CTC).toBeTruthy();
+  expect(CTC).toBeDefined();
 });
 
 test('CTC::getStationStops', () => {
   const CTC = new CTCOffice();
 
-  expect(CTC.getStationStops('green', [72, 73, 74], ['Dormont'])).toStrictEqual(['73']);
+  expect(
+    CTC.getStationStops('green', [72, 73, 74], ['Dormont'])
+  ).toStrictEqual(
+    ['73']
+  );
+});
+
+test('CTC::getStationStops works with strings', () => {
+  const CTC = new CTCOffice();
+
+  expect(
+    CTC.getStationStops('green', ['72', '73', '74'], ['Dormont'])
+  ).toStrictEqual(
+    ['73']
+  );
+});
+
+test('CTC::getStationStops, duplicates case', () => {
+  const CTC = new CTCOffice();
+
+  expect(
+    CTC.getStationStops('green', [73, 77, 105], ['Dormont', 'Mt. Lebanon'])
+  ).toStrictEqual(
+    ['73', '77']
+  );
 });
 
 // Query Speed limits for a list of blocks on a line

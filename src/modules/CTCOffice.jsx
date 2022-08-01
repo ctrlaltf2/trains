@@ -513,7 +513,9 @@ class CTCOffice extends React.Component {
     return auth_table;
   }
 
-  // partially tested, needs duplicates case
+  // tested
+  // Given a block route and list of stations to stop at, output
+  // block ids that need to be stopped at
   getStationStops(line, route, stations) {
     // Pull out all stations from route
     const possible_stops = route.map( (block_id) => {
