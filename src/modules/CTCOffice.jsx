@@ -101,22 +101,26 @@ class CTCOffice extends React.Component {
       },
       occupancy: { // occupancy[line][block_id] = is_occupied: bool
         'red': {},
-        'green': {
-          '67': true,
-          '21': true
-        },
+        'green': {},
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
-        'red': {},
+        'red': {
+          '1-15-16':   new TrackSwitch(undefined, '1',  ['15', '16']),
+          '27-28-76':  new TrackSwitch(undefined, '27', ['28', '76']),
+          '32-33-72':  new TrackSwitch(undefined, '33', ['32', '72']),
+          '38-39-71':  new TrackSwitch(undefined, '38', ['39', '71']),
+          '43-44-67':  new TrackSwitch(undefined, '44', ['43', '67']),
+          '52-53-66':  new TrackSwitch(undefined, '52', ['53', '66']),
+        },
         'green': {
           '85-86-100': new TrackSwitch(undefined, '85', ['86', '100']),
           '76-77-101': new TrackSwitch(undefined, '77', ['76', '101']),
           '29-30-150': new TrackSwitch(undefined, '29', ['30', '150']),
           '1-12-13':   new TrackSwitch(undefined, '13', [ '1',  '12']),
-          '57-58':  new TrackSwitch(undefined, '57', ['58', '152']) // TODO: Add yard
+          '57-58':     new TrackSwitch(undefined, '57', ['58', '152']) // TODO: Add yard
         },
         'blue': {
-          '5-6-11': new TrackSwitch(undefined, '5', ['6', '11'])
+          '5-6-11':    new TrackSwitch(undefined, '5', ['6', '11'])
         },
       },
       closures: { // closures[line][block_id] = is_closed;
@@ -134,7 +138,7 @@ class CTCOffice extends React.Component {
       editingSwitch: undefined,
       editingBlock: undefined,
       switchGoingToPosition: undefined,
-      activeLine: 'green',
+      activeLine: 'red',
     };
 
     this.nextTrainID = 1;
@@ -201,7 +205,7 @@ class CTCOffice extends React.Component {
         'Inglewood::E': [48],
         '(Inglewood-Overbrook)': range(49, 56, 1),
         'Overbrook::E': [57],
-        'J': range(58, 62, 1),
+        '(J)': range(58, 62, 1),
         '(FGZ-Whited)': range(29, 23, -1),
         'Whited::E': [22],
         '(Whited-UNKNOWN)': range(21, 17, -1),
@@ -218,7 +222,42 @@ class CTCOffice extends React.Component {
         'Whited::W': [22],
         '(Whited-South Bank)': range(23, 31, 1),
       },
-      'red': {} // TODO: RED
+      'red': {
+        '(Station Square-South Hills Junction)': range(49, 59, 1),
+        'South Hills Junction': [60],
+        '(South Hills Junction-Station Square)': [].concat(range(61, 66, 1), range(52, 49, -1)),
+        'Penn Station::D': [25],
+        '(Penn Station-Steel Plaza)': range(26, 34, 1),
+        '(Steel Plaza-Penn Station)': [].concat([34, 33], range(71, 76, 1), [27, 26]),
+        'Steel Plaza::D': [35],
+        '(Steel Plaza-First Ave.)': range(36, 44, 1),
+        '(First Ave.-Steel Plaza)': [].concat([44], range(67, 71, 1), range(38, 36, -1)),
+        'First Ave.::D': [45],
+        '(First Ave.-Station Square)': [46, 47],
+        'Station Square::D': [48],
+        'Station Square::U': [48],
+        '(Station Square-First Ave.)': [47, 46],
+        'First Ave.::U': [45],
+        'Steel Plaza::U': [35],
+        'Penn Station::U': [25],
+        '(yard-exit)': [151],
+        '(yard-Shadyside)': [9, 8],
+        'Shadyside::D': [7],
+        '(Shadyside-Herron Ave.)': range(6, 1, -1),
+        'Herron Ave.::D': [16],
+        '(Herron Ave.-Swissville)': range(17, 20, 1),
+        'Swissville::D': [21],
+        '(Swissville-Penn Station)': range(22, 24, 1),
+        '(Penn Station-Swissville)': range(24, 22, -1),
+        'Swissville::U': [21],
+        '(Swissville-Herron Ave.)': range(20, 17, -1),
+        'Herron Ave.::U': [16],
+        '(Herron Ave.-Shadyside)': range(1, 6, 1),
+        'Shadyside::U': [7],
+        '(Shadyside-yard)': [8, 9],
+        '(yard-enter)': [152],
+        '(yard-Herron Ave.)': range(10, 15, 1)
+      }
     };
 
     this.stations = {
@@ -241,6 +280,16 @@ class CTCOffice extends React.Component {
         '16': 'UNKNOWN',
         '2': 'Pioneer',
         '9': 'Edgebrook'
+      },
+      'red': {
+        '7': 'Shadyside',
+        '16': 'Herron Ave.',
+        '21': 'Swissville',
+        '25': 'Penn Station',
+        '35': 'Steel Plaza',
+        '45': 'First Ave.',
+        '48': 'Station Square',
+        '60': 'South Hills Junction',
       }
     }
 
@@ -252,12 +301,14 @@ class CTCOffice extends React.Component {
           '152': 1 // Going from 57 to 152 requires authority 1 at 57
         }
       },
-      'red': {}
+      'red': {
+        '9': {
+          '152': 1 // Going from 9 to 152 requires authority 1 at 9
+        }
+      }
     };
 
     this.initCy();
-
-    this.manualDispatch('green', 'Overbrook', '15:00');
   }
 
   // too complex for unit tests?
@@ -764,6 +815,8 @@ class CTCOffice extends React.Component {
     switch(line) {
       case 'green':
         return `node[id = 'JKy']`;
+      case 'green':
+        return `node[id = '10d']`;
       default:
         console.warn(`Unimplemented line '${line}' for starting block query detected`);
         return 'oops';
