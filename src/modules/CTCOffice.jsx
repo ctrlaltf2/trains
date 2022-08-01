@@ -168,56 +168,58 @@ class CTCOffice extends React.Component {
 
     // Generate section-based routing expansions
     const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
-
-    this.route_green_lookup = {
-      '(yard-enter)': [152],
-      '(yard-exit)': [151],
-      '(yard-Glenbury)': [63, 64],
-      'Glenbury::S': [65],
-      '(Glenbury-Dormont)': range(66, 72, 1),
-      'Dormont::S': [73],
-      '(Dormont-MNR)': [74, 75, 76],
-      'Mt. Lebanon::W': [77],
-      '(Mt. Lebanon-Poplar)': range(78, 87, 1),
-      'Poplar': [88],
-      '(Poplar-Castle Shannon)': range(89, 95, 1),
-      'Castle Shannon': [96],
-      '(Castle Shannon-Mt. Lebanon)': [].concat(range(97, 100, 1), range(85, 78, -1)),
-      'Mt. Lebanon::E': [77],
-      '(Mt. Lebanon-Dormont)': range(101, 104, 1),
-      'Dormont::N': [105],
-      '(Dormont-Glenbury)': range(106, 113, 1),
-      'Glenbury::N': [114],
-      '(Glenbury-Overbrook)': range(115, 122, 1),
-      'Overbrook::W': [123],
-      '(Overbrook-Inglewood)': range(124, 131, 1),
-      'Inglewood::W': [132],
-      '(Inglewood-Central)': range(133, 140, 1),
-      'Central::W': [141],
-      '(Central-FGZ)': range(142, 150, 1),
-      'South Bank': [31],
-      '(South Bank-Central)': range(32, 38, 1),
-      'Central::E': [39],
-      '(Central-Inglewood)': range(40, 47, 1),
-      'Inglewood::E': [48],
-      '(Inglewood-Overbrook)': range(49, 56, 1),
-      'Overbrook::E': [57],
-      'J': range(58, 62, 1),
-      '(FGZ-Whited)': range(29, 23, 1),
-      'Whited::E': [22],
-      '(Whited-UNKNOWN)': range(21, 17, 1),
-      'UNKNOWN::E': [16],
-      '(Unknown-ACDe)': range(15, 13, 1),
-      '(ACDe-Edgebrook)': range(12, 10, 1),
-      'Edgebrook': [9],
-      '(Edgebrook-Pioneer)': range(8, 3, 1),
-      'Pioneer': [2],
-      '(Pioneer-ACDw)': [1],
-      '(ACDw-UNKNOWN)': [13, 14, 15],
-      'UNKNOWN::W': [16],
-      '(UNKNOWN-Whited)': range(17, 21, 1),
-      'Whited::W': [22],
-      '(Whited-South Bank)': range(23, 31, 1),
+    this.route_lookup = {
+      'green': {
+        '(yard-enter)': [152],
+        '(yard-exit)': [151],
+        '(yard-Glenbury)': [63, 64],
+        'Glenbury::S': [65],
+        '(Glenbury-Dormont)': range(66, 72, 1),
+        'Dormont::S': [73],
+        '(Dormont-MNR)': [74, 75, 76],
+        'Mt. Lebanon::W': [77],
+        '(Mt. Lebanon-Poplar)': range(78, 87, 1),
+        'Poplar': [88],
+        '(Poplar-Castle Shannon)': range(89, 95, 1),
+        'Castle Shannon': [96],
+        '(Castle Shannon-Mt. Lebanon)': [].concat(range(97, 100, 1), range(85, 78, -1)),
+        'Mt. Lebanon::E': [77],
+        '(Mt. Lebanon-Dormont)': range(101, 104, 1),
+        'Dormont::N': [105],
+        '(Dormont-Glenbury)': range(106, 113, 1),
+        'Glenbury::N': [114],
+        '(Glenbury-Overbrook)': range(115, 122, 1),
+        'Overbrook::W': [123],
+        '(Overbrook-Inglewood)': range(124, 131, 1),
+        'Inglewood::W': [132],
+        '(Inglewood-Central)': range(133, 140, 1),
+        'Central::W': [141],
+        '(Central-FGZ)': range(142, 150, 1),
+        'South Bank': [31],
+        '(South Bank-Central)': range(32, 38, 1),
+        'Central::E': [39],
+        '(Central-Inglewood)': range(40, 47, 1),
+        'Inglewood::E': [48],
+        '(Inglewood-Overbrook)': range(49, 56, 1),
+        'Overbrook::E': [57],
+        'J': range(58, 62, 1),
+        '(FGZ-Whited)': range(29, 23, -1),
+        'Whited::E': [22],
+        '(Whited-UNKNOWN)': range(21, 17, -1),
+        'UNKNOWN::E': [16],
+        '(Unknown-ACDe)': range(15, 13, -1),
+        '(ACDe-Edgebrook)': range(12, 10, -1),
+        'Edgebrook': [9],
+        '(Edgebrook-Pioneer)': range(8, 3, -1),
+        'Pioneer': [2],
+        '(Pioneer-ACDw)': [1],
+        '(ACDw-UNKNOWN)': [13, 14, 15],
+        'UNKNOWN::W': [16],
+        '(UNKNOWN-Whited)': range(17, 21, 1),
+        'Whited::W': [22],
+        '(Whited-South Bank)': range(23, 31, 1),
+      },
+      'red': {} // TODO: RED
     };
 
     this.stations = {
@@ -318,11 +320,11 @@ class CTCOffice extends React.Component {
 
     if(return_last) {
       return {
-        route: this.resolveSegmentRoutes(this.route_green_lookup, segment_route),
+        route: this.resolveSegmentRoutes(line, segment_route),
         last_segment: segment_route.at(-1)
       }
     } else {
-      return this.resolveSegmentRoutes(this.route_green_lookup, segment_route);
+      return this.resolveSegmentRoutes(line, segment_route);
     }
   }
 
@@ -367,7 +369,6 @@ class CTCOffice extends React.Component {
   manualDispatch(line, station, eta_str) {
     const [hh, mm] = eta_str.split(':');
     const eta_ms = parseInt(hh) * 60 * 60 * 1000 + parseInt(mm) * 60 * 1000;
-    console.log(eta_ms);
 
     const { route, last_segment } = this.generateYardRoute(line, [station], true);
     const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]), [10*1000]);
@@ -387,7 +388,7 @@ class CTCOffice extends React.Component {
 
     // And get a return path- send it at full speed who cares when it gets back to the yard
     const return_segment_path = this.getInterstationRoute(line, last_segment, '(yard-enter)');
-    const return_block_path = this.resolveSegmentRoutes(this.route_green_lookup, return_segment_path);
+    const return_block_path = this.resolveSegmentRoutes(line, return_segment_path);
 
     // commanded speed here == speed_limit
     const return_authority_table = this.getAuthorityTable(line, return_block_path, [], []);
@@ -573,10 +574,12 @@ class CTCOffice extends React.Component {
     return speed_table;
   }
 
-  resolveSegmentRoutes(route_lookup, segment_route) {
+  resolveSegmentRoutes(line, segment_route) {
     let block_route = [];
-    for(let segment of segment_route)
-      block_route = block_route.concat(route_lookup[segment]);
+    console.log(this.route_lookup[line]);
+    for(let segment of segment_route) {
+      block_route = block_route.concat(this.route_lookup[line][segment]);
+    }
 
     return block_route;
   }
