@@ -79,5 +79,130 @@ test(`CTC::resolveSegmentRoutes('green')`, () => {
   );
 });
 
+test('CTCOffice::getSwitchIdentifier', () => {
+  const CTC = new CTCOffice();
+
+  expect(
+    CTC.getSwitchIdentifier([5, 11, 6])
+  ).toStrictEqual(
+    '5-6-11'
+  );
+
+  expect(
+    CTC.getSwitchIdentifier([5, 11])
+  ).toStrictEqual(
+    '5-11'
+  );
+
+  expect(
+    CTC.getSwitchIdentifier([50, 12, 3])
+  ).toStrictEqual(
+    '3-12-50'
+  );
+});
+
+test(`CTCOffice::inferTrainMovement, unknown source`, () => {
+  const CTC = new CTCOffice();
+
+  expect(
+    CTC.inferTrainMovement('green', '43', true)
+  ).toStrictEqual(
+    undefined
+  );
+});
+
+test(`CTCOffice::inferTrainMovement, single possible source`, () => {
+  const CTC = new CTCOffice();
+  CTC.trainPositions['Thomas'] = '42';
+
+  expect(
+    CTC.inferTrainMovement('green', '43', true)
+  ).toStrictEqual(
+    'Thomas'
+  );
+});
+
+test(`CTCOffice::inferTrainMovement, multiple possible sources`, () => {
+  const CTC = new CTCOffice();
+  CTC.trainPositions['Thomas'] = '42';
+
+  expect(
+    CTC.inferTrainMovement('green', '43', true)
+  ).toStrictEqual(
+    'Thomas'
+  );
+});
+
+test(`CTCOffice::inferTrainMovement, across switch junction, single source`, () => {
+  const CTC = new CTCOffice();
+  CTC.trainPositions['Thomas'] = '42';
+
+  expect(
+    CTC.inferTrainMovement('green', '43', true)
+  ).toStrictEqual(
+    'Thomas'
+  );
+});
+
+test(`CTCOffice::inferTrainMovement, across switch junction, multiple source`, () => {
+
+});
+
+describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
+  test(`green junction, no 100 -> 86 movement`, () => {
+    const CTC = new CTCOffice();
+    CTC.trainPositions['Thomas'] = '100';
+
+    expect(
+      CTC.inferTrainMovement('green', '86', true)
+    ).toBe(
+      undefined
+    );
+  });
+
+  test(`green junction, no 76 -> 101 movement`, () => {
+    const CTC = new CTCOffice();
+    CTC.trainPositions['Thomas'] = '76';
+
+    expect(
+      CTC.inferTrainMovement('green', '101', true)
+    ).toBe(
+      undefined
+    );
+  });
+
+  test(`green junction, no 101 -> 76 movement`, () => {
+    const CTC = new CTCOffice();
+    CTC.trainPositions['Thomas'] = '101';
+
+    expect(
+      CTC.inferTrainMovement('green', '76', true)
+    ).toBe(
+      undefined
+    );
+  });
+
+  test(`green junction, no 150 -> 30 movement`, () => {
+    const CTC = new CTCOffice();
+    CTC.trainPositions['Thomas'] = '150';
+
+    expect(
+      CTC.inferTrainMovement('green', '30', true)
+    ).toBe(
+      undefined
+    );
+  });
+
+  test(`green junction, no 1 -> 12 movement`, () => {
+    const CTC = new CTCOffice();
+    CTC.trainPositions['Thomas'] = '1';
+
+    expect(
+      CTC.inferTrainMovement('green', '12', true)
+    ).toBe(
+      undefined
+    );
+  });
+});
 
 /* -- UI Tests -- */
