@@ -1,3 +1,4 @@
+// @ts-nocheck
 export class PLCReader {
   public switchLogic = [];
   public crossingLogic = [];

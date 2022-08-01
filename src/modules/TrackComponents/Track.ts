@@ -2,6 +2,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable guard-for-in */
 /* eslint-disable import/prefer-default-export */
+// @ts-nocheck
 import { Block } from './Block';
 
 export class Track {
