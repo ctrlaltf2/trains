@@ -1158,13 +1158,7 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="centered">
-                  <TextField
-                    value={this.state.schedule}
-                    onChange={this.schedule}
-                    id="standard-basic"
-                    label="Schedule train"
-                    variant="standard"
-                  />
+
                   <div style={{ margin: '1rem' }}>
                     <Button
                       className="button"
