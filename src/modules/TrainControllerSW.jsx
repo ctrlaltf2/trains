@@ -172,30 +172,50 @@ class TrainControllerSW extends React.Component {
 
   componentDidMount(){ // This acts as the Main program - where the functions are called
     setInterval( () => {
+
+      // Check to make sure train does not exceed maximum power
       if(this.power >= this.maxPower){
         this.setState({powerUI: this.maxPower});
       }
       else{
         this.setState({powerUI: this.power});
       }
+
+      // Test UI speeds
+      this.setState({currentSpeedUI: this.currentSpeed});
+      this.setState({commandedSpeedUI: this.commandedSpeed});
+      this.setState({suggestedSpeedUI: this.suggestedSpeed});
+
+
+      // Check to make sure train does not exceed 43 miles an hour
+      if (this.currentSpeed == 70){
+        this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))-1});
+      }
+      else{
+        this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))});
+      }
+      if (this.suggestedSpeed == 70){
+        this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))-1});
+      }
+      else{
+        this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))});
+      }
+      if (this.commandedSpeed == 70){
+        this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))-1});
+      }
+      else{
+        this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))});
+      }
+
+      // Setting values for UI display
       this.setState({k_i_UI: this.k_i});
       this.setState({k_p_UI: this.k_p});
-      this.setState({setSpeedUI: this.setSpeed});
-      this.setState({temperatureUI: this.temperature});
-      this.setState({currentSpeedUI: this.currentSpeed});
-      // Convert from km/h into miles per hour
-      this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))});
-      this.setState({commandedSpeedUI: this.commandedSpeed});
-      // Convert from km/h into miles per hour
-      this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))});
-      this.setState({suggestedSpeedUI: this.suggestedSpeed});
-      this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))});
-      // Speed exceeds 43 by 1, need to change it
       this.setState({authorityUI: this.authority});
       this.setState({stationNameUI: this.stationName});
-    }, 100)
+      this.setState({setSpeedUI: this.setSpeed});
+      this.setState({temperatureUI: this.temperature});
 
-    const interval = setInterval(() => {
+
 
       // Automatic Mode
       if(this.state.automaticMode){
@@ -206,12 +226,17 @@ class TrainControllerSW extends React.Component {
           this.setSpeed = 0;
         }
         else{
-          if(!this.state.brakeFailureDisplay && !this.state.engineFailureDisplay && !this.state.signalPickupFailureDisplay){
-            this.setState({emergencyButton: false});
-            this.setSpeed = this.suggestedSpeed;
-          }
+          // if(!this.state.brakeFailureDisplay && !this.state.engineFailureDisplay && !this.state.signalPickupFailureDisplay){
+          //   // Reset the emergency brake
+          //   this.setState({emergencyButton: false});
+          //   this.setSpeed = this.suggestedSpeed;
+          // }
+
+          // In automatic mode, desired speed should be set to suggested speed
+          this.setState({setSpeedUI: this.state.suggestedSpeedUI_MPH});
         }
 
+        // Stop the train when authority reaches 0
         if(this.authority == 0){
           this.authorityStop();
         }
@@ -220,16 +245,22 @@ class TrainControllerSW extends React.Component {
 
       // Manual Mode
       else{
+
+
+        // If the service brake is activated while train is moving,
+        // set the desired speed to 0 and toggle service brake UI
         if((this.state.brakeStatus == true) && (this.state.currentSpeed != 0)){
-          this.setState({brakeStatus: true});
           this.setSpeed = 0;
         }
-        else if(this.state.emergencyButton && (this.state.currentSpeed != 0)){
-          this.setState({emergencyButton: true});
+
+        // If the emergency brake is activated while train is moving,
+        // set the desired speed to 0 and toggle emergency brake UI
+        else if((this.state.emergencyButton == true) && (this.state.currentSpeed != 0)){
           this.setSpeed = 0;
         }
       }
-    },2000);
+    }, 100)
+
   }
 
 
@@ -289,6 +320,15 @@ class TrainControllerSW extends React.Component {
         this.setSpeed = event.target.value;
       }
     }
+
+    // Convert from miles per hour to km/h
+    this.setSpeedkilo = this.miles_to_meters(this.setSpeed);
+
+    // Send desired speed  to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'setSpeed',
+      'leftDoor': this.setSpeedkilo,
+    });
 
   }
 
@@ -577,32 +617,6 @@ class TrainControllerSW extends React.Component {
           </AppBar>
         </Box>
         <Grid container spacing={4}>
-          <Grid item xs={5} md={5}>
-            <Item>
-              {this.state.brakeStatus ? (
-              <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
-                Service Brake Activated
-              </Button>
-              ) : (
-              <Button variant="outlined" color="error" onClick={this.toggleServiceBrake}>
-                Service Brake Deactivated
-              </Button>
-              )}
-            </Item>
-          </Grid>
-          <Grid item xs={6} md={4}>
-            <Item>
-              {this.state.emergencyButton ? (
-              <Button variant="contained" color="error" onClick={this.emergencyBrake}>
-                Emergency Brake Activated
-              </Button>
-              ) : (
-              <Button variant="outlined" color="error" onClick={this.emergencyBrake}>
-                Emergency Brake Deactivated
-              </Button>
-              )}
-            </Item>
-          </Grid>
           <Grid item xs={4} md={4}>
               <label>
                 Commanded Speed:
