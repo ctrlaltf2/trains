@@ -3,7 +3,7 @@ name: Unit Test
 on: [push, pull_request]
 
 jobs:
-  test:
+  CTC:
     runs-on: windows-latest
 
     steps:
@@ -19,6 +19,10 @@ jobs:
       - name: npm install
         run: |
           npm install
+
+      - name: npm run build
+        run: |
+          npm run build:main
 
       - name: npm run test
         run: |
