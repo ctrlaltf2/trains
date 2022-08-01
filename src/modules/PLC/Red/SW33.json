@@ -4,15 +4,18 @@
     "True": "33 && !72 && !73 && !74 && !75 && !76"
   },
   {
-    "command": "light ",
-    "green": ""
+    "command": "light 32",
+    "green": "!33 && !34 && !35 && !36 && !37 && !38",
+    "yelow": "72"
   },
   {
-    "command": "light ",
-    "green": ""
+    "command": "light 33",
+    "green": "!72 && !73 && !74 && !75 && !76",
+    "yellow": "32"
   },
   {
-    "command": "light ",
-    "green": ""
+    "command": "light 72",
+    "green": "!33 && !34 && !35 && !36 && !37 && !38",
+    "yellow": "32"
   }
 ]
