@@ -149,7 +149,6 @@ class CTCOffice extends React.Component {
       )
     };
     this.trainPositions = {
-      '-1': '21'
     }; // str(train id) -> str(block_id)
 
     this.systemMapRef = React.createRef();
@@ -259,7 +258,6 @@ class CTCOffice extends React.Component {
     this.initCy();
 
     this.manualDispatch('green', 'Overbrook', '15:00');
-    this.inferTrainMovement('green', '20', true);
   }
 
   checkShouldDispatch() {
@@ -328,7 +326,30 @@ class CTCOffice extends React.Component {
     }
   }
 
-  isinvalidSwitchMovement(line, block_a_, block_b_) {
+  isInvalidSwitchMovement_FIXED(line, src_, dst_) {
+    const src = src_.toString();
+    const dst = dst_.toString();
+
+    // Map src -> valid dsts
+    const valid_movements = {
+      'green': {
+        '1': ['13'],
+        '13': ['12'],
+        '29': ['30'],
+        '150': ['29'],
+        '57': ['58', '152'],
+        '151': ['63'],
+        '76': ['77'],
+        '77': []
+      }
+    };
+  }
+
+  /**
+   * Assumes directionality has been checked. Determines if, given a movement
+   * across a junction, does the switch connect that way and allow a movement.
+   */
+  isInvalidSwitchMovement(line, block_a_, block_b_) {
     const block_a = parseInt(block_a_);
     const block_b = parseInt(block_b_);
     // const search_value = [parseInt(block_a), parseInt(block_b)].sort( (a, b) => a - b );
@@ -336,19 +357,15 @@ class CTCOffice extends React.Component {
     const invalid_movements = {
       'green': [
         [13, 1],
-        [12, 13],
-        [30, 29],
-        [29, 150],
         [150, 30],
         [152, 57],
-        [58, 57],
-        [63, 62],
         [63, 151],
         [76, 101],
         [101, 76],
         [101, 77],
         [77, 76],
         [100, 86],
+        [1, 12]
       ],
       'red': []
     }
@@ -576,7 +593,6 @@ class CTCOffice extends React.Component {
 
   resolveSegmentRoutes(line, segment_route) {
     let block_route = [];
-    console.log(this.route_lookup[line]);
     for(let segment of segment_route) {
       block_route = block_route.concat(this.route_lookup[line][segment]);
     }
@@ -687,7 +703,7 @@ class CTCOffice extends React.Component {
 
     // Filter out invalid movements based on switch restrictions
     const possible_sources = all_possible_source_edges.filter( (edge) => {
-      if(this.isinvalidSwitchMovement(line, edge, block_id))
+      if(this.isInvalidSwitchMovement(line, edge.data('block_id'), block_id))
         return false;
 
       return true;
@@ -704,7 +720,6 @@ class CTCOffice extends React.Component {
   }
 
   updateBlockOccupancy(line, block_id, is_occupied) {
-    console.log(line, block_id, is_occupied);
     const occupancy = _.cloneDeep(this.state.occupancy);
     occupancy[line][block_id] = !!is_occupied;
 
@@ -1200,7 +1215,6 @@ class CTCOffice extends React.Component {
                   {
                     (lineSelection && blockSelection) ?
                       <TextField margin="none" size="small" label="ETA" type="time" variant="standard" onChange={(ev) => {
-                        console.log(ev.target.value);
                         this.setState({
                           enteredETA: ev.target.value
                         });
