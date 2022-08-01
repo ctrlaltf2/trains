@@ -187,6 +187,10 @@ class TrackController extends React.Component {
     this.setSwitch = this.setSwitch.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleLineChange = this.handleLineChange.bind(this);
+    this.getBlock = this.getBlock.bind(this);
+    this.CTCMMode = this.CTCMMode.bind(this);
+    this.getSwitchPos = this.getSwitchPos.bind(this);
+    this.occupy = this.occupy.bind(this);
 
     this.handleChangeController = this.handleChangeController.bind(this);
     this.plc = this.plc.bind(this);
@@ -197,6 +201,22 @@ class TrackController extends React.Component {
     this.reset = this.reset.bind(this);
   }
 
+  getBlock(id, line) {
+    if (line === 'green') {
+      return this.tracks[0].blocks[id-1];
+    } else if (line === 'yellow') {
+      return this.tracks[1].blocks[id-1];
+    }
+  }
+
+  getSwitchPos(id, line) {
+    if (line === 'green') {
+      return this.tracks[0].blocks[id - 1].switch.getPosition();
+    } else if (line === 'yellow') {
+      return this.tracks[1].blocks[id - 1].switch.getPosition();
+    }
+  }
+
   mmMode() {
     this.tracks[this.state.line].blocks[
       this.state.currBlock.id - 1
@@ -204,6 +224,17 @@ class TrackController extends React.Component {
       !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
         .maintenanceMode;
 
+    this.setState((prevState) => ({
+      appSate: !prevState.appState,
+    }));
+  }
+
+  CTCMMode(id, line, value) {
+    if (line === 'green') {
+      this.tracks[0].blocks[id-1].maintenanceMode = value;
+    } else if (line === 'red') {
+      this.tracks[1].blocks[id -1].maintenanceMode = value;
+    }
     this.setState((prevState) => ({
       appSate: !prevState.appState,
     }));
@@ -236,7 +267,7 @@ class TrackController extends React.Component {
     });
   }
 
-  plc(){
+  plc() {
     if (this.state.currTrack === 'green') {
       this.tracks[this.state.line].blocks = this.tracks[0].blocks;
     } else if (this.state.currTrack === 'red') {
@@ -267,9 +298,7 @@ class TrackController extends React.Component {
             if (controller.plc.switchLogic[j].logicTrue[k] === '&&') {
             }
             // NOT
-            else if (
-              controller.plc.switchLogic[j].logicTrue[k].includes('!')
-            ) {
+            else if (controller.plc.switchLogic[j].logicTrue[k].includes('!')) {
               if (
                 this.tracks[line].blocks[
                   parseInt(
@@ -281,9 +310,7 @@ class TrackController extends React.Component {
               }
             }
             // Authority part will be in format '<blockNum>A<authNumber>'
-            else if (
-              controller.plc.switchLogic[j].logicTrue[k].includes('A')
-            ) {
+            else if (controller.plc.switchLogic[j].logicTrue[k].includes('A')) {
               // If authority of train on block is less than - return false
               if (
                 this.trackGreen.blocks[
@@ -317,7 +344,7 @@ class TrackController extends React.Component {
         ) {
           if (status.every((val) => val === true)) {
             if (
-              !this.tracks[line].this.tracks[line].blocks[
+              !this.tracks[line].blocks[
                 parseInt(controller.plc.switchLogic[j].switchNumber) - 1
               ].switch.positionBool
             ) {
@@ -396,11 +423,7 @@ class TrackController extends React.Component {
         // Run 3x for vitality
         status = [true, true, true];
         for (let vitality = 0; vitality < 3; vitality++) {
-          for (
-            let k = 0;
-            k < controller.plc.lightLogic[j].green.length;
-            k++
-          ) {
+          for (let k = 0; k < controller.plc.lightLogic[j].green.length; k++) {
             // AND
             if (controller.plc.lightLogic[j].green[k] === '&&') {
             }
@@ -408,9 +431,8 @@ class TrackController extends React.Component {
             else if (controller.plc.lightLogic[j].green[k].includes('!')) {
               if (
                 this.tracks[line].blocks[
-                  parseInt(
-                    controller.plc.lightLogic[j].green[k].substring(1)
-                  ) - 1
+                  parseInt(controller.plc.lightLogic[j].green[k].substring(1)) -
+                    1
                 ].occupancy
               ) {
                 status[vitality] = false;
@@ -632,7 +654,7 @@ class TrackController extends React.Component {
   // Always keep status of blocks ----- executes PLC logic
   componentDidMount() {
     const interval = setInterval(() => {
-     this.plc();
+      this.plc();
       // console.log('Blocks up to date');
     }, 1000);
   }
@@ -689,12 +711,23 @@ class TrackController extends React.Component {
   }
 
   // Set specific swithc to position
-  setSwitchCTC(block, position) {
-    this.tracks[this.state.line].blocks[block].switch.position(position);
-
+  setSwitchCTC(block, position, line) {
+    if (line === 'green') {
+      this.tracks[0].blocks[block - 1].switch.setPosition(position);
+    } else if (line === 'red') {
+      this.tracks[1].blocks[block - 1].switch.setPosition(position);
+    }
     this.setState((prevState) => ({
       appState: !prevState.appState,
     }));
+  }
+
+  occupy(id, line, value){
+    if(line === 'green'){
+      this.tracks[0].blocks[id-1].occupancy = value;
+    } else if(line === 'red'){
+      this.tracks[1].blocks[id-1].occupancy = value;
+    }
   }
 
   occupancy() {
@@ -751,12 +784,6 @@ class TrackController extends React.Component {
       testMode: !prevState.testMode,
     }));
   }
-
-  // mmMode() {
-  //   this.setState((prevState) => ({
-  //     maintenanceMode: !prevState.maintenanceMode,
-  //   }));
-  // }
 
   // eslint-disable-next-line class-methods-use-this
   testUI() {
