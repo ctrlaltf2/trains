@@ -41,6 +41,7 @@ export class PLCReader {
           this.lightLogic.push({
             block: file[key].command.split(' ')[1],
             green: file[key].green.split(' '),
+            yellow: file[key].yellow.split(' ')
           });
         }
       } catch (e) {
