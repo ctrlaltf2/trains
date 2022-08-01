@@ -224,16 +224,13 @@ class TrainControllerSW extends React.Component {
         if (this.state.brakeFailureDisplay || this.state.engineFailureDisplay || this.state.signalPickupFailureDisplay){
           this.setState({emergencyButton: true});
           this.setSpeed = 0;
+          this.setState({setSpeedUI: 0});
         }
         else{
-          // if(!this.state.brakeFailureDisplay && !this.state.engineFailureDisplay && !this.state.signalPickupFailureDisplay){
-          //   // Reset the emergency brake
-          //   this.setState({emergencyButton: false});
-          //   this.setSpeed = this.suggestedSpeed;
-          // }
-
-          // In automatic mode, desired speed should be set to suggested speed
-          this.setState({setSpeedUI: this.state.suggestedSpeedUI_MPH});
+            // Reset the emergency brake
+            this.setState({emergencyButton: false});
+            this.setSpeed = this.suggestedSpeed;
+            this.setState({setSpeedUI: this.state.suggestedSpeedUI_MPH});
         }
 
         // Stop the train when authority reaches 0
@@ -309,17 +306,16 @@ class TrainControllerSW extends React.Component {
 
   setDesiredSpeed(event){
 
-    if(this.state.automaticMode == false){
-      if(event.target.value < 0){
-        this.setSpeed = 0;
-      }
-      else if (event.target.value > 43){
-        this.setSpeed = 43;
-      }
-      else{
-        this.setSpeed = event.target.value;
-      }
+    if(event.target.value < 0){
+      this.setSpeed = 0;
     }
+    else if (event.target.value > 43){
+      this.setSpeed = 43;
+    }
+    else{
+      this.setSpeed = event.target.value;
+    }
+
 
     // Convert from miles per hour to km/h
     this.setSpeedkilo = this.miles_to_meters(this.setSpeed);
