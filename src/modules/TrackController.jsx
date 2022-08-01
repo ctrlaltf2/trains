@@ -203,9 +203,9 @@ class TrackController extends React.Component {
 
   getBlock(id, line) {
     if (line === 'green') {
-      return this.tracks[0].blocks[id-1];
+      return this.tracks[0].blocks[id - 1];
     } else if (line === 'yellow') {
-      return this.tracks[1].blocks[id-1];
+      return this.tracks[1].blocks[id - 1];
     }
   }
 
@@ -231,9 +231,9 @@ class TrackController extends React.Component {
 
   CTCMMode(id, line, value) {
     if (line === 'green') {
-      this.tracks[0].blocks[id-1].maintenanceMode = value;
+      this.tracks[0].blocks[id - 1].maintenanceMode = value;
     } else if (line === 'red') {
-      this.tracks[1].blocks[id -1].maintenanceMode = value;
+      this.tracks[1].blocks[id - 1].maintenanceMode = value;
     }
     this.setState((prevState) => ({
       appSate: !prevState.appState,
@@ -722,11 +722,11 @@ class TrackController extends React.Component {
     }));
   }
 
-  occupy(id, line, value){
-    if(line === 'green'){
-      this.tracks[0].blocks[id-1].occupancy = value;
-    } else if(line === 'red'){
-      this.tracks[1].blocks[id-1].occupancy = value;
+  occupy(id, line, value) {
+    if (line === 'green') {
+      this.tracks[0].blocks[id - 1].occupancy = value;
+    } else if (line === 'red') {
+      this.tracks[1].blocks[id - 1].occupancy = value;
     }
   }
 
