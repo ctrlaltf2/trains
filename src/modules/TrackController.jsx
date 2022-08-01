@@ -83,10 +83,11 @@ class TrackController extends React.Component {
           break;
         case 'authority':
           // TODO Add other line
-          this.tracks[this.state.line].blocks[payload.block].authority = payload.authority;
+          this.tracks[this.state.line].blocks[payload.block].authority =
+            payload.authority;
           break;
         case 'dispatch':
-          // TODO
+          window.electronAPI.sendTrackModelMessage(payload);
           break;
         case 'closure':
         // MMode ?
@@ -128,12 +129,18 @@ class TrackController extends React.Component {
     };
 
     // Wayside controllers for switches on green line
-    this.controllers.push(new Wayside(1, this.tracks[0].blocks.slice(0, 13), 13, 'green'));
+    this.controllers.push(
+      new Wayside(1, this.tracks[0].blocks.slice(0, 13), 13, 'green')
+    );
     let temp = this.tracks[0].blocks.slice(11, 28);
     temp.push(this.tracks[0].blocks[150]);
     this.controllers.push(new Wayside(2, temp, 29, 'green'));
-    this.controllers.push(new Wayside(3, this.tracks[0].blocks.slice(56, 57), 57, 'green'));
-    this.controllers.push(new Wayside(4, this.tracks[0].blocks.slice(61, 76), 62, 'green'));
+    this.controllers.push(
+      new Wayside(3, this.tracks[0].blocks.slice(56, 57), 57, 'green')
+    );
+    this.controllers.push(
+      new Wayside(4, this.tracks[0].blocks.slice(61, 76), 62, 'green')
+    );
     temp = this.tracks[0].blocks.slice(100, 149);
     temp.push(this.tracks[0].blocks[76]);
     this.controllers.push(new Wayside(5, temp, 77, 'green'));
@@ -142,8 +149,12 @@ class TrackController extends React.Component {
     this.controllers.push(new Wayside(6, temp, 85, 'green'));
 
     // Waysides for red line
-    this.controllers.push(new Wayside(7, this.tracks[1].blocks.slice(8,15), 9, 'red'));
-    this.controllers.push(new Wayside(8, this.tracks[1].blocks.slice(14,27), 16, 'red'));
+    this.controllers.push(
+      new Wayside(7, this.tracks[1].blocks.slice(8, 15), 9, 'red')
+    );
+    this.controllers.push(
+      new Wayside(8, this.tracks[1].blocks.slice(14, 27), 16, 'red')
+    );
     temp = this.tracks[1].blocks.slice(14, 27);
     temp.push(this.tracks[1].blocks[75]);
     this.controllers.push(new Wayside(9, temp, 27, 'red'));
@@ -173,12 +184,12 @@ class TrackController extends React.Component {
     this.mmMode = this.mmMode.bind(this);
     this.occupancy = this.occupancy.bind(this);
     this.suggSpeed = this.suggSpeed.bind(this);
-    this.schedule = this.schedule.bind(this);
     this.setSwitch = this.setSwitch.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleLineChange = this.handleLineChange.bind(this);
 
     this.handleChangeController = this.handleChangeController.bind(this);
+    this.plc = this.plc.bind(this);
 
     // this.plc = this.plc.bind(this);
     this.handleChangePLC = this.handleChangePLC.bind(this);
@@ -187,8 +198,11 @@ class TrackController extends React.Component {
   }
 
   mmMode() {
-    this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].maintenanceMode =
-      !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].maintenanceMode;
+    this.tracks[this.state.line].blocks[
+      this.state.currBlock.id - 1
+    ].maintenanceMode =
+      !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
+        .maintenanceMode;
 
     this.setState((prevState) => ({
       appSate: !prevState.appState,
@@ -208,7 +222,7 @@ class TrackController extends React.Component {
       console.log('green');
     }
     this.state.line = event.target.value - 1;
-    this.currTrack = this.tracks[event.target.value - 1]
+    this.currTrack = this.tracks[event.target.value - 1];
     // this.tracks[this.state.line].blocks = this.currTrack.blocks;
 
     this.setState((prevState) => ({
@@ -222,400 +236,403 @@ class TrackController extends React.Component {
     });
   }
 
+  plc(){
+    if (this.state.currTrack === 'green') {
+      this.tracks[this.state.line].blocks = this.tracks[0].blocks;
+    } else if (this.state.currTrack === 'red') {
+      this.tracks[this.state.line].blocks = this.tracks[1].blocks;
+    }
+
+    // Logic
+    this.controllers.forEach((controller) => {
+      var status = [];
+
+      let line = 0;
+
+      if (controller.line === 'green') {
+        line = 0;
+      } else if (controller.line == 'red') {
+        line = 1;
+      }
+      for (let j = 0; j < controller.plc.switchLogic.length; j++) {
+        // Run 3x for vitality
+        status = [true, true, true];
+        for (let vitality = 0; vitality < 3; vitality++) {
+          for (
+            let k = 0;
+            k < controller.plc.switchLogic[j].logicTrue.length;
+            k++
+          ) {
+            // AND
+            if (controller.plc.switchLogic[j].logicTrue[k] === '&&') {
+            }
+            // NOT
+            else if (
+              controller.plc.switchLogic[j].logicTrue[k].includes('!')
+            ) {
+              if (
+                this.tracks[line].blocks[
+                  parseInt(
+                    controller.plc.switchLogic[j].logicTrue[k].substring(1)
+                  ) - 1
+                ].occupancy
+              ) {
+                status[vitality] = false;
+              }
+            }
+            // Authority part will be in format '<blockNum>A<authNumber>'
+            else if (
+              controller.plc.switchLogic[j].logicTrue[k].includes('A')
+            ) {
+              // If authority of train on block is less than - return false
+              if (
+                this.trackGreen.blocks[
+                  parseInt(
+                    controller.plc.switchLogic[j].logicTrue[k].split('A')[0]
+                  ) - 1
+                ].authority <
+                controller.plc.switchLogic[j].logicTrue[k].split('A')[1]
+              ) {
+                status[vitality] = false;
+              }
+            }
+            // Regular
+            else {
+              if (
+                this.tracks[0].blocks[
+                  parseInt(controller.plc.switchLogic[j].logicTrue[k]) - 1
+                ].occupancy === false
+              ) {
+                status[vitality] = false;
+              }
+            }
+          }
+        }
+        // Vitality check before setting switch position
+        // Also send to CTC/Track Model
+        if (
+          !this.tracks[line].blocks[
+            parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+          ].maintenanceMode
+        ) {
+          if (status.every((val) => val === true)) {
+            if (
+              !this.tracks[line].this.tracks[line].blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.positionBool
+            ) {
+              window.electronAPI.sendCTCMessage({
+                type: 'switch',
+                line: this.tracks[line].blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].line,
+                root: this.tracks[line].blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].switch.swBlock,
+                pointing_to:
+                  this.tracks[line].blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].switch.position,
+              });
+              window.electronAPI.sendTrackModelMessage({
+                type: 'switch',
+                line: this.tracks[line].blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].line,
+                root: this.tracks[line].blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].switch.swBlock,
+                pointing_to:
+                  this.tracks[line].blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].switch.position,
+              });
+            }
+            this.tracks[line].blocks[
+              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+            ].switch.position = true;
+          } else {
+            if (
+              this.tracks[line].blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.positionBool
+            ) {
+              window.electronAPI.sendCTCMessage({
+                type: 'switch',
+                line: this.tracks[line].blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].line,
+                root: this.tracks[line].blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].switch.swBlock,
+                pointing_to:
+                  this.tracks[line].blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].switch.position,
+              });
+              window.electronAPI.sendTrackModelMessage({
+                type: 'switch',
+                line: this.tracks[line].blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].line,
+                root: this.tracks[line].blocks[
+                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                ].switch.swBlock,
+                pointing_to:
+                  this.tracks[line].blocks[
+                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+                  ].switch.position,
+              });
+            }
+            this.tracks[line].blocks[
+              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+            ].switch.position = false;
+          }
+        }
+      }
+
+      //   // Transit light logic
+      for (let j = 0; j < controller.plc.lightLogic.length; j++) {
+        // Run 3x for vitality
+        status = [true, true, true];
+        for (let vitality = 0; vitality < 3; vitality++) {
+          for (
+            let k = 0;
+            k < controller.plc.lightLogic[j].green.length;
+            k++
+          ) {
+            // AND
+            if (controller.plc.lightLogic[j].green[k] === '&&') {
+            }
+            // NOT
+            else if (controller.plc.lightLogic[j].green[k].includes('!')) {
+              if (
+                this.tracks[line].blocks[
+                  parseInt(
+                    controller.plc.lightLogic[j].green[k].substring(1)
+                  ) - 1
+                ].occupancy
+              ) {
+                status[vitality] = false;
+              }
+            }
+            // Regular
+            else {
+              if (
+                !this.tracks[line].blocks[
+                  parseInt(controller.plc.lightLogic[j].green[k]) - 1
+                ].occupancy
+              ) {
+                status[vitality] = false;
+              }
+            }
+          }
+        }
+        // console.log(status);
+        // Vitality check before setting light position
+        if (status.every((val) => val === true)) {
+          let temp =
+            this.tracks[line].blocks[
+              parseInt(controller.plc.lightLogic[j].block) - 1
+            ].transitLight == 'red';
+
+          this.tracks[line].blocks[
+            parseInt(controller.plc.lightLogic[j].block) - 1
+          ].transitLight = 'green';
+
+          if (temp) {
+            window.electronAPI.sendCTCMessage({
+              type: 'lights',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.lightLogic[j].block) - 1
+              ].line,
+              id: parseInt(controller.plc.lightLogic[j].block),
+              value:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].transitLight,
+            });
+            window.electronAPI.sendTrackModelMessage({
+              type: 'lights',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.lightLogic[j].block) - 1
+              ].line,
+              id: parseInt(controller.plc.lightLogic[j].block),
+              value:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].transitLight,
+            });
+          }
+        } else {
+          let temp =
+            this.tracks[line].blocks[
+              parseInt(controller.plc.lightLogic[j].block) - 1
+            ].transitLight == 'green';
+
+          this.tracks[line].blocks[
+            parseInt(controller.plc.lightLogic[j].block) - 1
+          ].transitLight = 'red';
+
+          if (temp) {
+            window.electronAPI.sendCTCMessage({
+              type: 'lights',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.lightLogic[j].block) - 1
+              ].line,
+              id: parseInt(controller.plc.lightLogic[j].block),
+              value:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].transitLight,
+            });
+            window.electronAPI.sendTrackModelMessage({
+              type: 'lights',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.lightLogic[j].block) - 1
+              ].line,
+              id: parseInt(controller.plc.lightLogic[j].block),
+              value:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.lightLogic[j].block) - 1
+                ].transitLight,
+            });
+          }
+        }
+      }
+
+      // Crossing logic
+
+      for (let j = 0; j < controller.plc.crossingLogic.length; j++) {
+        // Run 3x for vitality
+        status = [false, false, false];
+        for (let vitality = 0; vitality < 3; vitality++) {
+          for (
+            let k = 0;
+            k < controller.plc.crossingLogic[j].logicTrue.length;
+            k++
+          ) {
+            // OR
+            if (controller.plc.crossingLogic[j].logicTrue[k] === '||') {
+            }
+            // NOT
+            else if (
+              controller.plc.crossingLogic[j].logicTrue[k].includes('!')
+            ) {
+              if (
+                !this.tracks[line].blocks[
+                  parseInt(
+                    controller.plc.crossingLogic[j].logicTrue[k].substring(1)
+                  ) - 1
+                ].occupancy
+              ) {
+                status[vitality] = true;
+              }
+            }
+            // Regular
+            else {
+              if (
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].logicTrue[k]) - 1
+                ].occupancy
+              ) {
+                status[vitality] = true;
+              }
+            }
+          }
+        }
+        // Vitality check before setting switch position
+        // Also send to CTC/Track Model
+        if (status.every((val) => val === true)) {
+          if (
+            !this.tracks[line].blocks[
+              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+            ].crossing
+          ) {
+            window.electronAPI.sendCTCMessage({
+              type: 'crossing',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].line,
+              id: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].id,
+              status:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].crossing,
+            });
+            window.electronAPI.sendTrackModelMessage({
+              type: 'crossing',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].line,
+              id: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].id,
+              status:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].crossing,
+            });
+          }
+          this.tracks[line].blocks[
+            parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+          ].crossing = true;
+          console.log(
+            this.tracks[line].blocks[
+              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+            ].crossing
+          );
+        } else {
+          if (
+            this.tracks[line].blocks[
+              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+            ].crossing
+          ) {
+            window.electronAPI.sendCTCMessage({
+              type: 'crossing',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].line,
+              id: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].id,
+              status:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].crossing,
+            });
+            window.electronAPI.sendTrackModelMessage({
+              type: 'crossing',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].line,
+              id: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].id,
+              status:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].crossing,
+            });
+          }
+          this.tracks[line].blocks[
+            parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+          ].crossing = false;
+        }
+      }
+    });
+
+    this.setState((prevState) => ({
+      appSate: !prevState.appState,
+    }));
+  }
+
   // Always keep status of blocks ----- executes PLC logic
   componentDidMount() {
     const interval = setInterval(() => {
-      if (this.state.currTrack === 'green'){
-        this.tracks[this.state.line].blocks = this.tracks[0].blocks;
-      } else if (this.state.currTrack === 'red'){
-        this.tracks[this.state.line].blocks = this.tracks[1].blocks;
-      }
-
-      // Logic
-      this.controllers.forEach((controller) => {
-        var status = [];
-
-        let line = 0;
-
-        if (controller.line === 'green'){
-          line = 0;
-        } else if (controller.line == 'red'){
-          line = 1;
-        }
-        for (let j = 0; j < controller.plc.switchLogic.length; j++) {
-
-          // Run 3x for vitality
-          status = [true, true, true];
-          for (let vitality = 0; vitality < 3; vitality++) {
-            for (
-              let k = 0;
-              k < controller.plc.switchLogic[j].logicTrue.length;
-              k++
-            ) {
-              // AND
-              if (controller.plc.switchLogic[j].logicTrue[k] === '&&') {
-              }
-              // NOT
-              else if (
-                controller.plc.switchLogic[j].logicTrue[k].includes('!')
-              ) {
-                if (
-                  this.tracks[line].blocks[
-                    parseInt(
-                      controller.plc.switchLogic[j].logicTrue[k].substring(1)
-                    ) - 1
-                  ].occupancy
-                ) {
-                  status[vitality] = false;
-                }
-              }
-              // Authority part will be in format '<blockNum>A<authNumber>'
-              else if (
-                controller.plc.switchLogic[j].logicTrue[k].includes('A')
-              ) {
-                // If authority of train on block is less than - return false
-                if (
-                  this.trackGreen.blocks[
-                    parseInt(
-                      controller.plc.switchLogic[j].logicTrue[k].split('A')[0]
-                    ) - 1
-                  ].authority <
-                  controller.plc.switchLogic[j].logicTrue[k].split('A')[1]
-                ) {
-                  status[vitality] = false;
-                }
-              }
-              // Regular
-              else {
-                if (
-                  this.tracks[0].blocks[
-                    parseInt(controller.plc.switchLogic[j].logicTrue[k]) - 1
-                  ].occupancy === false
-                ) {
-                  status[vitality] = false;
-                }
-              }
-            }
-          }
-          // Vitality check before setting switch position
-          // Also send to CTC/Track Model
-          if (
-            !this.tracks[line].blocks[
-              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].maintenanceMode
-          ) {
-            if (status.every((val) => val === true)) {
-              if (
-                !this.tracks[line].this.tracks[line].blocks[
-                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                ].switch.positionBool
-              ) {
-                window.electronAPI.sendCTCMessage({
-                  type: 'switch',
-                  line: this.tracks[line].blocks[
-                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                  ].line,
-                  root: this.tracks[line].blocks[
-                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                  ].switch.swBlock,
-                  pointing_to:
-                    this.tracks[line].blocks[
-                      parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                    ].switch.position,
-                });
-                window.electronAPI.sendTrackModelMessage({
-                  type: 'switch',
-                  line: this.tracks[line].blocks[
-                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                  ].line,
-                  root: this.tracks[line].blocks[
-                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                  ].switch.swBlock,
-                  pointing_to:
-                    this.tracks[line].blocks[
-                      parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                    ].switch.position,
-                });
-              }
-              this.tracks[line].blocks[
-                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-              ].switch.position = true;
-            } else {
-              if (
-                this.tracks[line].blocks[
-                  parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                ].switch.positionBool
-              ) {
-                window.electronAPI.sendCTCMessage({
-                  type: 'switch',
-                  line: this.tracks[line].blocks[
-                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                  ].line,
-                  root: this.tracks[line].blocks[
-                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                  ].switch.swBlock,
-                  pointing_to:
-                    this.tracks[line].blocks[
-                      parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                    ].switch.position,
-                });
-                window.electronAPI.sendTrackModelMessage({
-                  type: 'switch',
-                  line: this.tracks[line].blocks[
-                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                  ].line,
-                  root: this.tracks[line].blocks[
-                    parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                  ].switch.swBlock,
-                  pointing_to:
-                    this.tracks[line].blocks[
-                      parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-                    ].switch.position,
-                });
-              }
-              this.tracks[line].blocks[
-                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-              ].switch.position = false;
-            }
-          }
-        }
-
-        //   // Transit light logic
-        for (let j = 0; j < controller.plc.lightLogic.length; j++) {
-          // Run 3x for vitality
-          status = [true, true, true];
-          for (let vitality = 0; vitality < 3; vitality++) {
-            for (
-              let k = 0;
-              k < controller.plc.lightLogic[j].green.length;
-              k++
-            ) {
-              // AND
-              if (controller.plc.lightLogic[j].green[k] === '&&') {
-              }
-              // NOT
-              else if (controller.plc.lightLogic[j].green[k].includes('!')) {
-                if (
-                  this.tracks[line].blocks[
-                    parseInt(
-                      controller.plc.lightLogic[j].green[k].substring(1)
-                    ) - 1
-                  ].occupancy
-                ) {
-                  status[vitality] = false;
-                }
-              }
-              // Regular
-              else {
-                if (
-                  !this.tracks[line].blocks[
-                    parseInt(controller.plc.lightLogic[j].green[k]) - 1
-                  ].occupancy
-                ) {
-                  status[vitality] = false;
-                }
-              }
-            }
-          }
-          // console.log(status);
-          // Vitality check before setting light position
-          if (status.every((val) => val === true)) {
-            let temp =
-              this.tracks[line].blocks[
-                parseInt(controller.plc.lightLogic[j].block) - 1
-              ].transitLight == 'red';
-
-            this.tracks[line].blocks[
-              parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight = 'green';
-
-            if (temp) {
-              window.electronAPI.sendCTCMessage({
-                type: 'lights',
-                line: this.tracks[line].blocks[
-                  parseInt(controller.plc.lightLogic[j].block) - 1
-                ].line,
-                id: parseInt(controller.plc.lightLogic[j].block),
-                value:
-                  this.tracks[line].blocks[
-                    parseInt(controller.plc.lightLogic[j].block) - 1
-                  ].transitLight,
-              });
-              window.electronAPI.sendTrackModelMessage({
-                type: 'lights',
-                line: this.tracks[line].blocks[
-                  parseInt(controller.plc.lightLogic[j].block) - 1
-                ].line,
-                id: parseInt(controller.plc.lightLogic[j].block),
-                value:
-                  this.tracks[line].blocks[
-                    parseInt(controller.plc.lightLogic[j].block) - 1
-                  ].transitLight,
-              });
-            }
-          } else {
-            let temp =
-              this.tracks[line].blocks[
-                parseInt(controller.plc.lightLogic[j].block) - 1
-              ].transitLight == 'green';
-
-            this.tracks[line].blocks[
-              parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight = 'red';
-
-            if (temp) {
-              window.electronAPI.sendCTCMessage({
-                type: 'lights',
-                line: this.tracks[line].blocks[
-                  parseInt(controller.plc.lightLogic[j].block) - 1
-                ].line,
-                id: parseInt(controller.plc.lightLogic[j].block),
-                value:
-                  this.tracks[line].blocks[
-                    parseInt(controller.plc.lightLogic[j].block) - 1
-                  ].transitLight,
-              });
-              window.electronAPI.sendTrackModelMessage({
-                type: 'lights',
-                line: this.tracks[line].blocks[
-                  parseInt(controller.plc.lightLogic[j].block) - 1
-                ].line,
-                id: parseInt(controller.plc.lightLogic[j].block),
-                value:
-                  this.tracks[line].blocks[
-                    parseInt(controller.plc.lightLogic[j].block) - 1
-                  ].transitLight,
-              });
-            }
-          }
-        }
-
-        // Crossing logic
-
-        for (let j = 0; j < controller.plc.crossingLogic.length; j++) {
-          // Run 3x for vitality
-          status = [false, false, false];
-          for (let vitality = 0; vitality < 3; vitality++) {
-            for (
-              let k = 0;
-              k < controller.plc.crossingLogic[j].logicTrue.length;
-              k++
-            ) {
-              // OR
-              if (controller.plc.crossingLogic[j].logicTrue[k] === '||') {
-              }
-              // NOT
-              else if (
-                controller.plc.crossingLogic[j].logicTrue[k].includes('!')
-              ) {
-                if (
-                  !this.tracks[line].blocks[
-                    parseInt(
-                      controller.plc.crossingLogic[j].logicTrue[k].substring(1)
-                    ) - 1
-                  ].occupancy
-                ) {
-                  status[vitality] = true;
-                }
-              }
-              // Regular
-              else {
-                if (
-                  this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].logicTrue[k]) - 1
-                  ].occupancy
-                ) {
-                  status[vitality] = true;
-                }
-              }
-            }
-          }
-          // Vitality check before setting switch position
-          // Also send to CTC/Track Model
-            if (status.every((val) => val === true)) {
-              if (
-                !this.tracks[line].blocks[
-                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                ].crossing
-              ) {
-                window.electronAPI.sendCTCMessage({
-                  type: 'crossing',
-                  line: this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                  ].line,
-                  id: this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                  ].id,
-                  status:
-                    this.tracks[line].blocks[
-                      parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                    ].crossing,
-                });
-                window.electronAPI.sendTrackModelMessage({
-                  type: 'crossing',
-                  line: this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                  ].line,
-                  id: this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                  ].id,
-                  status:
-                    this.tracks[line].blocks[
-                      parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                    ].crossing,
-                });
-              }
-              this.tracks[line].blocks[
-                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].crossing = true;
-                          console.log(this.tracks[line].blocks[
-              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-            ].crossing);
-            } else {
-              if (
-                this.tracks[line].blocks[
-                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                ].crossing
-              ) {
-                window.electronAPI.sendCTCMessage({
-                  type: 'crossing',
-                  line: this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                  ].line,
-                  id: this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                  ].id,
-                  status:
-                    this.tracks[line].blocks[
-                      parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                    ].crossing,
-                });
-                window.electronAPI.sendTrackModelMessage({
-                  type: 'crossing',
-                  line: this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                  ].line,
-                  id: this.tracks[line].blocks[
-                    parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                  ].id,
-                  status:
-                    this.tracks[line].blocks[
-                      parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                    ].crossing,
-                });
-              }
-              this.tracks[line].blocks[
-                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].crossing = false;
-            }
-
-        }
-
-      });
-
-      this.setState((prevState) => ({
-        appSate: !prevState.appState,
-      }));
+     this.plc();
       // console.log('Blocks up to date');
     }, 1000);
   }
@@ -625,17 +642,6 @@ class TrackController extends React.Component {
       this.tracks[this.state.line].blocks[i].occupancy = false;
       this.tracks[this.state.line].blocks[i].authority = false;
       this.tracks[this.state.line].blocks[i].suggSpeed = 0;
-    }
-  }
-
-  schedule(e) {
-    if (!isNaN(e.target.value)) {
-      for (let i = 0; i < this.tracks[this.state.line].blocks.length; i++) {
-        this.tracks[this.state.line].blocks[i].occupancy = true;
-        for (let j = 0; j < 500000; j++) {
-          this.tracks[this.state.line].blocks[i].occupancy = false;
-        }
-      }
     }
   }
 
@@ -652,18 +658,28 @@ class TrackController extends React.Component {
   // Toggles switch
   setSwitch() {
     if (
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch.position ==
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch.outBlockHigh
+      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
+        .position ==
+      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
+        .outBlockHigh
     ) {
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch.setPosition(
-        this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch.outBlockLow
+      this.tracks[this.state.line].blocks[
+        this.state.currBlock.id - 1
+      ].switch.setPosition(
+        this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
+          .outBlockLow
       );
     } else if (
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch.position ==
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch.outBlockLow
+      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
+        .position ==
+      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
+        .outBlockLow
     ) {
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch.setPosition(
-        this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch.outBlockHigh
+      this.tracks[this.state.line].blocks[
+        this.state.currBlock.id - 1
+      ].switch.setPosition(
+        this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
+          .outBlockHigh
       );
     }
 
@@ -688,10 +704,10 @@ class TrackController extends React.Component {
     }));
 
     window.electronAPI.sendCTCMessage({
-      'type': 'occupancy',
-      'line': this.state.currBlock.line,
-      'block_id': this.state.currBlock.id.toString(),
-      'value': this.state.currBlock.occupancy
+      type: 'occupancy',
+      line: this.state.currBlock.line,
+      block_id: this.state.currBlock.id.toString(),
+      value: this.state.currBlock.occupancy,
     });
 
     console.log(this.state.currBlock.occupancy);
@@ -814,7 +830,9 @@ class TrackController extends React.Component {
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
-                        this.tracks[this.state.line].blocks[this.currBlock.id - 1].switch.position
+                        this.tracks[this.state.line].blocks[
+                          this.currBlock.id - 1
+                        ].switch.position
                       }`}
                       color={'success'}
                       variant="outlined"
@@ -832,8 +850,9 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
-                    .maintenanceMode ? (
+                  {this.tracks[this.state.line].blocks[
+                    this.state.currBlock.id - 1
+                  ].maintenanceMode ? (
                     <Chip
                       onClick={this.mmMode}
                       label="Maintenence Mode Activated"
@@ -1120,11 +1139,13 @@ class TrackController extends React.Component {
                       label="Controller"
                       onChange={this.handleChangeController}
                     >
-                      {this.controllers.filter((con) => con.line === this.currTrack.line).map((controller) => (
-                        <MenuItem key={+controller.id} value={+controller.id}>
-                          {String(controller.id)}
-                        </MenuItem>
-                      ))}
+                      {this.controllers
+                        .filter((con) => con.line === this.currTrack.line)
+                        .map((controller) => (
+                          <MenuItem key={+controller.id} value={+controller.id}>
+                            {String(controller.id)}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -1200,8 +1221,9 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
-                    .maintenanceMode ? (
+                  {this.tracks[this.state.line].blocks[
+                    this.state.currBlock.id - 1
+                  ].maintenanceMode ? (
                     <Chip
                       label="Maintenence Mode Activated"
                       color="warning"
