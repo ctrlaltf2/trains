@@ -88,7 +88,7 @@
     "Block Length (m)": "75",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "40",
-    "Infrastructure": "SWITCH TO/FROM YARD (75-yard)",
+    "Infrastructure": "SWITCH (9-0; 9-10)",
     "ELEVATION (M)": "0.00",
     "CUMALTIVE ELEVATION (M)": "4.13"
   },
@@ -149,7 +149,6 @@
     "Block Length (m)": "60",
     "Block Grade (%)": "-1",
     "Speed Limit (Km/Hr)": "40",
-    "Infrastructure": "SWITCH (15-16; 1-16)",
     "ELEVATION (M)": "-0.60",
     "CUMALTIVE ELEVATION (M)": "0.25"
   },
@@ -160,7 +159,7 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "-0.5",
     "Speed Limit (Km/Hr)": "40",
-    "Infrastructure": "STATION: HERRON AVE",
+    "Infrastructure": "SWITCH (16-15; 16-1); STATION: HERRON AVE",
     "Station Side": "Left/Right",
     "ELEVATION (M)": "-0.25",
     "CUMALTIVE ELEVATION (M)": "0.00"
@@ -333,7 +332,7 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "70",
-    "Infrastructure": "SWITCH (32-33; 33-72); UNDERGROUND",
+    "Infrastructure": "UNDERGROUND",
     "ELEVATION (M)": "0.00",
     "CUMALTIVE ELEVATION (M)": "-1.24"
   },
@@ -344,7 +343,7 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "70",
-    "Infrastructure": "UNDERGROUND",
+    "Infrastructure": "SWITCH (33-32; 33-72); UNDERGROUND",
     "ELEVATION (M)": "0.00",
     "CUMALTIVE ELEVATION (M)": "-1.24"
   },
@@ -455,7 +454,7 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "70",
-    "Infrastructure": "SWITCH (43-44; 44-67); UNDERGROUND",
+    "Infrastructure": "UNDERGROUND",
     "ELEVATION (M)": "0.00",
     "CUMALTIVE ELEVATION (M)": "-1.24"
   },
@@ -466,7 +465,7 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "70",
-    "Infrastructure": "UNDERGROUND",
+    "Infrastructure": "SWITCH (44-43; 44-67); UNDERGROUND",
     "ELEVATION (M)": "0.00",
     "CUMALTIVE ELEVATION (M)": "-1.24"
   },
