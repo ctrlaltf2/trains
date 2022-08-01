@@ -238,15 +238,13 @@ describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
 
 describe(`CTCOffice::initCy loads red and green lines`, () => {
   // Routing graphs
-  // TODO: Red routing graph
-  /*
   test(`red routing graph`, () => {
     const CTC = new CTCOffice();
 
     expect(
       CTC.cy['red']
     ).toBeDefined();
-  });*/
+  });
 
   test(`green routing graph`, () => {
     const CTC = new CTCOffice();
@@ -290,7 +288,7 @@ describe(`CTCOffice::getIntersegmentRoute`, () => {
           'Inglewood::E',
           '(Inglewood-Overbrook)',
           'Overbrook::E',
-          'J',
+          '(J)',
           '(yard-Glenbury)',
           'Glenbury::S',
           '(Glenbury-Dormont)',
@@ -315,23 +313,162 @@ describe(`CTCOffice::getIntersegmentRoute`, () => {
     test('Mt. Lebanon (due West) -> Dormont', () => {
       expect(
         CTC.getIntersegmentRoute('green', 'Mt. Lebanon::W', 'Dormont::N')
+      ).toStrictEqual([
+        'Mt. Lebanon::W',
+        '(Mt. Lebanon-Poplar)',
+        'Poplar',
+        '(Poplar-Castle Shannon)',
+        'Castle Shannon',
+        '(Castle Shannon-Mt. Lebanon)',
+        'Mt. Lebanon::E',
+        '(Mt. Lebanon-Dormont)',
+        'Dormont::N'
+      ]);
+    });
+
+    test('Sanity check - all segments defined in route_lookup', () => {
+      expect(
+        CTC.cy['green'].edges().map( (edge) => {
+          return edge.data('id');
+        })
+        .sort()
       ).toStrictEqual(
-        [
-          'Mt. Lebanon::W',
-          '(Mt. Lebanon-Poplar)',
-          'Poplar',
-          '(Poplar-Castle Shannon)',
-          'Castle Shannon',
-          '(Castle Shannon-Mt. Lebanon)',
-          'Mt. Lebanon::E',
-          '(Mt. Lebanon-Dormont)',
-          'Dormont::N'
-        ]
+        Array.from(
+          Object.keys(
+            CTC.route_lookup['green']
+          )
+        ).sort()
+      );
+    });
+
+    test('Sanity check - all stations defined', () => {
+      expect(
+        Array.from(
+          new Set(
+            CTC.cy['green'].edges().filter( (edge) => {
+              return edge.data('station');
+            })
+            .map( (edge) => {
+              return edge.data('id');
+            })
+            .map( (station_name) => {
+              return station_name.split('::')[0];
+            })
+          )
+        ).sort()
+      ).toStrictEqual(
+        Array.from(
+          new Set(
+            Object.values(
+              CTC.stations['green']
+            )
+          )
+        ).sort()
       );
     });
   });
 
+  const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
+
   // TODO: Red Line
+  describe('Red Line', () => {
+    test('Yard exit -> Swissville', () => {
+      expect(
+        CTC.getIntersegmentRoute('red', '(yard-exit)', 'Swissville::D')
+      ).toStrictEqual([
+        '(yard-exit)',
+        '(yard-Shadyside)',
+        'Shadyside::D',
+        '(Shadyside-Herron Ave.)',
+        'Herron Ave.::D',
+        '(Herron Ave.-Swissville)',
+        'Swissville::D',
+      ]);
+    });
+
+    test('Swissville (E) -> Swissville (W) (round upper loop)', () => {
+      expect(
+        CTC.getIntersegmentRoute('red', 'Swissville::U', 'Swissville::D')
+      ).toStrictEqual([
+        'Swissville::U',
+        '(Swissville-Herron Ave.)',
+        'Herron Ave.::U',
+        '(Herron Ave.-Shadyside)',
+        'Shadyside::U',
+        '(Shadyside-yard)',
+        '(yard-Herron Ave.)',
+        'Herron Ave.::D',
+        '(Herron Ave.-Swissville)',
+        'Swissville::D',
+      ]);
+    });
+
+    test('First Ave. (U) -> Penn Station (U) (upwards through center)', () => {
+      expect(
+        CTC.getIntersegmentRoute('red', 'First Ave.::U', 'Penn Station::U')
+      ).toStrictEqual([
+        'First Ave.::U',
+        '(First Ave.-Steel Plaza)',
+        'Steel Plaza::U',
+        '(Steel Plaza-Penn Station)',
+        'Penn Station::U'
+      ]);
+    });
+
+    test('Penn Station (D) -> First Ave. (D) (downwards through center)', () => {
+      expect(
+        CTC.getIntersegmentRoute('red', 'Penn Station::D', 'First Ave.::D')
+      ).toStrictEqual([
+        'Penn Station::D'
+        '(Penn Station-Steel Plaza)',
+        'Steel Plaza::D',
+        '(Steel Plaza-First Ave.)',
+        'First Ave.::D'
+      ]);
+    });
+
+    test('Sanity check - all stations defined', () => {
+      expect(
+        CTC.cy['red'].edges().map( (edge) => {
+          return edge.data('id');
+        })
+        .sort()
+      ).toStrictEqual(
+        Array.from(
+          Object.keys(
+            CTC.route_lookup['red']
+          )
+        ).sort()
+      );
+    });
+
+    test('Sanity check - all stations defined', () => {
+      expect(
+        Array.from(
+          new Set(
+            CTC.cy['red'].edges().filter( (edge) => {
+              return edge.data('station');
+            })
+            .map( (edge) => {
+              return edge.data('id');
+            })
+            .map( (station_name) => {
+              return station_name.split('::')[0];
+            })
+          )
+        ).sort()
+      ).toStrictEqual(
+        Array.from(
+          new Set(
+            Object.values(
+              CTC.stations['red']
+            )
+          )
+        ).sort()
+      );
+    });
+  });
+
 });
 
 /* -- UI Tests -- */

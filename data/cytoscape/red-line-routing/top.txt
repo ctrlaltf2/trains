@@ -1,0 +1,17 @@
+yEX 10d (yard-exit)
+10d 8d (yard-Shadyside)
+8d 7d Shadyside::D
+7d 1d "(Shadyside-Herron Ave.)"
+1d 17d "Herron Ave.::D"
+17d 21d "(Herron Ave.-Swissville)"
+21d 22d Swissville::D
+22d 25d "(Swissville-Penn Station)"
+25u 22u "(Penn Station-Swissville)"
+22u 21u Swissville::U
+21u 17u "(Swissville-Herron Ave.)"
+17u 16u "Herron Ave.::U"
+16u 6u "(Herron Ave.-Shadyside)"
+6u 7u Shadyside::U
+7u 10u (Shadyside-yard)
+10u yENT (yard-enter)
+10u 1d "(yard-Herron Ave.)"
