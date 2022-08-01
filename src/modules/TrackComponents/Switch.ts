@@ -1,7 +1,8 @@
+// @ts-nocheck
 export class Switch {
-  private _position: number;
+  public _position: number;
 
-  private _positionBool: boolean;
+  public _positionBool: boolean;
 
   constructor(
     public swBlock: number,
@@ -34,6 +35,10 @@ export class Switch {
     }
   }
 
+  getPosition(){
+    return this._position;
+  }
+
   get position() {
     return this._position;
   }
@@ -42,3 +47,5 @@ export class Switch {
     return this._positionBool;
   }
 }
+
+export default Switch;
