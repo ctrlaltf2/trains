@@ -145,7 +145,14 @@ test(`CTCOffice::inferTrainMovement, across switch junction, single source`, () 
 });
 
 test(`CTCOffice::inferTrainMovement, across switch junction, multiple source`, () => {
+  const CTC = new CTCOffice();
+  CTC.trainPositions['Thomas'] = '29';
 
+  expect(
+    CTC.inferTrainMovement('green', '30', true)
+  ).toStrictEqual(
+    'Thomas'
+  );
 });
 
 describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
@@ -203,6 +210,104 @@ describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
       undefined
     );
   });
+});
+
+describe(`CTCOffice::initCy loads red and green lines`, () => {
+  // Routing graphs
+  // TODO: Red routing graph
+  /*
+  test(`red routing graph`, () => {
+    const CTC = new CTCOffice();
+
+    expect(
+      CTC.cy['red']
+    ).toBeDefined();
+  });*/
+
+  test(`green routing graph`, () => {
+    const CTC = new CTCOffice();
+
+    expect(
+      CTC.cy['green']
+    ).toBeDefined();
+  });
+
+  // Display graphs
+  test(`red display graph`, () => {
+    const CTC = new CTCOffice();
+
+    expect(
+      CTC.cy_display['red']
+    ).toBeDefined();
+  });
+
+  test(`green display graph`, () => {
+    const CTC = new CTCOffice();
+
+    expect(
+      CTC.cy_display['green']
+    ).toBeDefined();
+  });
+});
+
+describe(`CTCOffice::getIntersegmentRoute`, () => {
+  const CTC = new CTCOffice();
+
+  describe(`Green Line`, () => {
+    test('South Bank -> Dormont', () => {
+      expect(
+        CTC.getIntersegmentRoute('green', 'South Bank', 'Dormont::S')
+      ).toStrictEqual(
+        [
+          'South Bank',
+          '(South Bank-Central)',
+          'Central::E',
+          '(Central-Inglewood)',
+          'Inglewood::E',
+          '(Inglewood-Overbrook)',
+          'Overbrook::E',
+          'J',
+          '(yard-Glenbury)',
+          'Glenbury::S',
+          '(Glenbury-Dormont)',
+          'Dormont::S'
+        ]
+      );
+    });
+
+    test('Central -> Whited', () => {
+      expect(
+        CTC.getIntersegmentRoute('green', 'Central::W', 'Whited::E')
+      ).toStrictEqual(
+        [
+          'Central::W',
+          '(Central-FGZ)',
+          '(FGZ-Whited)',
+          'Whited::E'
+        ]
+      );
+    });
+
+    test('Mt. Lebanon (due West) -> Dormont', () => {
+      expect(
+        CTC.getIntersegmentRoute('green', 'Mt. Lebanon::W', 'Dormont::N')
+      ).toStrictEqual(
+        [
+          'Mt. Lebanon::W',
+          '(Mt. Lebanon-Poplar)',
+          'Poplar',
+          '(Poplar-Castle Shannon)',
+          'Castle Shannon',
+          '(Castle Shannon-Mt. Lebanon)',
+          'Mt. Lebanon::E',
+          '(Mt. Lebanon-Dormont)',
+          'Dormont::N'
+        ]
+      );
+    });
+  });
+
+  // TODO: Red Line
 });
 
 /* -- UI Tests -- */
