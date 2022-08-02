@@ -6,9 +6,13 @@ import {
   Grid,
   FormGroup,
   FormControlLabel,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Switch,
   Button,
   Slider,
+  Select,
   Stack,
   AppBar,
   Typography,
@@ -66,6 +70,14 @@ class TrainControllerSW extends React.Component {
         case 'signalPickupFailure':
           this.signalPickupFailure(payload.signalPickupFailure);
           break;
+        case 'Beacon':
+          // Takes the appended character of station name and sets it to station side
+          this.stationSide = payload.Beacon.charAt(payload.Beacon.length - 1);
+
+          // Gets all but the last character of the string
+          this.stationName = payload.Beacon.slice(0, -1);
+
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -82,8 +94,6 @@ class TrainControllerSW extends React.Component {
       trainLights: true,
       cabinLights: true,
       under: false, // Variable for if the train is underground
-      rightPlatform: false, // Used to check if right doors should open
-      leftPlatform: false, // Used to check if left doors should open
       announcementsOnOff: false,
       transitLights: '',
 
@@ -109,7 +119,7 @@ class TrainControllerSW extends React.Component {
       k_i_UI: 0, // Integral Gain
       setSpeedUI: 0, // Speed set by the driver: the speech you want to approach
       currentSpeedUI: 0, // The current speed of the train, also known as currentVelocity, in meters per second
-      currentSpeedUI_MPH: 0,
+      currentSpeedUI_MPH: 0, // Current speed, converted to miles per hour
 
     };
 
@@ -119,18 +129,18 @@ class TrainControllerSW extends React.Component {
     this.setSpeed = 0;
     this.setSpeedkilo = 0.0; // Desired speed converted to km/h for velocity calculation in Train Model
     this.power = 0;
-    this.maxPower = 120000; // Max power of the train is 120 kilowatts
+    this.maxPower = 120000.0; // Max power of the train is 120 kilowatts
     this.cumulative_err = 0; //u_k
     this.error_k = 0;
     this.error_kprev = 0;
-    this.totalMass = 0;
-    this.passengers = 8;
     this.currentSpeed = 0;
     this.commandedSpeed = 0;
     this.suggestedSpeed = 0;
     this.temperature = 70;
     this.authority = 10;
     this.stationName = '';
+    this.stationSide = '';
+    this.trainID;
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
@@ -160,6 +170,7 @@ class TrainControllerSW extends React.Component {
     this.handleSuggestedSpeedChange = this.handleSuggestedSpeedChange.bind(this);
     this.handleAuthorityChange = this.handleAuthorityChange.bind(this);
     this.handleTemperatureChange = this.handleTemperatureChange.bind(this);
+    this.handleDropdownChange = this.handleDropdownChange.bind(this);
     this.setKp = this.setKp.bind(this);
     this.setKi = this.setKi.bind(this);
     this.setDesiredSpeed = this.setDesiredSpeed.bind(this);
@@ -218,7 +229,10 @@ class TrainControllerSW extends React.Component {
 
 
       // Automatic Mode
-      if(this.state.automaticMode){
+      if(this.state.automaticMode == true){
+
+        // // Train speed should be set to suggested speed in automatic mode
+        // this.setState({setSpeedUI: this.state.suggestedSpeedUI_MPH});
 
         // If there's a brake failure, engine failure, or signal pickup failure, decrease the speed and stop
         if (this.state.brakeFailureDisplay || this.state.engineFailureDisplay || this.state.signalPickupFailureDisplay){
@@ -229,8 +243,6 @@ class TrainControllerSW extends React.Component {
         else{
             // Reset the emergency brake
             this.setState({emergencyButton: false});
-            this.setSpeed = this.suggestedSpeed;
-            this.setState({setSpeedUI: this.state.suggestedSpeedUI_MPH});
         }
 
         // Stop the train when authority reaches 0
@@ -243,18 +255,21 @@ class TrainControllerSW extends React.Component {
       // Manual Mode
       else{
 
-
         // If the service brake is activated while train is moving,
         // set the desired speed to 0 and toggle service brake UI
-        if((this.state.brakeStatus == true) && (this.state.currentSpeed != 0)){
+        if((this.state.brakeStatus == true) && (this.state.currentSpeedUI_MPH != 0)){
           this.setSpeed = 0;
+          this.setState({setSpeedUI: 0});
         }
 
         // If the emergency brake is activated while train is moving,
         // set the desired speed to 0 and toggle emergency brake UI
-        else if((this.state.emergencyButton == true) && (this.state.currentSpeed != 0)){
+
+        if((this.state.emergencyButton == true) && (this.state.currentSpeedUI_MPH != 0)){
           this.setSpeed = 0;
+          this.setState({setSpeedUI: 0});
         }
+
       }
     }, 100)
 
@@ -278,6 +293,10 @@ class TrainControllerSW extends React.Component {
       'temperature': this.temperature,
     });
 
+  }
+
+  handleDropdownChange(event) {
+    this.trainID = event.target.value;
   }
 
   emergencyBrake(){ // Toggles the emergency brake
@@ -421,9 +440,12 @@ class TrainControllerSW extends React.Component {
 
   calculatePower() { // Function that calculates the current power of the train
 
-    if(this.state.automaticMode == true){
-      this.setSpeed = this.suggestedSpeed;
-    }
+    // Convert speeds from km/h to m/s
+    // this.setSpeed = this.setSpeed / 3.6;
+    // this.currentSpeed = this.currentSpeed / 3.6;
+
+
+
     // Calculate error
     this.error_kprev = this.error_k;
     this.error_k = Math.abs(this.setSpeed - this.currentSpeed);
@@ -440,6 +462,7 @@ class TrainControllerSW extends React.Component {
 
     // Final Power Calculation
     this.power = ((this.k_p*this.error_k) + (this.k_i*this.cumulative_err));
+
 
     // Send power command to train model
     window.electronAPI.sendTrainModelMessage({
@@ -462,13 +485,16 @@ class TrainControllerSW extends React.Component {
   }
 
   platformSide(){ // Checks which side the station is on and opens the respective doors
-    if(this.automaticMode == true && this.currentSpeed == 0 && this.rightPlatform == true){
-      this.setState({rightDoors: true});
+    if(this.automaticMode == true && this.currentSpeed == 0 && this.platformSide == 'r'){
+      // true = closed, false = open
+      this.setState({rightDoors: false});
+    }
+    else if (this.automaticMode = true && this.currentSpeed == 0 && this.platformSide == 'l'){
       this.setState({leftDoors: false});
     }
-    else if (this.automaticMode = true && this.currentSpeed == 0 && this.leftPlatform == true){
-      this.setState({leftDoors: true});
+    else if (this.automaticMode = true && this.currentSpeed == 0 && this.platformSide == 'b'){
       this.setState({rightDoors: false});
+      this.setState({leftDoors: false});
     }
   }
 
@@ -707,8 +733,7 @@ class TrainControllerSW extends React.Component {
           </AppBar>
         </Box>
         <Grid container spacing={2}>
-          <div className="left">
-              <Grid item xs={8} md={8}>
+              <Grid item xs={8} md={6}>
                 <Item>
                   <FormGroup>
                     <FormControlLabel
@@ -719,9 +744,7 @@ class TrainControllerSW extends React.Component {
                   </FormGroup>
                 </Item>
               </Grid>
-            </div>
-            <div className="left">
-              <Grid item xs={8} md={4}>
+              <Grid item xs={8} md={6}>
                 <Item>
                   <FormGroup>
                     <FormControlLabel
@@ -732,9 +755,7 @@ class TrainControllerSW extends React.Component {
                   </FormGroup>
                 </Item>
               </Grid>
-            </div>
-            <div className="left">
-              <Grid item xs={8} md={4}>
+              <Grid item xs={8} md={6}>
                 <Item>
                   <FormGroup>
                     <FormControlLabel
@@ -745,9 +766,7 @@ class TrainControllerSW extends React.Component {
                   </FormGroup>
                 </Item>
               </Grid>
-            </div>
-            <div className="left">
-              <Grid item xs={8} md={8}>
+              <Grid item xs={8} md={6}>
                 <Item>
                   <FormGroup>
                     <FormControlLabel
@@ -758,19 +777,7 @@ class TrainControllerSW extends React.Component {
                   </FormGroup>
                 </Item>
               </Grid>
-            </div>
-            <Grid item xs={5} md={5}>
-              <Item>
-                <FormGroup>
-                  <FormControlLabel
-                    control={<Switch defaultChecked />}
-                    onClick={this.toggleAutomatic}
-                    label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
-                  />
-                </FormGroup>
-              </Item>
-            </Grid>
-            <Grid item xs={6} md={8}>
+            <Grid item xs={6} md={6}>
               <Item>
                 {this.state.emergencyButton ? (
                 <Button variant="contained" color="error" onClick={this.emergencyBrake}>
@@ -783,7 +790,7 @@ class TrainControllerSW extends React.Component {
                 )}
               </Item>
             </Grid>
-            <Grid item xs={6} md={8}>
+            <Grid item xs={6} md={6}>
               <Item>
                 {this.state.brakeStatus ? (
                 <Button variant="contained" color="error" onClick={this.toggleServiceBrake}>
@@ -796,21 +803,26 @@ class TrainControllerSW extends React.Component {
                 )}
               </Item>
             </Grid>
-            <Grid item xs={4} md={2}>
+            <Grid item xs={2} md={3}>
+              <Item>
+                <FormGroup>
+                  <FormControlLabel
+                    control={<Switch defaultChecked />}
+                    onClick={this.toggleAutomatic}
+                    label={this.state.automaticMode ? "Automatic Mode" : "Manual Mode"}
+                  />
+                </FormGroup>
+              </Item>
+            </Grid>
+            <Grid item xs={4} md={4}>
               <Item>Power: {this.state.powerUI / 1000} Kilowatts</Item>
             </Grid>
-            <Grid item xs={3} md={3}>
-                <label>
-                  Temperature:
-                  <input type="number" value={this.state.temperatureUI} onChange={this.handleTemperatureChange} />
-                </label>
-            </Grid>
-            <Grid item xs={4} md={2}>
+            <Grid item xs={4} md={4}>
               <Item>Current Speed: {this.state.currentSpeedUI_MPH} MPH</Item>
             </Grid>
             <Grid item xs={4} md={2}>
               <label>
-                Set Desired Speed:
+                Set Speed (MPH):
                 <input type="number" value={this.state.setSpeedUI} onChange={this.setDesiredSpeed} />
               </label>
             </Grid>
@@ -826,7 +838,13 @@ class TrainControllerSW extends React.Component {
             <Grid item xs={5} md={2}>
               <Item>Next Stop: {this.state.stationNameUI} </Item>
             </Grid>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5}>
+            <Grid item xs={3} md={2}>
+                <label>
+                  Temperature (F):
+                  <input type="number" value={this.state.temperatureUI} onChange={this.handleTemperatureChange} />
+                </label>
+            </Grid>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={6}>
               {this.state.brakeFailureDisplay ? (
                 <Button variant="contained" color="error">
                   Brake Status: Failing
@@ -863,6 +881,36 @@ class TrainControllerSW extends React.Component {
                 Toggle Engineer Panel
               </Button>
             </Stack>
+            <FormControl sx={{ m: 1, width: 300 }}>
+              <InputLabel id="demo-simple-select-label">Train ID</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={this.trainID}
+                label="Train ID"
+                onChange={this.handleDropdownChange}
+              >
+                <MenuItem value={1}>Train 1</MenuItem>
+                <MenuItem value={2}>Train 2</MenuItem>
+                <MenuItem value={3}>Train 3</MenuItem>
+                <MenuItem value={4}>Train 4</MenuItem>
+                <MenuItem value={5}>Train 5</MenuItem>
+                <MenuItem value={6}>Train 6</MenuItem>
+                <MenuItem value={7}>Train 7</MenuItem>
+                <MenuItem value={8}>Train 8</MenuItem>
+                <MenuItem value={9}>Train 9</MenuItem>
+                <MenuItem value={10}>Train 10</MenuItem>
+                <MenuItem value={11}>Train 11</MenuItem>
+                <MenuItem value={12}>Train 12</MenuItem>
+                <MenuItem value={13}>Train 13</MenuItem>
+                <MenuItem value={14}>Train 14</MenuItem>
+                <MenuItem value={15}>Train 15</MenuItem>
+                <MenuItem value={16}>Train 16</MenuItem>
+                <MenuItem value={17}>Train 17</MenuItem>
+                <MenuItem value={18}>Train 18</MenuItem>
+                <MenuItem value={19}>Train 19</MenuItem>
+              </Select>
+            </FormControl>
         </Grid>
       </Box>
       </ThemeProvider>
