@@ -112,6 +112,7 @@ class TrainControllerSW extends React.Component {
       temperatureUI: 70,
       authorityUI: 10,
       stationNameUI: '',
+      currentTrain: 1,
 
       //Power & Velocity Variables
       powerUI: 0, // power is in kilowatts
@@ -123,24 +124,27 @@ class TrainControllerSW extends React.Component {
 
     };
 
-    this.k_p = 10000; // Proportional gain
-    this.k_i = 0;     // Integral gain
-    this.T = 2000;       // Sample period of the train model
-    this.setSpeed = 0;
-    this.setSpeedkilo = 0.0; // Desired speed converted to km/h for velocity calculation in Train Model
-    this.power = 0;
-    this.maxPower = 120000.0; // Max power of the train is 120 kilowatts
-    this.cumulative_err = 0; //u_k
-    this.error_k = 0;
-    this.error_kprev = 0;
+    // Backend variables used for calculations
     this.currentSpeed = 0;
     this.commandedSpeed = 0;
     this.suggestedSpeed = 0;
+    this.power = 0;
+    this.maxPower = 120000.0; // Max power of the train is 120 kilowatts
+    this.cumulative_err = 0; //u_k
+    this.k_p = 10000; // Proportional gain
+    this.k_i = 0;     // Integral gain
+    this.error_k = 0;
+    this.error_kprev = 0;
+    this.T = 2000;       // Sample period of the train model
+    this.setSpeed = 0;
+    this.setSpeedkilo = 0.0; // Desired speed converted to km/h for velocity calculation in Train Model
+
+
     this.temperature = 70;
     this.authority = 10;
     this.stationName = '';
     this.stationSide = '';
-    this.trainID;
+    this.trainID = [];
 
     // Toggling buttons
     this.toggle = this.toggle.bind(this);
@@ -192,31 +196,6 @@ class TrainControllerSW extends React.Component {
         this.setState({powerUI: this.power});
       }
 
-      // Test UI speeds
-      this.setState({currentSpeedUI: this.currentSpeed});
-      this.setState({commandedSpeedUI: this.commandedSpeed});
-      this.setState({suggestedSpeedUI: this.suggestedSpeed});
-
-
-      // Check to make sure train does not exceed 43 miles an hour
-      if (this.currentSpeed == 70){
-        this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))-1});
-      }
-      else{
-        this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))});
-      }
-      if (this.suggestedSpeed == 70){
-        this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))-1});
-      }
-      else{
-        this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))});
-      }
-      if (this.commandedSpeed == 70){
-        this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))-1});
-      }
-      else{
-        this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))});
-      }
 
       // Setting values for UI display
       this.setState({k_i_UI: this.k_i});
@@ -285,6 +264,7 @@ class TrainControllerSW extends React.Component {
     }
     else{
       this.temperature = event.target.value;
+      //this.temperature = this.trainID[this.state.currentTrain].temperature
     }
 
     // Send temperature to train model
@@ -296,7 +276,7 @@ class TrainControllerSW extends React.Component {
   }
 
   handleDropdownChange(event) {
-    this.trainID = event.target.value;
+    this.setState({currentTrain: event.target.value});
   }
 
   emergencyBrake(){ // Toggles the emergency brake
@@ -361,6 +341,16 @@ class TrainControllerSW extends React.Component {
     else{
       this.currentSpeed = event.target.value;
     }
+
+    // Update current speed on UI
+    this.setState({currentSpeedUI: this.currentSpeed});
+
+    if (this.currentSpeed == 70){
+      this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))-1});
+    }
+    else{
+      this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))});
+    }
   }
 
   handleCommandedSpeedChange(event) { // Changes the commanded speed
@@ -375,6 +365,16 @@ class TrainControllerSW extends React.Component {
     }
     else{
       this.commandedSpeed = event.target.value;
+    }
+
+    // Update commanded speed on UI
+    this.setState({commandedSpeedUI: this.commandedSpeed});
+
+    if (this.commandedSpeed == 70){
+      this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))-1});
+    }
+    else{
+      this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))});
     }
 
   }
@@ -392,6 +392,15 @@ class TrainControllerSW extends React.Component {
       this.suggestedSpeed = event.target.value;
     }
 
+    // Update suggested speed on UI
+    this.setState({suggestedSpeedUI: this.suggestedSpeed});
+
+    if (this.suggestedSpeed == 70){
+      this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))-1});
+    }
+    else{
+      this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))});
+    }
   }
 
   handleAuthorityChange(event) { // Changes the authority
@@ -443,7 +452,9 @@ class TrainControllerSW extends React.Component {
     // Convert speeds from km/h to m/s
     // this.setSpeed = this.setSpeed / 3.6;
     // this.currentSpeed = this.currentSpeed / 3.6;
-
+    for (let i = 0; i < 3; i++){
+      //todo
+    }
 
 
     // Calculate error
@@ -873,11 +884,11 @@ class TrainControllerSW extends React.Component {
                 </Button>
                 )}
             </Stack>
-            <Stack spacing={2} direction="row">
-              <Button variant="contained" onClick={this.toggle}>
+            <Stack spacing={2} direction="row" >
+              <Button variant="contained" onClick={this.toggle} style={{margin: '1rem'}}>
                 Toggle Test UI
               </Button>
-              <Button variant="contained" onClick={this.toggleEngineer}>
+              <Button variant="contained" onClick={this.toggleEngineer} style={{margin: '1rem'}}>
                 Toggle Engineer Panel
               </Button>
             </Stack>
@@ -886,7 +897,7 @@ class TrainControllerSW extends React.Component {
               <Select
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
-                value={this.trainID}
+                value={this.trainID[this.state.currentTrain]}
                 label="Train ID"
                 onChange={this.handleDropdownChange}
               >
