@@ -470,7 +470,7 @@ describe(`CTCOffice::getIntersegmentRoute`, () => {
 
 test('CTCOffice:checkShouldDispatch', () => {
   // Run with multiple timestamps, there's some string <-> float conversion happening
-  for(let i = 0; i < 1; ++i) {
+  for(let i = 0; i < 10; ++i) {
     const CTC = new CTCOffice();
     window.electronAPI.sendTrackControllerMessage = jest.fn( payload => {} );
 
