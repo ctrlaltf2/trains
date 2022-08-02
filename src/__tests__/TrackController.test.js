@@ -1,6 +1,9 @@
 import TrackController from '../modules/TrackController';
 import Switch from '../modules/TrackComponents/Switch';
 import Track from '../modules/TrackComponents/Track';
+import PLCReader from '../modules/PLCReader';
+
+import SW13 from '../modules/PLC/Green/SW13.json';
 
 test('Track Controller exists', () => {
   const TC = new TrackController();
@@ -82,4 +85,14 @@ test('TrackController::plcCrossing', () => {
   TC.occupy(19, 'green', true);
   TC.plc();
   expect(TC.getBlock(19, 'green').crossing).toEqual(true);
+});
+
+test('TrackController::loadPLC', () => {
+  const PLCRead = new PLCReader();
+  PLCRead.parse(SW13);
+  const TC = new TrackController();
+  TC.getController(1).setPLC(SW13);
+
+  expect(TC.getController(1).plc).toEqual(PLCRead);
+
 });

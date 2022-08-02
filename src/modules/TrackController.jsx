@@ -211,6 +211,7 @@ class TrackController extends React.Component {
     this.CTCMMode = this.CTCMMode.bind(this);
     this.getSwitchPos = this.getSwitchPos.bind(this);
     this.occupy = this.occupy.bind(this);
+    this.getController = this.getController.bind(this);
 
     this.handleChangeController = this.handleChangeController.bind(this);
     this.plc = this.plc.bind(this);
@@ -235,6 +236,10 @@ class TrackController extends React.Component {
     } else if (line === 'yellow') {
       return this.tracks[1].blocks[id - 1].switch.getPosition();
     }
+  }
+
+  getController(id) {
+    return this.controllers[id];
   }
 
   mmMode() {
