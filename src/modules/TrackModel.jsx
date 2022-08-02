@@ -1,6 +1,8 @@
 /* eslint-disable react/sort-comp */
 /* eslint-disable no-plusplus */
 /* eslint-disable react/destructuring-assignment */
+
+//  -----IMPORT STATEMENTS----- //
 import { Module } from 'module';
 import React, { useRef } from 'react';
 import {
@@ -26,26 +28,54 @@ import { blue, grey, red, lightGreen } from '@mui/material/colors';
 import { Box, sizing } from '@mui/system';
 import './TrackModel.css';
 import {
+  AutoFixHighRounded,
   ContactPageSharp,
+  ContactSupportOutlined,
   FastForward,
   PortableWifiOffRounded,
 } from '@mui/icons-material';
 import { array } from 'prop-types';
-import blueTrackImg from './BlueTrack.jpg';
-import blueTrackJson from './blueLineTrackModel.json';
-
 import { Block } from './TrackComponents/Block';
 import { Switch } from './TrackComponents/Switch';
 import { Track } from './TrackComponents/Track';
 
-// variables
+//  needed for the track model class to recieve and send signals
+import redLine from './TrackComponents/TrackJSON/VF2/TrackModel_JSON/red_line.json';
+import greenLine from './TrackComponents/TrackJSON/VF2/TrackModel_JSON/green_line.json';
+
+import { isGeneratorFunction } from 'util/types';
+
+// -----VARIABLES----- //
+
 const darkMode = createTheme({
   palette: {
     mode: 'dark',
   },
 });
 
-const blocks = [];
+let greenBlocks = [];
+let redBlocks = [];
+let greenEVTemp;
+let redEVTemp;
+let greenTH_Status;
+let redTH_Status;
+let trainDispatchArr = [];
+
+let isTrainMoving = false;
+let enteredBlock = false;
+let exitedBlock = false;
+
+let lineName = '';
+let enviornmentTemp = 0;
+let trackHeaterStatus = 'disabled';
+let trainOccupancy = 25;
+let personsAtStation = 10;
+
+let redCurrBlock; let greenCurrBlock = 1; //  Block that the train model is currently entering // default to 1
+
+let Authority = 0; //  will be given via track controller
+
+//  -----TRACK MODEL CLASS----- //
 
 class TrackModel extends React.Component {
   constructor(props, name) {
@@ -72,8 +102,6 @@ class TrackModel extends React.Component {
       trainOccupancy: 25,
       blockOccupancy: 'false',
       personsAtStation: 10,
-
-      TrackJSON: '',
       TransitLightStatus: 'Red',
 
       // beacon
@@ -81,8 +109,8 @@ class TrackModel extends React.Component {
 
       // if information has problem might need blocks: blocks
       //  is an array of blocks, one block has block info for the track
-      blocks,
-      currBlock: 1, //  Block that the train model is currently entering
+      blocks: [],
+      currBlock: 1, //  Block that the train model is currently entering // default to 1
 
       Authority: 0, //  will be given via track controller
 
@@ -94,39 +122,52 @@ class TrackModel extends React.Component {
     //  function to load in new files
     window.electronAPI.subscribeFileMessage((_event, payload) => {
       try {
-        // this.state.TrackJSON = JSON.parse(payload.payload); //  assigns the value of the JSON data to the JSON var
-        // call other function
         this.loadNewTrackModel(JSON.parse(payload.payload));
       } catch (error) {
         console.log(error);
       }
-
-      //  testing
     });
 
     //  Function to recieve messages from other modules via IPC communication
     window.electronAPI.subscribeTrackModelMessage((_event, payload) => {
       console.log('IPC:Track Model: ', payload);
+      let trainID; let trackLine;
       switch (payload.type) {
         //  signals from Track Controller
+        case 'dispatch':
+          trainID = payload.trainID;
+          trackLine = payload.line;
+          trainDispatchArr.push({
+            trainID, trackLine
+          });
+          this.sendYardExitInfo(trainID, trackLine);
+          break;
         case 'switch':
-          this.state.Authority = payload.payload;
+          //  only set up for green line rn
+          // blocks[payload.root].next = payload.pointing_to;
+          // blocks[payload.pointing_to].prev = payload.root;
+          // console.log(
+          //   'blocks root, next, prev',
+          //   blocks[payload.root].id,
+          //   blocks[payload.root].next,
+          //   blocks[payload.root].prev
+          // );
           break;
         case 'light':
           this.state.TransitLightStatus = payload.payload;
           break;
         case 'authority':
-          this.state.Authority = payload.payload;
+          Authority = payload.payload;
           break;
 
         //  signals from Train Model
         case 'signalPickupFailure':
           this.state.TrackSignalPickup = payload.payload;
           break;
-
-        case 'blockOccupancy':
-          //  call the update block occupancy function
-          this.updateBlockOccupancy(payload.payload);
+        case 'updateBlockOccupancy':
+          // eslint-disable-next-line no-case-declarations
+          trackLine = payload.payload;
+          this.trainModelHandshake(trackLine);
           break;
         default:
       }
@@ -146,74 +187,103 @@ class TrackModel extends React.Component {
     this.loadBlockInfo = this.loadBlockInfo.bind(this);
     this.resetAllSettings = this.resetAllSettings.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    // this.generateTrackModelEVtemp = this.generateTrackModelEVtemp.bind(this);
     this.checkTrackHeaters = this.checkTrackHeaters.bind(this);
     this.loadFile = this.loadFile.bind(this);
     this.testUISpeedLimitFun = this.testUISpeedLimitFun.bind(this);
     this.testUIEnvtempFun = this.testUIEnvtempFun.bind(this);
     this.testUITrackHeaterStatusFun =
       this.testUITrackHeaterStatusFun.bind(this);
-    // this.isBlockUnderground = this.isBlockUnderground.bind(this);
-    // this.generateBeacon = this.generateBeacon.bind(this);
+
+    this.trainModelHandshake = this.trainModelHandshake.bind(this);
     this.sendYardExitInfo = this.sendYardExitInfo.bind(this);
     this.sendMessages = this.sendMessages.bind(this);
+
+    //  Create multiple track model instances (one for each line)
+    const redLineObject = new Track();
+    const greenLineObject = new Track();
+
+    //  load tracks
+    redLineObject.loadTrack(redLine);
+    greenLineObject.loadTrack(greenLine);
+
+    //  set infrastructure
+    redLineObject.setInfrastructure();
+    greenLineObject.setInfrastructure();
+
+    //   load the Track Objects' blocks arrays into the Track Model Class blocks' arrays
+    greenBlocks = greenLineObject.blocks;
+    redBlocks = redLineObject.blocks;
+
+    //  set the enviornemnt temps for both lines
+    const tr = redLineObject.generateTrackModelEVtemp();
+    redEVTemp = tr;
+    const tg = greenLineObject.generateTrackModelEVtemp();
+    greenEVTemp = tg;
+
+    //  check the track heater status
+    this.checkTrackHeaters(redEVTemp, greenEVTemp);
+
+    //  send messages to the other modules based on the information in the Track Classes
+    this.sendMessages(redLineObject);
+    this.sendMessages(greenLineObject);
   }
-
-  //  Load's blocks information from the Track Model File - alpha = blockIndex
-  loadBlockInfo = (alpha) => {
-    //  convert to imperials for display only
-    const curBlock = this.state.blocks[alpha]; //  get the block selected
-    const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
-    const speedLimitImperial = (curBlock.spdLimit * 0.621371).toFixed(3);
-    const elevationImperial = (curBlock.elevation * 3.28084).toFixed(3);
-
-    //  Assign values from the Blocks array to State vars
-    this.setState({
-      blockLength: blockLengthImperial,
-    });
-    this.setState({
-      speedLimit: speedLimitImperial,
-    });
-    this.setState({
-      elevation: elevationImperial,
-    });
-    this.state.blockOccupancy =
-      this.state.blocks[this.state.blockIndex - 1].Occupied;
-  };
 
   //  Load Track Block Info
   loadNewTrackModel = (trackFile) => {
     //  instantiate new track object
-    const TrackObject = new Track();
-    TrackObject.loadTrack(trackFile);
+    console.log('Track File contents: ', trackFile);
+    // const TrackObject = new Track();
+    // TrackObject.loadTrack(trackFile);
 
-    //  set infrastructure
-    TrackObject.setInfrastructure();
+    // //  set infrastructure
+    // TrackObject.setInfrastructure();
 
-    //  load the TrackJSON object's properties into the blocks array
-    this.state.blocks = TrackObject.blocks;
+    // //  load the TrackJSON object's properties into the blocks array
+    // blocks = TrackObject.blocks;
+    // // load in the track model for the first block
+    // this.loadBlockInfo(1);
 
-    // load in the track model for the first block
-    this.loadBlockInfo(1);
+    // //  set line Name -- any index of the file will work as the line is same throughout
+    // // console.log('line name: ', TrackObject.blocks[0].line);
+    // lineName = TrackObject.blocks[0].line;
+    // console.log(lineName);
+    // const t = TrackObject.generateTrackModelEVtemp();
+    // enviornmentTemp = t;
+    // //  this.setState({ enviornmentTemp: t });
 
-    //  set line Name -- any index of the file will work as the line is same throughout
-    // console.log('line name: ', TrackObject.blocks[0].line);
-    this.state.lineName = TrackObject.blocks[0].line;
-    const t = TrackObject.generateTrackModelEVtemp();
-    this.setState({ enviornmentTemp: t });
+    // //  call the function to check if the heaters are needed
+    // this.checkTrackHeaters();
 
-    //  call the function to check if the heaters are needed
-    this.checkTrackHeaters();
+    // //  send messages to the track controller and train model
+    // this.sendMessages(TrackObject);
+  };
 
-    //  send messages to the track controller and train model
-    this.sendMessages(TrackObject);
+  //  Load's blocks information from the Track Model File - alpha = blockIndex
+  loadBlockInfo = (alpha) => {
+    // //  convert to imperials for display only
+    // const curBlock = blocks[alpha]; //  get the block selected
+    // const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
+    // const speedLimitImperial = (curBlock.spdLimit * 0.621371).toFixed(3);
+    // const elevationImperial = (curBlock.elevation * 3.28084).toFixed(3);
+    // //  Assign values from the Blocks array to State vars
+    // this.setState({
+    //   blockLength: blockLengthImperial,
+    // });
+    // this.setState({
+    //   speedLimit: speedLimitImperial,
+    // });
+    // this.setState({
+    //   elevation: elevationImperial,
+    // });
+    // this.state.blockOccupancy = blocks[this.state.blockIndex - 1].Occupied;
   };
 
   loadFile = (event) => {
     window.electronAPI.openFileDialog('TrackModel');
   };
 
-  //  TODO
+  //  -----STATE VARIABLE FUNCTIONS-----  //
+  //  TODO -- Might not need
   handleSwitchChange = (event) => {
     let { myValue } = event.currentTarget.dataset;
     let index = this.state.blockIndex;
@@ -279,27 +349,19 @@ class TrackModel extends React.Component {
     }
   };
 
-  //  send leaving yard info
-  sendYardExitInfo = () => {
-    //  send message to train model about leaving the yard
-  };
-
-  //  update block occupancy
-  updateBlockOccupancy = (payload) => {
-    //  need to get the payload message and upate the block occupancy
-    const interval = setInterval(() => {
-      if (payload.Enter !== null)
-        this.state.blocks[this.state.currBlock].Occupied = true;
-      if (payload.Leave !== null)
-        this.state.blocks[this.state.currBlock].Occupied = false;
-    }, 10000);
-  };
-
   //  check if the track heaters should turn on
-  checkTrackHeaters = () => {
-    if (this.state.enviornmentTemp < 32)
-      this.setState({ trackHeaterStatus: 'enabled' });
-    else this.setState({ trackHeaterStatus: 'disabled' });
+  checkTrackHeaters = (r, g) => {
+    if (r < 32) {
+      redTH_Status = 'enabled';
+    } else if (!(r < 32)) {
+      redTH_Status = 'disabled';
+    }
+
+    if (g < 32) {
+      greenTH_Status = 'enabled';
+    } else if (!(g < 32)) {
+      greenTH_Status = 'disabled';
+    }
   };
 
   //  handle the select change
@@ -318,34 +380,6 @@ class TrackModel extends React.Component {
     this.setState({ beaconStatus: 'functional' });
   };
 
-  //  need to send messages based on block info that train is entering
-  sendMessages(TrackObject) {
-    const interval = setInterval(() => {
-      //  function to send message to the Track Controller
-      // console.log('sending track model status to track controller');
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'trackModelStatus',
-        TrackSignalPickup: this.state.recievingTrackCircuit,
-        RailStatus: this.state.railStatus,
-        TrackPowerStatus: this.state.trackPower,
-        SpeedLimit: this.state.speedLimit,
-        Throughput: '',
-      });
-
-      //  function to send message to the Train Model
-      // console.log('sending track model status to train model');
-      window.electronAPI.sendTrainModelMessage({
-        type: 'trackModelStatus',
-        TransitLightStatus: this.state.TransitLightStatus, //  light status of the block train is entering
-        CommandedSpeed: TrackObject.blocks[this.state.currBlock].spdLimit, // speed limit of the block train is entering
-        Authority: this.state.Authority, //  authority
-        Beacon: TrackObject.blocks[this.state.currBlock].beacon, //  beacon of the block (if exists) that train is entering
-        UndergroundBlocks: TrackObject.blocks[this.state.currBlock].underground, //  underground status of the block train is entering
-        Grade: TrackObject.blocks[this.state.currBlock].grade,
-      });
-    }, 1000);
-  }
-
   //  FUNCTIONS FOR TEST UI
   testUIEnvtempFun = (event) => {
     const myValue = event.currentTarget.value;
@@ -360,6 +394,162 @@ class TrackModel extends React.Component {
   testUITrackHeaterStatusFun = (event) => {
     const myValue = event.currentTarget.value;
     this.setState({ testUITrackHeaterStatus: myValue });
+  };
+
+  //  -----TRACK MODEL FUNCTIONALITY----- //
+
+  // On loading the Track Model Program, load in the Red and Green lines
+
+  //  send leaving yard info
+  sendYardExitInfo = (trainID, trackLine) => {
+    //  send message to train model about leaving the yard
+    window.electronAPI.sendTrackModelMessage({
+      type: 'exitYard',
+      // trainID: trainDispatchArr[]
+      trainID,
+      trackLine
+    });
+  };
+
+  //  ----MIGHT NOT NEED-----//
+  //  update block occupancy
+  // updateBlockOccupancy = (payload) => {
+  //   //  need to get the payload message and upate the block occupancy
+  //   const interval = setInterval(() => {
+  //     // if (payload.Enter !== null) blocks[currBlock].Occupied = true;
+  //     // if (payload.Leave !== null) blocks[currBlock].Occupied = false;
+  //   }, 10000);
+  // };
+
+  //  need to send messages based on block info that train is entering
+  sendMessages = (TrackObject) => {
+    const interval = setInterval(() => {
+      //  function to send message to the Track Controller
+      // console.log('sending track model status to track controller');
+      window.electronAPI.sendTrackControllerMessage({
+        type: 'trackModelStatus',
+        TrackSignalPickup: this.state.recievingTrackCircuit,
+        RailStatus: this.state.railStatus,
+        TrackPowerStatus: this.state.trackPower,
+        // SpeedLimit: speedLimit,
+        Throughput: '',
+      });
+
+      //  function to send message to the Train Model
+      // console.log('sending track model status to train model');
+      window.electronAPI.sendTrainModelMessage({
+        type: 'trackModelStatus',
+        // CommandedSpeed: TrackObject.blocks[currBlock].spdLimit, // speed limit of the block train is entering
+        // Authority, //  authority set to 0
+        // Beacon: TrackObject.blocks[currBlock].beacon, //  beacon of the block (if exists) that train is entering
+        // UndergroundBlocks: TrackObject.blocks[currBlock].underground, //  underground status of the block train is entering
+        // Grade: TrackObject.blocks[currBlock].grade,
+      });
+
+      // window.electronAPI.sendTrainControllerMessage({
+      //   type: 'TransitLightStatus',
+      //   TransitLightStatus: this.state.TransitLightStatus,
+      // });
+    }, 1000);
+  };
+
+  //  function for updating block occupancy and exchanging information with train model
+  //  GETS TRIGGERED FROM TRAIN MODEL MESSAGE
+  trainModelHandshake = (trainID, trackLine) => {
+
+    let blocks;
+    let currBlock;
+    //  decide whick track is getting updated
+    if(trackLine === 'red line')
+    {
+      blocks = redBlocks;
+      currBlock = redCurrBlock;
+    }
+    else if(trackLine === 'green line')
+    {
+      blocks = greenLine;
+      currBlock = greenCurrBlock;
+    }
+
+    //  expect a message from train that it is moving/entering a new block
+    while (currBlock < blocks[blocks.length]) {
+      //  check if the train is moving
+      if (isTrainMoving) {
+        //  occupy the current block
+        blocks[currBlock].Occupied = true;
+        //  send the train model a message about the length of the current block and speed
+        window.electronAPI.sendTrainModelMessage({
+          type: 'CurrentCommandedSpeed',
+          CommandedSpeed: blocks[currBlock].spdLimit,
+        });
+        window.electronAPI.sendTrainModelMessage({
+          type: 'CurrentBlockLength',
+          BlockLength: blocks[currBlock].length,
+        });
+        if(currBlock < blocks.length)
+        {
+          window.electronAPI.sendTrainModelMessage({
+            type: 'NextBlockLength',
+            BlockLength: blocks[currBlock + 1].length,
+          });
+        }
+
+        //  find the train ID to update authority
+        const ind = trainDispatchArr.findIndex(
+          (TrainID) => TrainID === trainID
+        );
+
+        //  SEND TRAIN MODEL OTHER VARIABLES
+        //  authority, beacon, underground, grade
+        // window.electronAPI.sendTrainModelMessage({
+        //   type: 'Authority',
+        //   Authority = trainDispatchArr[ind].Authority,
+        // });
+
+        window.electronAPI.sendTrainModelMessage({
+          type: 'Beacon',
+          Beacon : blocks[currBlock].beacon,
+        });
+
+        window.electronAPI.sendTrainModelMessage({
+          type: 'Underground',
+          Underground : blocks[currBlock].underground,
+        });
+
+        window.electronAPI.sendTrainModelMessage({
+          type: 'Grade',
+          Grade : blocks[currBlock].grade,
+        });
+      }
+      //  Train progresses to next block
+      if (enteredBlock) {
+        //  update the next block
+        currBlock++;
+        //  check if the old block has been vacatted
+        if (exitedBlock) {
+          //  loop through blocks, first occupied block becomes unoccupied
+          const searchInd = blocks.Occupied.indexOf.true;
+          //  set occupancy to false
+          blocks[searchInd].Occupied = false;
+        }
+      }
+    }
+  };
+
+  //  function to assign all UI state variables based on the system variables
+  setUIStateVars = () => {
+    //  commented out variables arent present in UI (most likely)
+    // this.state.blocks = blocks;
+    // let isTrainMoving = ;
+    // let trainInNextBlock = ;
+    // let trainExitedBlock = ;
+    this.state.lineName = lineName;
+    this.state.enviornmentTemp = enviornmentTemp;
+    this.state.trackHeaterStatus = trackHeaterStatus;
+    this.state.trainOccupancy = trainOccupancy;
+    this.state.personsAtStation = personsAtStation;
+    // this.state.currBlock = currBlock;
+    this.state.Authority = Authority;
   };
 
   toggle() {
@@ -637,7 +827,7 @@ class TrackModel extends React.Component {
             <Grid item xs={4}>
               <Grid container spacing={1}>
                 <Grid item xs={12}>
-                  <div>Track Line: {this.state.lineName}</div>
+                  <div>Track Line: {lineName}</div>
                 </Grid>
                 <Grid item xs={12} />
                 <Grid item xs={12}>
@@ -657,11 +847,11 @@ class TrackModel extends React.Component {
                       onChange={this.handleChange}
                       value={this.state.blockIndex}
                     >
-                      {this.state.blocks.map((block) => (
+                      {/* {blocks.map((block) => (
                         <MenuItem key={block.id} value={block.id}>
                           {String(block.id)}
                         </MenuItem>
-                      ))}
+                      ))} */}
                     </Select>
                   </FormControl>
                 </Grid>
