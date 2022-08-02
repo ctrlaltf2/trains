@@ -1135,7 +1135,7 @@ class CTCOffice extends React.Component {
                   }}
                 />
                 <Button variant="contained" component="span">
-                  Upload
+                  Upload Schedule
                 </Button>
               </label>
             </label>
