@@ -138,4 +138,4 @@ export class Track {
   getBlocks() {
     return this.blocks;
   }
-}
+} export default Track;
