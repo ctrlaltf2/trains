@@ -316,16 +316,10 @@ class CTCOffice extends React.Component {
     const deleted = [];
     for(const pendingTimestamp_ of Array.from(Object.keys(this.pendingDispatches))) {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
+      console.log(this.pendingDispatches, pendingTimestamp_, pendingTimestamp, this.now, this.now > pendingTimestamp);
 
-      if(this.now < pendingTimestamp) {
-        const payload = {
-          type: 'dispatch',
-          value: this.pendingDispatches[pendingTimestamp]
-        };
-
-        console.log('Sending dispatch message of ', payload);
-
-        window.electronAPI.sendTrackControllerMessage(payload);
+      if(this.now > pendingTimestamp) {
+        this.sendDispatchMessage(this.pendingDispatches[pendingTimestamp]);
 
         deleted.push(pendingTimestamp_);
 
@@ -336,6 +330,17 @@ class CTCOffice extends React.Component {
     for(const delete_ of deleted) {
       delete this.pendingDispatches[delete_];
     }
+  }
+
+  // tested
+  sendDispatchMessage(train) {
+    console.log(this.now, 'Dispatching train');
+    const payload = {
+      type: 'dispatch',
+      value: train
+    };
+
+    window.electronAPI.sendTrackControllerMessage(payload);
   }
 
   // With list of stations, generate a route/path of blocks to go to meet station ordering
