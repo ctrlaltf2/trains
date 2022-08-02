@@ -1,8 +1,9 @@
 import TrackModel from '../modules/TrackModel';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
+import { constants } from 'http2';
 
-let TM = new TrackModel();
-//const TM = shallow(<TrackModel />);
+//  const TM = new TrackModel();
+const TM = shallow(<TrackModel />);
 
 test('Track Model Exists', () => {
   expect(TM).toBeTruthy();
