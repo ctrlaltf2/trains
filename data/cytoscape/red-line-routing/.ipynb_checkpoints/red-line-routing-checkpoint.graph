@@ -1,0 +1,34 @@
+49d 60d "(Station Square-South Hills Junction)"
+60d 61d "South Hills Junction"
+61d 49u "(South Hills Junction-Station Square)"
+25d 26d "Penn Station::D"
+26d 35d "(Penn Station-Steel Plaza)"
+35d 36d "Steel Plaza::D"
+36d 45d "(Steel Plaza-First Ave.)"
+45d 46d "First Ave.::D"
+46d 48d "(First Ave.-Station Square)"
+48d 49d "Station Square::D"
+49u 48u "Station Square::U"
+48u 46u "(Station Square-First Ave.)"
+46u 45u "First Ave.::U"
+45u 36u "(First Ave.-Steel Plaza)"
+36u 35u "Steel Plaza::U"
+35u 26u "(Steel Plaza-Penn Station)"
+26u 25u "Penn Station::U"
+yEX 10d (yard-exit)
+10d 8d (yard-Shadyside)
+8d 7d Shadyside::D
+7d 1d "(Shadyside-Herron Ave.)"
+1d 17d "Herron Ave.::D"
+17d 21d "(Herron Ave.-Swissville)"
+21d 22d Swissville::D
+22d 25d "(Swissville-Penn Station)"
+25u 22u "(Penn Station-Swissville)"
+22u 21u Swissville::U
+21u 17u "(Swissville-Herron Ave.)"
+17u 16u "Herron Ave.::U"
+16u 6u "(Herron Ave.-Shadyside)"
+6u 7u Shadyside::U
+7u 10u (Shadyside-yard)
+10u yENT (yard-enter)
+10u 1d "(yard-Herron Ave.)"

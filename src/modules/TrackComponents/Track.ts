@@ -2,6 +2,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable guard-for-in */
 /* eslint-disable import/prefer-default-export */
+// @ts-nocheck
 import { Block } from './Block';
 
 export class Track {
@@ -120,7 +121,7 @@ export class Track {
         }
       }
       if (this.blocks[i].infrastructure.includes('CROSSING')) {
-        this.blocks[i].crossing = true;
+        this.blocks[i].crossing = false;
       }
     }
   }
