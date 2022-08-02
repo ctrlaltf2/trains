@@ -52,15 +52,10 @@ export class Block {
     this.crossing = crossing;
     this.previous = previous;
     this.next = next;
-
-    // Failures
-    this.brokenRailFailure = false;
-    this.signalFailure = false;
-    this.engineFailure = false;
   }
 
   createSwitch(swBlock: number, outBlockLow: number, outBlockHigh: number) {
     // @ts-ignore
     this.switch = new Switch(swBlock, outBlockLow, outBlockHigh);
   }
-}
+} export default Block;
