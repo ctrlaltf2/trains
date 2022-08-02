@@ -77,20 +77,27 @@ class TrackController extends React.Component {
       console.log('IPC:TrackController: ', payload);
 
       switch (payload.type) {
-        case 'trackModelStatus':
-          // TODO
-          // window.electronAPI.sendCTCMessage({
-          //   type: 'occupancy',
-          //   line: this.tracks[this.state.line].blocks[].line,
-          //   block_id: ,
-          //   value: ,
-          // });
-          // window.electronAPI.sendCTCMessage({
-          //   type: 'throughput',
-          //   line: this.tracks[this.state.line].blocks[].line,
-          //   value: ,
-          // });
+        // Failures from track model
+        case 'RedlineTrackSignalPickup':
+          window.electronAPI.sendCTCMessage(payload);
           break;
+        case 'GreenlineTrackSignalPickup':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+        case 'GreenlineRailStatus':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+        case 'RedlineRailStatus':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+        case 'RedlineTrackPower':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+        case 'GreenlineTrackPower':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+
+        // From CTC
         case 'authority':
           // TODO Add other line
           this.tracks[this.state.line].blocks[payload.block].authority =
@@ -474,34 +481,39 @@ class TrackController extends React.Component {
               }
             }
           }
-          if (controller.plc.lightLogic[j].yellow != ''){
-          for (let k = 0; k < controller.plc.lightLogic[j].yellow.length; k++) {
-            // AND
-            if (controller.plc.lightLogic[j].yellow[k] === '&&') {
-            }
-            // NOT
-            else if (controller.plc.lightLogic[j].yellow[k].includes('!')) {
-              if (
-                !this.tracks[line].blocks[
-                  parseInt(controller.plc.lightLogic[j].yellow[k].substring(1)) -
-                    1
-                ].occupancy
-              ) {
-                status[vitality] = 'yellow';
+          if (controller.plc.lightLogic[j].yellow != '') {
+            for (
+              let k = 0;
+              k < controller.plc.lightLogic[j].yellow.length;
+              k++
+            ) {
+              // AND
+              if (controller.plc.lightLogic[j].yellow[k] === '&&') {
               }
-            }
-            // Regular
-            else {
-              if (
-                this.tracks[line].blocks[
-                  parseInt(controller.plc.lightLogic[j].yellow[k]) - 1
-                ].occupancy
-              ) {
-                status[vitality] = 'yellow';
+              // NOT
+              else if (controller.plc.lightLogic[j].yellow[k].includes('!')) {
+                if (
+                  !this.tracks[line].blocks[
+                    parseInt(
+                      controller.plc.lightLogic[j].yellow[k].substring(1)
+                    ) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = 'yellow';
+                }
+              }
+              // Regular
+              else {
+                if (
+                  this.tracks[line].blocks[
+                    parseInt(controller.plc.lightLogic[j].yellow[k]) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = 'yellow';
+                }
               }
             }
           }
-        }
         }
         // console.log(status);
         // Vitality check before setting light position
@@ -573,12 +585,11 @@ class TrackController extends React.Component {
                 ].transitLight,
             });
           }
-        }
-        else if (status.every((val) => val === 'yellow')) {
+        } else if (status.every((val) => val === 'yellow')) {
           let temp =
             this.tracks[line].blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight ==( 'green' || 'red');
+            ].transitLight == ('green' || 'red');
 
           this.tracks[line].blocks[
             parseInt(controller.plc.lightLogic[j].block) - 1
@@ -1163,7 +1174,6 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="centered">
-
                   <div style={{ margin: '1rem' }}>
                     <Button
                       className="button"
