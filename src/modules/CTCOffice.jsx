@@ -69,7 +69,7 @@ class CTCOffice extends React.Component {
         case 'occupancy':
           // TODO: message validation
           payload.line = payload.line.toLowerCase();
-          console.log(payload);
+          // console.log(payload);
           this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
           break;
         default:
@@ -78,7 +78,7 @@ class CTCOffice extends React.Component {
     });
 
     window.electronAPI.subscribeFileMessage( (_event, payload) => {
-      console.log(payload);
+      // console.log(payload);
     });
 
     window.electronAPI.subscribeTimerMessage( (_event, payload) => {
@@ -101,22 +101,26 @@ class CTCOffice extends React.Component {
       },
       occupancy: { // occupancy[line][block_id] = is_occupied: bool
         'red': {},
-        'green': {
-          '67': true,
-          '21': true
-        },
+        'green': {},
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
-        'red': {},
+        'red': {
+          '1-15-16':   new TrackSwitch(undefined, '1',  ['15', '16']),
+          '27-28-76':  new TrackSwitch(undefined, '27', ['28', '76']),
+          '32-33-72':  new TrackSwitch(undefined, '33', ['32', '72']),
+          '38-39-71':  new TrackSwitch(undefined, '38', ['39', '71']),
+          '43-44-67':  new TrackSwitch(undefined, '44', ['43', '67']),
+          '52-53-66':  new TrackSwitch(undefined, '52', ['53', '66']),
+        },
         'green': {
           '85-86-100': new TrackSwitch(undefined, '85', ['86', '100']),
           '76-77-101': new TrackSwitch(undefined, '77', ['76', '101']),
           '29-30-150': new TrackSwitch(undefined, '29', ['30', '150']),
           '1-12-13':   new TrackSwitch(undefined, '13', [ '1',  '12']),
-          '57-58':  new TrackSwitch(undefined, '57', ['58', '152']) // TODO: Add yard
+          '57-58':     new TrackSwitch(undefined, '57', ['58', '152']) // TODO: Add yard
         },
         'blue': {
-          '5-6-11': new TrackSwitch(undefined, '5', ['6', '11'])
+          '5-6-11':    new TrackSwitch(undefined, '5', ['6', '11'])
         },
       },
       closures: { // closures[line][block_id] = is_closed;
@@ -134,7 +138,7 @@ class CTCOffice extends React.Component {
       editingSwitch: undefined,
       editingBlock: undefined,
       switchGoingToPosition: undefined,
-      activeLine: 'green',
+      activeLine: 'red',
     };
 
     this.nextTrainID = 1;
@@ -149,7 +153,6 @@ class CTCOffice extends React.Component {
       )
     };
     this.trainPositions = {
-      '-1': '21'
     }; // str(train id) -> str(block_id)
 
     this.systemMapRef = React.createRef();
@@ -168,56 +171,93 @@ class CTCOffice extends React.Component {
 
     // Generate section-based routing expansions
     const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
-
-    this.route_green_lookup = {
-      '(yard-enter)': [152],
-      '(yard-exit)': [151],
-      '(yard-Glenbury)': [63, 64],
-      'Glenbury::S': [65],
-      '(Glenbury-Dormont)': range(66, 72, 1),
-      'Dormont::S': [73],
-      '(Dormont-MNR)': [74, 75, 76],
-      'Mt. Lebanon::W': [77],
-      '(Mt. Lebanon-Poplar)': range(78, 87, 1),
-      'Poplar': [88],
-      '(Poplar-Castle Shannon)': range(89, 95, 1),
-      'Castle Shannon': [96],
-      '(Castle Shannon-Mt. Lebanon)': [].concat(range(97, 100, 1), range(85, 78, -1)),
-      'Mt. Lebanon::E': [77],
-      '(Mt. Lebanon-Dormont)': range(101, 104, 1),
-      'Dormont::N': [105],
-      '(Dormont-Glenbury)': range(106, 113, 1),
-      'Glenbury::N': [114],
-      '(Glenbury-Overbrook)': range(115, 122, 1),
-      'Overbrook::W': [123],
-      '(Overbrook-Inglewood)': range(124, 131, 1),
-      'Inglewood::W': [132],
-      '(Inglewood-Central)': range(133, 140, 1),
-      'Central::W': [141],
-      '(Central-FGZ)': range(142, 150, 1),
-      'South Bank': [31],
-      '(South Bank-Central)': range(32, 38, 1),
-      'Central::E': [39],
-      '(Central-Inglewood)': range(40, 47, 1),
-      'Inglewood::E': [48],
-      '(Inglewood-Overbrook)': range(49, 56, 1),
-      'Overbrook::E': [57],
-      'J': range(58, 62, 1),
-      '(FGZ-Whited)': range(29, 23, 1),
-      'Whited::E': [22],
-      '(Whited-UNKNOWN)': range(21, 17, 1),
-      'UNKNOWN::E': [16],
-      '(Unknown-ACDe)': range(15, 13, 1),
-      '(ACDe-Edgebrook)': range(12, 10, 1),
-      'Edgebrook': [9],
-      '(Edgebrook-Pioneer)': range(8, 3, 1),
-      'Pioneer': [2],
-      '(Pioneer-ACDw)': [1],
-      '(ACDw-UNKNOWN)': [13, 14, 15],
-      'UNKNOWN::W': [16],
-      '(UNKNOWN-Whited)': range(17, 21, 1),
-      'Whited::W': [22],
-      '(Whited-South Bank)': range(23, 31, 1),
+    this.route_lookup = {
+      'green': {
+        '(yard-enter)': [152],
+        '(yard-exit)': [151],
+        '(yard-Glenbury)': [63, 64],
+        'Glenbury::S': [65],
+        '(Glenbury-Dormont)': range(66, 72, 1),
+        'Dormont::S': [73],
+        '(Dormont-MNR)': [74, 75, 76],
+        'Mt. Lebanon::W': [77],
+        '(Mt. Lebanon-Poplar)': range(78, 87, 1),
+        'Poplar': [88],
+        '(Poplar-Castle Shannon)': range(89, 95, 1),
+        'Castle Shannon': [96],
+        '(Castle Shannon-Mt. Lebanon)': [].concat(range(97, 100, 1), range(85, 78, -1)),
+        'Mt. Lebanon::E': [77],
+        '(Mt. Lebanon-Dormont)': range(101, 104, 1),
+        'Dormont::N': [105],
+        '(Dormont-Glenbury)': range(106, 113, 1),
+        'Glenbury::N': [114],
+        '(Glenbury-Overbrook)': range(115, 122, 1),
+        'Overbrook::W': [123],
+        '(Overbrook-Inglewood)': range(124, 131, 1),
+        'Inglewood::W': [132],
+        '(Inglewood-Central)': range(133, 140, 1),
+        'Central::W': [141],
+        '(Central-FGZ)': range(142, 150, 1),
+        'South Bank': [31],
+        '(South Bank-Central)': range(32, 38, 1),
+        'Central::E': [39],
+        '(Central-Inglewood)': range(40, 47, 1),
+        'Inglewood::E': [48],
+        '(Inglewood-Overbrook)': range(49, 56, 1),
+        'Overbrook::E': [57],
+        '(J)': range(58, 62, 1),
+        '(FGZ-Whited)': range(29, 23, -1),
+        'Whited::E': [22],
+        '(Whited-UNKNOWN)': range(21, 17, -1),
+        'UNKNOWN::E': [16],
+        '(Unknown-ACDe)': range(15, 13, -1),
+        '(ACDe-Edgebrook)': range(12, 10, -1),
+        'Edgebrook': [9],
+        '(Edgebrook-Pioneer)': range(8, 3, -1),
+        'Pioneer': [2],
+        '(Pioneer-ACDw)': [1],
+        '(ACDw-UNKNOWN)': [13, 14, 15],
+        'UNKNOWN::W': [16],
+        '(UNKNOWN-Whited)': range(17, 21, 1),
+        'Whited::W': [22],
+        '(Whited-South Bank)': range(23, 31, 1),
+      },
+      'red': {
+        '(Station Square-South Hills Junction)': range(49, 59, 1),
+        'South Hills Junction': [60],
+        '(South Hills Junction-Station Square)': [].concat(range(61, 66, 1), range(52, 49, -1)),
+        'Penn Station::D': [25],
+        '(Penn Station-Steel Plaza)': range(26, 34, 1),
+        '(Steel Plaza-Penn Station)': [].concat([34, 33], range(71, 76, 1), [27, 26]),
+        'Steel Plaza::D': [35],
+        '(Steel Plaza-First Ave.)': range(36, 44, 1),
+        '(First Ave.-Steel Plaza)': [].concat([44], range(67, 71, 1), range(38, 36, -1)),
+        'First Ave.::D': [45],
+        '(First Ave.-Station Square)': [46, 47],
+        'Station Square::D': [48],
+        'Station Square::U': [48],
+        '(Station Square-First Ave.)': [47, 46],
+        'First Ave.::U': [45],
+        'Steel Plaza::U': [35],
+        'Penn Station::U': [25],
+        '(yard-exit)': [151],
+        '(yard-Shadyside)': [9, 8],
+        'Shadyside::D': [7],
+        '(Shadyside-Herron Ave.)': range(6, 1, -1),
+        'Herron Ave.::D': [16],
+        '(Herron Ave.-Swissville)': range(17, 20, 1),
+        'Swissville::D': [21],
+        '(Swissville-Penn Station)': range(22, 24, 1),
+        '(Penn Station-Swissville)': range(24, 22, -1),
+        'Swissville::U': [21],
+        '(Swissville-Herron Ave.)': range(20, 17, -1),
+        'Herron Ave.::U': [16],
+        '(Herron Ave.-Shadyside)': range(1, 6, 1),
+        'Shadyside::U': [7],
+        '(Shadyside-yard)': [8, 9],
+        '(yard-enter)': [152],
+        '(yard-Herron Ave.)': range(10, 15, 1)
+      }
     };
 
     this.stations = {
@@ -240,6 +280,16 @@ class CTCOffice extends React.Component {
         '16': 'UNKNOWN',
         '2': 'Pioneer',
         '9': 'Edgebrook'
+      },
+      'red': {
+        '7': 'Shadyside',
+        '16': 'Herron Ave.',
+        '21': 'Swissville',
+        '25': 'Penn Station',
+        '35': 'Steel Plaza',
+        '45': 'First Ave.',
+        '48': 'Station Square',
+        '60': 'South Hills Junction',
       }
     }
 
@@ -251,21 +301,22 @@ class CTCOffice extends React.Component {
           '152': 1 // Going from 57 to 152 requires authority 1 at 57
         }
       },
-      'red': {}
+      'red': {
+        '9': {
+          '152': 1 // Going from 9 to 152 requires authority 1 at 9
+        }
+      }
     };
 
     this.initCy();
-
-    this.manualDispatch('green', 'Overbrook', '15:00');
-    this.inferTrainMovement('green', '20', true);
   }
 
+  // too complex for unit tests?
   checkShouldDispatch() {
     const deleted = [];
     for(const pendingTimestamp_ of Array.from(Object.keys(this.pendingDispatches))) {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
 
-      console.log(this.now, pendingTimestamp);
       if(this.now < pendingTimestamp) {
         const payload = {
           type: 'dispatch',
@@ -288,6 +339,7 @@ class CTCOffice extends React.Component {
   }
 
   // With list of stations, generate a route/path of blocks to go to meet station ordering
+  // TODO: test
   generateYardRoute(line, stations, return_last = false) {
     const windowedSlice = function(arr, size) {
       let result = [];
@@ -302,13 +354,13 @@ class CTCOffice extends React.Component {
     let segment_route = [];
 
     // Get initial route out of yard
-    let route = this.getInterstationRoute(line, '(yard-exit)', stations[0]);
+    let route = this.getIntersegmentRoute(line, '(yard-exit)', stations[0]);
     segment_route = segment_route.concat(...route);
 
     let previous_segment = route.at(-1);
     for(let station_pair of windowedSlice(stations, 2)) {
       // Get best route from previous stop segment to next station
-      let route = this.getInterstationRoute(line, previous_segment, station_pair[1]);
+      let route = this.getIntersegmentRoute(line, previous_segment, station_pair[1]);
 
       // Add to segment-routes
       segment_route = segment_route.concat(...route);
@@ -319,15 +371,20 @@ class CTCOffice extends React.Component {
 
     if(return_last) {
       return {
-        route: this.resolveSegmentRoutes(this.route_green_lookup, segment_route),
+        route: this.resolveSegmentRoutes(line, segment_route),
         last_segment: segment_route.at(-1)
       }
     } else {
-      return this.resolveSegmentRoutes(this.route_green_lookup, segment_route);
+      return this.resolveSegmentRoutes(line, segment_route);
     }
   }
 
-  isinvalidSwitchMovement(line, block_a_, block_b_) {
+  // tested
+  /**
+   * Assumes directionality has been checked. Determines if, given a movement
+   * across a junction, does the switch connect that way and allow a movement.
+   */
+  isInvalidSwitchMovement(line, block_a_, block_b_) {
     const block_a = parseInt(block_a_);
     const block_b = parseInt(block_b_);
     // const search_value = [parseInt(block_a), parseInt(block_b)].sort( (a, b) => a - b );
@@ -335,19 +392,15 @@ class CTCOffice extends React.Component {
     const invalid_movements = {
       'green': [
         [13, 1],
-        [12, 13],
-        [30, 29],
-        [29, 150],
         [150, 30],
         [152, 57],
-        [58, 57],
-        [63, 62],
         [63, 151],
         [76, 101],
         [101, 76],
         [101, 77],
         [77, 76],
         [100, 86],
+        [1, 12]
       ],
       'red': []
     }
@@ -365,10 +418,10 @@ class CTCOffice extends React.Component {
     return found;
   };
 
+  // TODO: test?
   manualDispatch(line, station, eta_str) {
     const [hh, mm] = eta_str.split(':');
     const eta_ms = parseInt(hh) * 60 * 60 * 1000 + parseInt(mm) * 60 * 1000;
-    console.log(eta_ms);
 
     const { route, last_segment } = this.generateYardRoute(line, [station], true);
     const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]), [10*1000]);
@@ -387,8 +440,8 @@ class CTCOffice extends React.Component {
     const leave_time = eta_ms - total_travel_time_ms;
 
     // And get a return path- send it at full speed who cares when it gets back to the yard
-    const return_segment_path = this.getInterstationRoute(line, last_segment, '(yard-enter)');
-    const return_block_path = this.resolveSegmentRoutes(this.route_green_lookup, return_segment_path);
+    const return_segment_path = this.getIntersegmentRoute(line, last_segment, '(yard-enter)');
+    const return_block_path = this.resolveSegmentRoutes(line, return_segment_path);
 
     // commanded speed here == speed_limit
     const return_authority_table = this.getAuthorityTable(line, return_block_path, [], []);
@@ -419,9 +472,10 @@ class CTCOffice extends React.Component {
 
     ++this.nextTrainID;
 
-    console.log('Dispatch pending: ', pain, ' at ', leave_time, 'ms.');
+    // console.log('Dispatch pending: ', pain, ' at ', leave_time, 'ms.');
   }
 
+  // TODO: test
   getAuthorityTable(line, block_route, blocks_stopped_at = [], stop_times = []) {
     const control_points = this.control_points[line];
 
@@ -510,6 +564,9 @@ class CTCOffice extends React.Component {
     return auth_table;
   }
 
+  // tested
+  // Given a block route and list of stations to stop at, output
+  // block ids that need to be stopped at
   getStationStops(line, route, stations) {
     // Pull out all stations from route
     const possible_stops = route.map( (block_id) => {
@@ -535,6 +592,8 @@ class CTCOffice extends React.Component {
     return final_stop_list;
   }
 
+  // TODO: test? though not sure where this could go wrong
+  // NOTE: Speeds assumed km/h
   getTravelTimeTable(line, route, safe_speed_table) {
     return _.zip(route, safe_speed_table).map( (block_speed_pair) => {
       const [block_id, speed] = block_speed_pair;
@@ -546,6 +605,7 @@ class CTCOffice extends React.Component {
     });
   }
 
+  // tested
   generateSpeedTable(line, route) {
     return route.map( (block_id) => {
       const block_info = TrackModelInfo[line][block_id];
@@ -557,7 +617,7 @@ class CTCOffice extends React.Component {
     });
   }
 
-  // this is a mess
+  // tested
   makeSpeedTableSafe(speed_table_) {
     const speed_table = speed_table_.slice();
     let j = 0;
@@ -574,20 +634,26 @@ class CTCOffice extends React.Component {
     return speed_table;
   }
 
-  resolveSegmentRoutes(route_lookup, segment_route) {
+  // tested
+  resolveSegmentRoutes(line, segment_route) {
     let block_route = [];
-    for(let segment of segment_route)
-      block_route = block_route.concat(route_lookup[segment]);
+    for(let segment of segment_route) {
+      block_route = block_route.concat(this.route_lookup[line][segment]);
+    }
 
     return block_route;
   }
 
-  // from_station must be an exact section-routing edge
-  getInterstationRoute(line, from_station, to_station) {
-    const goal_stops = this.cy[line].$(`edge[id ^= '${to_station}']`)
+  // tested
+  /**
+   * Given two segment-routing segments, route between them,
+   * producing an ordered list of segments to get between the two.
+   */
+  getIntersegmentRoute(line, from_segment, to_segment) {
+    const goal_stops = this.cy[line].$(`edge[id ^= '${to_segment}']`)
     const routable_graph = this.cy[line];
 
-    const starting_node = routable_graph.$(`edge[id ^= '${from_station}']`).source();
+    const starting_node = routable_graph.$(`edge[id ^= '${from_segment}']`).source();
 
     const routes = goal_stops.map( (edge) => {
       const edge_points_to = edge.targets();
@@ -635,8 +701,7 @@ class CTCOffice extends React.Component {
     return best_route;
   }
 
-  componentDidMount() { }
-
+  // tested
   initCy() {
     for(const line in TrackModel) {
       this.cy[line] = cytoscape({
@@ -651,6 +716,7 @@ class CTCOffice extends React.Component {
     }
   }
 
+  // trivial, no test needed
   getBlocks(line) {
     const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
 
@@ -664,6 +730,7 @@ class CTCOffice extends React.Component {
     }
   }
 
+  // tested
   /**
    * Get a standardized identifier for a switch given its connected blocks
    */
@@ -674,6 +741,7 @@ class CTCOffice extends React.Component {
             .join('-');
   }
 
+  // tested
   /**
    * Given an occupancy change on a block, infer a train movement
    */
@@ -685,7 +753,7 @@ class CTCOffice extends React.Component {
 
     // Filter out invalid movements based on switch restrictions
     const possible_sources = all_possible_source_edges.filter( (edge) => {
-      if(this.isinvalidSwitchMovement(line, edge, block_id))
+      if(this.isInvalidSwitchMovement(line, edge.data('block_id'), block_id))
         return false;
 
       return true;
@@ -701,8 +769,8 @@ class CTCOffice extends React.Component {
     return undefined;
   }
 
+  // too complex to unit test?
   updateBlockOccupancy(line, block_id, is_occupied) {
-    console.log(line, block_id, is_occupied);
     const occupancy = _.cloneDeep(this.state.occupancy);
     occupancy[line][block_id] = !!is_occupied;
 
@@ -711,6 +779,7 @@ class CTCOffice extends React.Component {
     });
 
     const train_id = inferTrainMovement(line, block_id, is_occupied);
+
     if(train_id) {
       // Decrement authority on train object
       this.trains[train_id].authority--;
@@ -723,10 +792,12 @@ class CTCOffice extends React.Component {
     }
   }
 
+  // too complex to unit test?
   scheduleAuthoritySend(authority, delay) {
     
   }
 
+  // too trivial to be worth testing?
   updateSwitchPosition(line, switch_identifier, new_direction) {
     const switches = _.cloneDeep(this.state.switches);
     switches[line][switch_identifier].point_to(new_direction);
@@ -735,6 +806,8 @@ class CTCOffice extends React.Component {
     });
   }
 
+  // TODO: s/getStartingBlockQuery/getStartingNodeQuery/g
+  // too trivial to test
   /**
    * Return cytoscape query that points to the starting block out of the yard
    */
@@ -742,98 +815,16 @@ class CTCOffice extends React.Component {
     switch(line) {
       case 'green':
         return `node[id = 'JKy']`;
+      case 'green':
+        return `node[id = '10d']`;
       default:
         console.warn(`Unimplemented line '${line}' for starting block query detected`);
         return 'oops';
     }
   }
 
+  // trivial to test
   buildCyBlockQuery(block_id) { return `edge[block_id = '${block_id}']`; }
-
-  // Major TODO: when a block that's part of another train's route changes occupancy state, recalculate route for that other train and relay that to Track Controller
-  dispatchTrain(line, destination_block_id, eta, do_circle_back) {
-    // TODO: Update to use section router
-
-    // Build route
-    // Run A* over the graph complement to route between edges and not nodes
-    const routable_graph = this.cy[line];
-
-    // First, yard -> destination_block
-    // Do it for all the possible ways to face in a block, take the shortest route
-    const goal_edges = routable_graph.filter(this.buildCyBlockQuery(destination_block_id));
-
-    const routes = goal_edges.map( (edge) => {
-      const edge_points_to = edge.targets();
-
-      if(edge_points_to.length > 1) {
-        console.warning('Warning: router goal edge has multiple targets, code isn\'t expecting this.');
-      } else if (edge_points_to.length === 0) {
-        console.error('Error: router goal edge doesn\'t point to anything. Not routing.');
-        return undefined;
-      }
-
-      const goal_node = edge_points_to[0];
-      const goal_node_id = goal_node.data('id');
-      const to_dst_route = routable_graph.elements().aStar({
-        root: this.getStartingBlockQuery(line),
-        goal: `node[id = '${goal_node_id}']`,
-        weight: (edge) => {
-          return edge.data('length') / edge.data('speed_limit'); // Minimize time in blocks
-        },
-        directed: true
-      });
-
-      return to_dst_route;
-    });
-
-    // Find minimum cost route
-    let min = Infinity;
-    let i_best_route = -1;
-    for (const i in routes) {
-      if(routes[i].distance < min)
-        i_best_route = i
-    }
-
-    const best_route = routes[i_best_route].path
-      .filter( (elem) => {
-        return elem.group() === "edges";
-      })
-      .map( (elem) => {
-        return elem.data('block_id');
-      });
-
-    if(do_circle_back) {
-      // TODO: just reuse this method lmao, for now it doesn't matter
-    }
-
-    // Get speed limit coming out of the yard
-    // This is spaghetti and I don't care
-    const speed_limit = routable_graph.nodes(`node[id = 'y']`)[0].outgoers().edges()[0].data('speed_limit');
-
-    const pain = new Train( // constant pain from trains
-      this.nextTrainID,
-      line,
-      destination_block_id,
-      speed_limit,
-      best_route.length, // TODO: Settle on a good authority
-      best_route
-    );
-
-    this.trains.push(pain);
-
-    const activeTrainIDs = _.cloneDeep(this.state.activeTrainIDs);
-    activeTrainIDs[line].push(this.nextTrainID);
-    this.setState({
-      activeTrainIDs: activeTrainIDs
-    });
-
-    this.nextTrainID++;
-
-    window.electronAPI.sendTrackControllerMessage({
-      type: 'dispatch train',
-      value: pain
-    });
-  }
 
   handleLineSelect(self, ev, elem) {
     self.setState({
@@ -1198,7 +1189,6 @@ class CTCOffice extends React.Component {
                   {
                     (lineSelection && blockSelection) ?
                       <TextField margin="none" size="small" label="ETA" type="time" variant="standard" onChange={(ev) => {
-                        console.log(ev.target.value);
                         this.setState({
                           enteredETA: ev.target.value
                         });

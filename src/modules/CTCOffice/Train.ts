@@ -1,4 +1,3 @@
-import Switch from './Switch';
 import Block from './Block';
 
 class Train {
@@ -18,7 +17,7 @@ class Train {
   authority: number;
 
   /** List of switch positions */
-  route: Switch[];
+  route: Block[];
 
   /** Authority table */
   auth_table: any;
