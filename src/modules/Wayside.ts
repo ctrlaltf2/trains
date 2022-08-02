@@ -67,5 +67,5 @@ export class Wayside {
   // update(){
 
   // }
-}
+} export default Wayside;
 

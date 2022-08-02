@@ -225,7 +225,7 @@ class TrackController extends React.Component {
   getBlock(id, line) {
     if (line === 'green') {
       return this.tracks[0].blocks[id - 1];
-    } else if (line === 'yellow') {
+    } else if (line === 'red') {
       return this.tracks[1].blocks[id - 1];
     }
   }

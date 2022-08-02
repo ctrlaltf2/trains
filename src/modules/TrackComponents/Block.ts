@@ -63,4 +63,4 @@ export class Block {
     // @ts-ignore
     this.switch = new Switch(swBlock, outBlockLow, outBlockHigh);
   }
-}
+} export default Block;
