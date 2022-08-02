@@ -342,7 +342,7 @@ class CTCOffice extends React.Component {
   }
 
   // With list of stations, generate a route/path of blocks to go to meet station ordering
-  // TODO: test
+  // tested
   generateYardRoute(line, stations, return_last = false) {
     const windowedSlice = function(arr, size) {
       let result = [];
@@ -477,8 +477,6 @@ class CTCOffice extends React.Component {
     this.pendingDispatches[leave_time] = pain;
 
     ++this.nextTrainID;
-
-    // console.log('Dispatch pending: ', pain, ' at ', leave_time, 'ms.');
   }
 
   // TODO: test
