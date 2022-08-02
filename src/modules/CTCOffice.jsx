@@ -10,12 +10,16 @@ import {
   FormControlLabel,
   Box,
   Typography,
+  IconButton,
 } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+
 import cytoscape from 'cytoscape';
 
 import _ from 'lodash';
@@ -857,6 +861,19 @@ class CTCOffice extends React.Component {
     });
   }
 
+  handleMapSwitcherClick() {
+    const { activeLine } = this.state;
+
+    if(activeLine === 'red')
+      this.setState({
+        activeLine: 'green'
+      });
+    else
+      this.setState({
+        activeLine: 'red'
+      });
+  }
+
   renderTest() {
     const { lineSelection, trainSelection, blockSelection, throughputValue } = this.state.testUI;
     const { activeTrainIDs, occupancy } = this.state;
@@ -1043,6 +1060,30 @@ class CTCOffice extends React.Component {
               <div className="throughputLabel" id="greenLineLabel">Green Line Throughput</div>
               <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
             </div>
+          </div>
+          <div id="leftMapToggle" className="floating">
+            <IconButton
+              class="mapToggleBtn"
+              color="default"
+              aria-label="switch map"
+              component="span"
+              size="large"
+              onClick={() => { this.handleMapSwitcherClick(); }}
+            >
+              <ChevronLeftIcon/>
+            </IconButton>
+          </div>
+          <div id="rightMapToggle" className="floating">
+            <IconButton
+              class="mapToggleBtn"
+              color="default"
+              aria-label="switch map"
+              component="span"
+              size="large"
+              onClick={() => { this.handleMapSwitcherClick(); }}
+            >
+              <ChevronRightIcon/>
+            </IconButton>
           </div>
           <div id="bottomLeftButtonGroup" className="floating">
             <FormGroup id="manualModeGroup">
