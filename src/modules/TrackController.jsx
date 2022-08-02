@@ -245,7 +245,7 @@ class TrackController extends React.Component {
         .maintenanceMode;
 
     this.setState((prevState) => ({
-      appSate: !prevState.appState,
+      appState: !prevState.appState,
     }));
   }
 
@@ -256,7 +256,7 @@ class TrackController extends React.Component {
       this.tracks[1].blocks[id - 1].maintenanceMode = value;
     }
     this.setState((prevState) => ({
-      appSate: !prevState.appState,
+      appState: !prevState.appState,
     }));
   }
 
@@ -277,7 +277,7 @@ class TrackController extends React.Component {
     // this.tracks[this.state.line].blocks = this.currTrack.blocks;
 
     this.setState((prevState) => ({
-      appSate: !prevState.appState,
+      appState: !prevState.appState,
     }));
   }
 
@@ -730,7 +730,7 @@ class TrackController extends React.Component {
     });
 
     this.setState((prevState) => ({
-      appSate: !prevState.appState,
+      appState: !prevState.appState,
     }));
   }
 
@@ -755,7 +755,7 @@ class TrackController extends React.Component {
       this.state.currBlock.suggSpeed = e.target.value;
 
       this.setState((prevState) => ({
-        appSate: !prevState.appState,
+        appState: !prevState.appState,
       }));
     }
   }
