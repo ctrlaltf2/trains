@@ -180,7 +180,7 @@ app
       3. Pattern 2: finish up async call and send data back
     */
 
-    Object.values(Modules.ALL_MODULES).forEach((moduleName) => {
+    activeModules.forEach((moduleName) => {
       ipcMain.on(moduleName, (_event, payload) => {
         moduleWindows[moduleName].webContents.send(moduleName, payload);
       });

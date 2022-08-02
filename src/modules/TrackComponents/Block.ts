@@ -1,4 +1,5 @@
 /* eslint-disable import/prefer-default-export */
+// @ts-nocheck
 import { Switch } from './Switch';
 
 export class Block {
@@ -59,6 +60,7 @@ export class Block {
   }
 
   createSwitch(swBlock: number, outBlockLow: number, outBlockHigh: number) {
+    // @ts-ignore
     this.switch = new Switch(swBlock, outBlockLow, outBlockHigh);
   }
 }
