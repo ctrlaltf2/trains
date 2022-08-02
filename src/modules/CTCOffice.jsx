@@ -872,6 +872,17 @@ class CTCOffice extends React.Component {
       this.setState({
         activeLine: 'red'
       });
+
+    // Clean up modals and stuff
+    this.setState({
+      lineSelection: undefined,
+      blockSelection: undefined,
+      trainSelection: undefined,
+      editingSwitch: undefined,
+      editingBlock: undefined,
+      switchModalOpen: false,
+      blockModalOpen: false
+    });
   }
 
   renderTest() {
@@ -1063,7 +1074,6 @@ class CTCOffice extends React.Component {
           </div>
           <div id="leftMapToggle" className="floating">
             <IconButton
-              class="mapToggleBtn"
               color="default"
               aria-label="switch map"
               component="span"
@@ -1075,7 +1085,6 @@ class CTCOffice extends React.Component {
           </div>
           <div id="rightMapToggle" className="floating">
             <IconButton
-              class="mapToggleBtn"
               color="default"
               aria-label="switch map"
               component="span"
