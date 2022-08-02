@@ -1,23 +1,23 @@
 import TrackModel from '../modules/TrackModel';
-import { shallow } from 'enzyme';
-import { constants } from 'http2';
+import Switch from '../modules/TrackComponents/Switch';
+import Track from '../modules/TrackComponents/Track';
 
-//  const TM = new TrackModel();
-const TM = shallow(<TrackModel />);
+import Green from '../modules/TrackComponents/TrackJSON/VF2/green.json'
+import Red from '../modules/TrackComponents/TrackJSON/VF2/red.json'
 
+//  TESTS
 test('Track Model Exists', () => {
+  const TM = new TrackModel();
   expect(TM).toBeTruthy();
 });
 
-test('TrackModel::checkTrackHeaters', () => {
-  //TM.state.enviornmentTemp = 20;
-  TM.setState({
-    enviornmentTemp: 20,
-  });
-
-  TM.checkTrackHeaters();
-
-  console.log(TM.state.enviornmentTemp);
-
-  expect(TM.state.trackHeaterStatus).toBe('enabled');
+test('Track Object Exists', () => {
+  const T = new Track();
 });
+
+// test('Track can generate from JSON object', () => {
+//   const T = new Track();
+//   expect(T.load(Green)).toBeTruthy();
+//   expect(T.blocks).toBeTruthy();
+//   expect(T.blocks[1].line).toEqual('Green');
+// })
