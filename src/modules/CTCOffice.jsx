@@ -311,12 +311,11 @@ class CTCOffice extends React.Component {
     this.initCy();
   }
 
-  // too complex for unit tests?
+  // tested
   checkShouldDispatch() {
     const deleted = [];
     for(const pendingTimestamp_ of Array.from(Object.keys(this.pendingDispatches))) {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
-      console.log(this.pendingDispatches, pendingTimestamp_, pendingTimestamp, this.now, this.now > pendingTimestamp);
 
       if(this.now > pendingTimestamp) {
         this.sendDispatchMessage(this.pendingDispatches[pendingTimestamp]);
@@ -334,7 +333,6 @@ class CTCOffice extends React.Component {
 
   // tested
   sendDispatchMessage(train) {
-    console.log(this.now, 'Dispatching train');
     const payload = {
       type: 'dispatch',
       value: train
@@ -366,6 +364,9 @@ class CTCOffice extends React.Component {
     for(let station_pair of windowedSlice(stations, 2)) {
       // Get best route from previous stop segment to next station
       let route = this.getIntersegmentRoute(line, previous_segment, station_pair[1]);
+
+      // Pop off the first segment, since that was covered in the previous loop/initial route
+      route = route.slice(1);
 
       // Add to segment-routes
       segment_route = segment_route.concat(...route);
