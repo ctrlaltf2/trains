@@ -789,6 +789,10 @@ class TrackController extends React.Component {
 
   // Toggles switch
   setSwitch() {
+    this.tracks[this.state.line].blocks[
+      this.controllers[this.state.currController].swBlock - 1
+    ].switch.override = true;
+
     if (
       this.tracks[this.state.line].blocks[
         this.controllers[this.state.currController].swBlock - 1
