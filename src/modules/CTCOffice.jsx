@@ -94,8 +94,8 @@ class CTCOffice extends React.Component {
       UIMode: UIState.Main,
       isDispatchModalOpen: false,
       throughput: {
-        'red': 0,
-        'green': 1,
+        'red': '-',
+        'green': '-',
       },
       testUI: {
         lineSelection: undefined,
