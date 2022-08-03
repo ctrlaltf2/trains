@@ -39,8 +39,7 @@ test('Track Model creates Track Object block arrayys', () => {
     greenBlocks: expect.any(object),
   });
 
-  console.log('red array', TM.redBlocks);
-  console.log('green array', TM.greenBlocks);
+  console.log('arrays', TM.getTrackModelArrays());
 });
 // test('Track Model objects have no block occupancy by default', () => {
 //   const TM = new TrackModel();

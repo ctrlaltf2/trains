@@ -151,14 +151,18 @@ class TrackModel extends React.Component {
           break;
         case 'switch':
           //  only set up for green line rn
-          // blocks[payload.root].next = payload.pointing_to;
-          // blocks[payload.pointing_to].prev = payload.root;
-          // console.log(
-          //   'blocks root, next, prev',
-          //   blocks[payload.root].id,
-          //   blocks[payload.root].next,
-          //   blocks[payload.root].prev
-          // );
+          // eslint-disable-next-line no-case-declarations
+          const LINE = payload.line;
+          if(LINE === 'Green')
+          {
+            greenBlocks[payload.root].next = payload.pointing_to;
+            greenBlocks[payload.pointing_to].prev = payload.root;
+          }
+          if(LINE === 'Red')
+          {
+            redBlocks[payload.root].next = payload.pointing_to;
+            redBlocks[payload.pointing_to].prev = payload.root;
+          }
           break;
         case 'light':
           this.state.TransitLightStatus = payload.payload;
@@ -177,9 +181,6 @@ class TrackModel extends React.Component {
           const blockOccInfo = payload.payload;
           this.trainModelHandshake(blockOccInfo);
           break;
-
-
-
         default:
       }
     });
@@ -210,6 +211,7 @@ class TrackModel extends React.Component {
     this.sendGreenMessages = this.sendGreenMessages.bind(this);
     this.sendRedMessages = this.sendRedMessages.bind(this);
     this.checkTrackFailures = this.checkTrackFailures.bind(this);
+    this.getTrackModelArrays = this.getTrackModelArrays.bind(this);
 
 
     //  Create multiple track model instances (one for each line)
@@ -477,23 +479,10 @@ class TrackModel extends React.Component {
   //  need to send messages based on block info that train is entering
   sendGreenMessages = (greenObj) => {
     const interval = setInterval(() => {
-
-      //  Track Signal Pickup GreenLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'GreenlineTrackSignalPickup',
-        TrackSignalPickup: greenTrackSignalPickup,
-      });
-
       //  Track rail Status GreenLine
       window.electronAPI.sendTrackControllerMessage({
         type: 'GreenlineRailStatus',
         RailStatus: greenRailStatus,
-      });
-
-      //  Track Power Stat GreenLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'GreenlineTrackPower',
-        TrackPowerStatus: greenTrackPowerStatus,
       });
 
       //  Tracks block occupancy
@@ -507,23 +496,10 @@ class TrackModel extends React.Component {
 
   sendRedMessages = (redObj) => {
     const interval = setInterval(() => {
-
-      //  Track Signal Pickup RedLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'RedlineTrackSignalPickup',
-        TrackSignalPickup: redTrackSignalPickup,
-      });
-
       //  Track rail Status RedLine
       window.electronAPI.sendTrackControllerMessage({
         type: 'RedlineRailStatus',
         RailStatus: redRailStatus,
-      });
-
-      //  Track Power Stat RedLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'RedlineTrackPower',
-        TrackPowerStatus: redTrackPowerStatus,
       });
 
       //  Tracks block occupancy
@@ -661,6 +637,11 @@ class TrackModel extends React.Component {
     this.state.personsAtStation = personsAtStation;
     // this.state.currBlock = currBlock;
     this.state.Authority = Authority;
+  };
+
+  //  Function to get the arrays in the track model
+  getTrackModelArrays = () => {
+    return ({'redBlocks': redBlocks, 'greenBlocks': greenBlocks});
   };
 
   toggle() {
