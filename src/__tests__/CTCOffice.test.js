@@ -94,7 +94,6 @@ test(`CTC::makeSpeedTableSafe`, () => {
 
 test(`CTC::resolveSegmentRoutes('green')`, () => {
   const CTC = new CTCOffice();
-  console.log(CTC.resolveSegmentRoutes('green', ['(ACDw-UNKNOWN)', 'Whited::E', '(ACDe-Edgebrook)']));
 
   expect(
     CTC.resolveSegmentRoutes('green', ['(ACDw-UNKNOWN)', 'Whited::E', '(ACDe-Edgebrook)']))
@@ -370,7 +369,6 @@ describe(`CTCOffice::getIntersegmentRoute`, () => {
 
   const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
 
-  // TODO: Red Line
   describe('Red Line', () => {
     test('Yard exit -> Swissville', () => {
       expect(
@@ -468,7 +466,91 @@ describe(`CTCOffice::getIntersegmentRoute`, () => {
       );
     });
   });
-
 });
 
-/* -- UI Tests -- */
+test('CTCOffice:checkShouldDispatch', () => {
+  // Run with multiple timestamps, there's some string <-> float conversion happening
+  for(let i = 0; i < 10; ++i) {
+    const CTC = new CTCOffice();
+    window.electronAPI.sendTrackControllerMessage = jest.fn( payload => {} );
+
+    const time = Math.abs(Math.random()) * 20;
+    const time_dont_dispatch = time * 0.95;
+    const time_do_dispatch = time * 1.10;
+
+    // Make CTC.sendDispatchMessage mock
+    CTC.sendDispatchMessage = jest.fn( train => {} );
+
+    // Add a dummy dispatch
+    CTC.pendingDispatches[time] = {};
+
+    // Check previous times
+    CTC.now = 0;
+    CTC.checkShouldDispatch();
+
+    expect(
+      CTC.sendDispatchMessage.mock.calls.length
+    ).toBe(
+      0
+    );
+
+    CTC.now = time_dont_dispatch;
+    CTC.checkShouldDispatch();
+
+    expect(
+      CTC.sendDispatchMessage.mock.calls.length
+    ).toBe(
+      0
+    );
+
+    // Check should dispatch time
+    CTC.now = time_do_dispatch;
+    CTC.checkShouldDispatch();
+
+    expect(
+      CTC.sendDispatchMessage.mock.calls.length
+    ).toBe(
+      1
+    );
+
+    // And make sure it was removed from dispatches
+    expect(
+      Object.keys(CTC.pendingDispatches).length
+    ).toBe(
+      0
+    );
+  }
+});
+
+describe('CTCOffice::sendDispatchMessage', () => {
+  test('Messages Track Controller', () => {
+    const CTC = new CTCOffice();
+    window.electronAPI.sendTrackControllerMessage = jest.fn( payload => {} );
+
+    CTC.sendDispatchMessage({});
+
+    expect(
+      window.electronAPI.sendTrackControllerMessage.mock.calls.length
+    ).toBe(
+      1
+    );
+  });
+});
+
+describe(`CTCOffice::generateYardRoute`, () => {
+  describe('Green Line', () => {
+
+  });
+
+  describe('Red Line', () => {
+    test('Yard -> Herron Ave. -> Penn Station', () => {
+      const CTC = new CTCOffice();
+
+      expect(
+        CTC.generateYardRoute('red', ['Herron Ave.', 'Penn Station'], false)
+      ).toEqual(
+        [151, 9, 8, 7, 6, 5, 4, 3, 2, 1, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+      );
+    });
+  });
+});
