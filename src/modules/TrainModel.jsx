@@ -63,8 +63,13 @@ class TrainModel extends React.Component {
     this.name = name;
 
     window.electronAPI.subscribeTrainModelMessage((_event, payload) => {
-      console.log('IPC:TrainModel: ', payload);
-
+      // Filter out power messages
+      switch(payload.type) {
+        case 'power':
+          break;
+        default:
+          console.log('IPC:TrainModel: ', payload);
+      }
 
       switch(payload.type) {
 
