@@ -110,7 +110,7 @@ class CTCOffice extends React.Component {
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
         'red': {
-          '1-15-16':   new TrackSwitch(undefined, '1',  ['15', '16']),
+          '1-15-16':   new TrackSwitch(undefined, '15', ['1', ' 16']),
           '27-28-76':  new TrackSwitch(undefined, '27', ['28', '76']),
           '32-33-72':  new TrackSwitch(undefined, '33', ['32', '72']),
           '38-39-71':  new TrackSwitch(undefined, '38', ['39', '71']),
