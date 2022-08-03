@@ -77,7 +77,7 @@ let lineName = '';
 // let trainOccupancy = 25;
 // let personsAtStation = 10;
 
-let redCurrBlock; let greenCurrBlock = 1; //  Block that the train model is currently entering // default to 1
+let redCurrBlock = 1; let greenCurrBlock = 1; //  Block that the train model is currently entering // default to 1
 
 let Authority = 0; //  will be given via track controller
 
