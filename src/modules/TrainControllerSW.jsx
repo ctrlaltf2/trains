@@ -46,7 +46,7 @@ class TrainControllerSW extends React.Component {
 
     // Module Communicaiton - Receiving Messages
     window.electronAPI.subscribeTrainControllerMessage( (_event, payload) => {
-      console.log('IPC:TrainController: ', payload);
+      // console.log('IPC::TrainController: ', payload);
 
       switch(payload.type) {
         case 'commandedSpeed':
