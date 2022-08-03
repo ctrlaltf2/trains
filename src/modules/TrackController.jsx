@@ -150,7 +150,7 @@ class TrackController extends React.Component {
       new Wayside(1, this.tracks[0].blocks.slice(0, 13), 13, 'green')
     );
     let temp = this.tracks[0].blocks.slice(11, 28);
-    temp.push(this.tracks[0].blocks[150]);
+    temp.push(this.tracks[0].blocks[149]);
     this.controllers.push(new Wayside(2, temp, 29, 'green'));
     this.controllers.push(
       new Wayside(3, this.tracks[0].blocks.slice(56, 57), 57, 'green')
@@ -250,26 +250,30 @@ class TrackController extends React.Component {
   }
 
   mmMode() {
-    this.tracks[this.state.line].blocks[
-      this.state.currBlock.id - 1
-    ].maintenanceMode =
-      !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
-        .maintenanceMode;
-
+    // this.tracks[this.state.line].blocks[
+    //   this.state.currBlock.id - 1
+    // ].maintenanceMode =
+    //   !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
+    //     .maintenanceMode;
     this.setState((prevState) => ({
-      appState: !prevState.appState,
+      maintenanceMode: !prevState.maintenanceMode,
     }));
   }
 
-  CTCMMode(id, line, value) {
-    if (line === 'green') {
-      this.tracks[0].blocks[id - 1].maintenanceMode = value;
-    } else if (line === 'red') {
-      this.tracks[1].blocks[id - 1].maintenanceMode = value;
-    }
-    this.setState((prevState) => ({
-      appState: !prevState.appState,
-    }));
+  // CTCMMode(id, line, value) {
+  //   if (line === 'green') {
+  //     this.tracks[0].blocks[id - 1].maintenanceMode = value;
+  //   } else if (line === 'red') {
+  //     this.tracks[1].blocks[id - 1].maintenanceMode = value;
+  //   }
+  //   this.setState((prevState) => ({
+  //     appState: !prevState.appState,
+  //   }));
+  // }
+  CTCMMode(value) {
+    this.setState({
+      maintenanceMode: status,
+    });
   }
 
   loadNewPLC = (event) => {
@@ -314,7 +318,7 @@ class TrackController extends React.Component {
 
       if (controller.line === 'green') {
         line = 0;
-      } else if (controller.line == 'red') {
+      } else if (controller.line === 'red') {
         line = 1;
       }
       for (let j = 0; j < controller.plc.switchLogic.length; j++) {
@@ -369,10 +373,17 @@ class TrackController extends React.Component {
         }
         // Vitality check before setting switch position
         // Also send to CTC/Track Model
+        // if (
+        //   !this.tracks[line].blocks[
+        //     parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+        //   ].maintenanceMode
+        // )
         if (
-          !this.tracks[line].blocks[
-            parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-          ].maintenanceMode
+          !this.state.maintenanceMode ||
+          (this.state.maintenanceMode &&
+            this.tracks[line].blocks[
+              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+            ].switch.override === false)
         ) {
           if (status.every((val) => val === true)) {
             if (
@@ -521,7 +532,7 @@ class TrackController extends React.Component {
           let temp =
             this.tracks[line].blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight == ('red' || 'yellow');
+            ].transitLight === ('red' || 'yellow');
 
           this.tracks[line].blocks[
             parseInt(controller.plc.lightLogic[j].block) - 1
@@ -555,7 +566,7 @@ class TrackController extends React.Component {
           let temp =
             this.tracks[line].blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight == ('green' || 'yellow');
+            ].transitLight === ('green' || 'yellow');
 
           this.tracks[line].blocks[
             parseInt(controller.plc.lightLogic[j].block) - 1
@@ -589,7 +600,7 @@ class TrackController extends React.Component {
           let temp =
             this.tracks[line].blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight == ('green' || 'red');
+            ].transitLight === ('green' || 'red');
 
           this.tracks[line].blocks[
             parseInt(controller.plc.lightLogic[j].block) - 1
@@ -779,28 +790,34 @@ class TrackController extends React.Component {
   // Toggles switch
   setSwitch() {
     if (
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-        .position ==
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-        .outBlockHigh
+      this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.position ==
+      this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.outBlockHigh
     ) {
       this.tracks[this.state.line].blocks[
-        this.state.currBlock.id - 1
+        this.controllers[this.state.currController].swBlock - 1
       ].switch.setPosition(
-        this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-          .outBlockLow
+        this.tracks[this.state.line].blocks[
+          this.controllers[this.state.currController].swBlock - 1
+        ].switch.outBlockLow
       );
     } else if (
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-        .position ==
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-        .outBlockLow
+      this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.position ==
+      this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.outBlockLow
     ) {
       this.tracks[this.state.line].blocks[
-        this.state.currBlock.id - 1
+        this.controllers[this.state.currController].swBlock - 1
       ].switch.setPosition(
-        this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-          .outBlockHigh
+        this.tracks[this.state.line].blocks[
+          this.controllers[this.state.currController].swBlock - 1
+        ].switch.outBlockHigh
       );
     }
 
@@ -811,11 +828,14 @@ class TrackController extends React.Component {
 
   // Set specific swithc to position
   setSwitchCTC(block, position, line) {
-    if (line === 'green') {
+    if (line === 'green' && this.state.maintenanceMode) {
       this.tracks[0].blocks[block - 1].switch.setPosition(position);
-    } else if (line === 'red') {
+      this.tracks[0].blocks[block - 1].switch.override = true;
+    } else if (line === 'red' && this.state.maintenanceMode) {
       this.tracks[1].blocks[block - 1].switch.setPosition(position);
+      this.tracks[1].blocks[block - 1].switch.override = true;
     }
+
     this.setState((prevState) => ({
       appState: !prevState.appState,
     }));
@@ -976,9 +996,10 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {this.tracks[this.state.line].blocks[
+                  {/* {this.tracks[this.state.line].blocks[
                     this.state.currBlock.id - 1
-                  ].maintenanceMode ? (
+                  ].maintenanceMode  */}
+                  {this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.mmMode}
                       label="Maintenence Mode Activated"
@@ -1302,9 +1323,10 @@ class TrackController extends React.Component {
                     this.controllers[this.state.currController].swBlock - 1
                   ].switch == undefined ? (
                     <div></div>
-                  ) : this.tracks[this.state.line].blocks[
-                      this.controllers[this.state.currController].swBlock - 1
-                    ].maintenanceMode ? (
+                  ) : // this.tracks[this.state.line].blocks[
+                  //     this.controllers[this.state.currController].swBlock - 1
+                  //   ].maintenanceMode
+                  this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
@@ -1340,9 +1362,10 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {this.tracks[this.state.line].blocks[
+                  {/* {this.tracks[this.state.line].blocks[
                     this.state.currBlock.id - 1
-                  ].maintenanceMode ? (
+                  ].maintenanceMode  */}
+                  {this.state.maintenanceMode ? (
                     <Chip
                       label="Maintenence Mode Activated"
                       color="warning"
