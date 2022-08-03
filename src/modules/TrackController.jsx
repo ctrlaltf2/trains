@@ -255,6 +255,16 @@ class TrackController extends React.Component {
     // ].maintenanceMode =
     //   !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
     //     .maintenanceMode;
+
+    // reset all overrides to false on change
+    this.controllers.forEach((controller) => {
+      if (controller.line === 'green') {
+        this.tracks[0].blocks[controller.swBlock - 1].override = false;
+      } else if (controller.line === 'red') {
+        this.tracks[1].blocks[controller.swBlock - 1].override = false;
+      }
+    })
+
     this.setState((prevState) => ({
       maintenanceMode: !prevState.maintenanceMode,
     }));
@@ -271,6 +281,15 @@ class TrackController extends React.Component {
   //   }));
   // }
   CTCMMode(value) {
+    // reset all overrides to false on change
+    this.controllers.forEach((controller) => {
+      if (controller.line === 'green') {
+        this.tracks[0].blocks[controller.swBlock - 1].override = false;
+      } else if (controller.line === 'red') {
+        this.tracks[1].blocks[controller.swBlock - 1].override = false;
+      }
+    })
+
     this.setState({
       maintenanceMode: status,
     });
@@ -981,7 +1000,7 @@ class TrackController extends React.Component {
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
                         this.tracks[this.state.line].blocks[
-                          this.currBlock.id - 1
+                          this.controllers[this.state.currController].swBlock - 1
                         ].switch.position
                       }`}
                       color={'success'}
