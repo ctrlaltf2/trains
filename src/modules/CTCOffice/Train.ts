@@ -22,6 +22,9 @@ class Train {
   /** Authority table */
   auth_table: any;
 
+  /** Speed table, map block_str -> speed for that block **/
+  speed_table: any;
+
   constructor(id: string, line: string, destination_block: Block, command_speed: number, authority: number, route: Block[]) {
     this.id = id;
     this.line = line;
