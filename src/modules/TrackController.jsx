@@ -99,11 +99,31 @@ class TrackController extends React.Component {
 
         // Occ from Track model 
         case 'GreenBlockOccupancy':
-
+          payload.GreenBlocks.forEach((block) => {
+            if (this.tracks[0].blocks[block.id - 1].occupancy != block.occupancy) {
+              this.tracks[0].blocks[block.id - 1].occupancy = block.occupancy;
+              window.electronAPI.sendCTCMessage({
+                type: 'occupancy',
+                line: this.tracks[0].blocks[block.id - 1].line,
+                block_id: this.tracks[0].blocks[block.id - 1].id,
+                value: this.tracks[0].blocks[block.id - 1].occupancy
+              });
+            }
+          })
           break;
 
         case 'RedBlockOccupancy':
-
+          payload.RedBlocks.forEach((block) => {
+            if (this.tracks[1].blocks[block.id - 1].occupancy != block.occupancy) {
+              this.tracks[1].blocks[block.id - 1].occupancy = block.occupancy;
+              window.electronAPI.sendCTCMessage({
+                type: 'occupancy',
+                line: this.tracks[1].blocks[block.id - 1].line,
+                block_id: this.tracks[1].blocks[block.id - 1].id,
+                value: this.tracks[1].blocks[block.id - 1].occupancy
+              });
+            }
+          })
           break;
 
         // From CTC
