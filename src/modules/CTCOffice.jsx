@@ -783,27 +783,49 @@ class CTCOffice extends React.Component {
    * Given an occupancy change on a block, infer a train movement
    */
   inferTrainMovement(line, block_id, new_occupancy) {
-    const graph_model_lite = this.cy_display[line];
+    if(new_occupancy === false) { // A train left a block
+      // Find train that was on that block
+      for(const [train_id, current_position_list] of Object.entries(this.trainPositions[line])) {
+        const back = current_position_list.slice(-1);
+        const current_positions_str = current_position_list.map( e => { return e.toString(); });
 
-    // Based on display graph's flow, get every possible edge source for this update (incl. switches- needs filtered for these still)
-    const all_possible_source_edges = graph_model_lite.$(`edge[block_id = '${block_id}']`).sources().incomers().edges(`edge[block_id != '${block_id}']`);
+        // Pop its occupancy from it
+        if(current_positions_str.includes(back.toString())) {
+          this.trainPositions[line][train_id].pop();
+          return train_id;
+        }
+      }
 
-    // Filter out invalid movements based on switch restrictions
-    const possible_sources = all_possible_source_edges.filter( (edge) => {
-      if(this.isInvalidSwitchMovement(line, edge.data('block_id'), block_id))
-        return false;
+      return undefined;
+    } else { // A train entered a block
+      const graph_model_lite = this.cy_display[line];
 
-      return true;
-    }).map( (edge) => {
-      return edge.data('block_id');
-    });
+      // Based on display graph's flow, get every possible edge source for this update (incl. switches- needs filtered for these still)
+      const all_possible_source_edges = graph_model_lite.$(`edge[block_id = '${block_id}']`).sources().incomers().edges(`edge[block_id != '${block_id}']`);
 
-    for(const [train_id, current_block_id] of Object.entries(this.trainPositions[line])) {
-      if(possible_sources.includes(current_block_id))
-        return train_id;
+      // Filter out invalid movements based on switch restrictions
+      const possible_sources = all_possible_source_edges.filter( (edge) => {
+        if(this.isInvalidSwitchMovement(line, edge.data('block_id'), block_id))
+          return false;
+
+        return true;
+      }).map( (edge) => {
+        return edge.data('block_id').toString();
+      });
+
+      for(const [train_id, current_position_list] of Object.entries(this.trainPositions[line])) {
+        const front = current_position_list[0];
+
+        if(possible_sources.includes(front.toString())) {
+          // Add block to front of array
+          this.trainPositions[line][train_id].unshift(block_id.toString());
+          console.log(`Train with id '`, train_id, `' with front on block`, front, 'now has leading block', block_id);
+          return train_id;
+        }
+      }
+
+      return undefined;
     }
-
-    return undefined;
   }
 
   // too complex to unit test?
