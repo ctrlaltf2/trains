@@ -1,8 +1,8 @@
 // @ts-nocheck
 export class Switch {
   public _position: number;
-
   public _positionBool: boolean;
+  public override: boolean = false;
 
   constructor(
     public swBlock: number,
