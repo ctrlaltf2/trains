@@ -243,9 +243,16 @@ class TrackModel extends React.Component {
     redBlocks.forEach((a) => {a.Occupied = 'Unoccupied'});
     greenBlocks.forEach((b) => {b.Occupied = 'Unoccupied'});
 
-    //  send messages to the other modules based on the information in the Track Classes
-    this.sendGreenMessages(greenLineObject);
-    this.sendRedMessages(redLineObject);
+    //  send the track controller an empty set of arrays (block unoccupied)
+    window.electronAPI.sendTrackControllerMessage({
+      type: 'GreenBlockOccupancy',
+      GreenBlocks: greenBlocks,
+    });
+
+    window.electronAPI.sendTrackControllerMessage({
+      type: 'RedBlockOccupancy',
+      RedBlocks: redBlocks,
+    });
 
     //  start checking for track errors
     this.checkTrackFailures();
@@ -466,38 +473,6 @@ class TrackModel extends React.Component {
     });
   };
 
-  //  ----MIGHT NOT NEED-----//
-  //  update block occupancy
-  // updateBlockOccupancy = (payload) => {
-  //   //  need to get the payload message and upate the block occupancy
-  //   const interval = setInterval(() => {
-  //     // if (payload.Enter !== null) blocks[currBlock].Occupied = true;
-  //     // if (payload.Leave !== null) blocks[currBlock].Occupied = false;
-  //   }, 10000);
-  // };
-
-  //  need to send messages based on block info that train is entering
-  sendGreenMessages = (greenObj) => {
-    const interval = setInterval(() => {
-      //  Tracks block occupancy
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'GreenBlockOccupancy',
-        GreenBlocks: greenBlocks,
-      });
-
-    }, 1000);
-  };
-
-  sendRedMessages = (redObj) => {
-    const interval = setInterval(() => {
-      //  Tracks block occupancy
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'RedBlockOccupancy',
-        RedBlocks: redBlocks,
-      });
-    }, 1000);
-  };
-
   //  GETS TRIGGERED IN CONSTRUCTOR, CHECKS FOR TRACK FAILURES
   checkTrackFailures = () =>
   {
@@ -631,12 +606,12 @@ class TrackModel extends React.Component {
     //  find the line that the train is on
     const trackLine = trainDispatchArr[ind].trackLine
 
-    if(trackLine === 'red line')
+    if(trackLine === 'Red')
     {
       blocks = redBlocks;
       currBlock = redCurrBlock;
     }
-    else if(trackLine === 'green line')
+    else if(trackLine === 'Green')
     {
       blocks = greenLine;
       currBlock = greenCurrBlock;
@@ -648,6 +623,26 @@ class TrackModel extends React.Component {
       if (IS_TRAIN_MOVING) {
         //  occupy the current block
         blocks[currBlock].Occupied = true;
+
+        //  send the track model a message about the blocks being updated
+        //  Tracks block occupancy
+        if(trackLine === 'Green')
+        {
+          window.electronAPI.sendTrackControllerMessage({
+            type: 'GreenBlockOccupancy',
+            GreenBlocks: blocks,
+          });
+        }
+        else
+        {
+          //  Tracks block occupancy
+          window.electronAPI.sendTrackControllerMessage({
+            type: 'RedBlockOccupancy',
+            RedBlocks: blocks,
+          });
+        }
+        
+
         //  send the train model a message about the length of the current block and speed
         window.electronAPI.sendTrainModelMessage({
           type: 'CurrentCommandedSpeed',
@@ -703,6 +698,23 @@ class TrackModel extends React.Component {
           const searchInd = blocks.Occupied.indexOf.true;
           //  set occupancy to false
           blocks[searchInd].Occupied = false;
+          //  send the track model a message about the blocks being updated
+        //  Tracks block occupancy
+          if(trackLine === 'Green')
+          {
+            window.electronAPI.sendTrackControllerMessage({
+              type: 'GreenBlockOccupancy',
+              GreenBlocks: blocks,
+            });
+          }
+          else
+          {
+            //  Tracks block occupancy
+            window.electronAPI.sendTrackControllerMessage({
+              type: 'RedBlockOccupancy',
+              RedBlocks: blocks,
+            });
+          }
         }
       }
     }
