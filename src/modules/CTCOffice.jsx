@@ -88,6 +88,7 @@ class CTCOffice extends React.Component {
     window.electronAPI.subscribeTimerMessage( (_event, payload) => {
       this.now = payload.timestamp;
       this.checkShouldDispatch();
+      this.checkShouldSendAuthority();
     });
 
     this.state = {
@@ -825,7 +826,31 @@ class CTCOffice extends React.Component {
         if(next_auth)
           scheduleAuthoritySend(train_id, next_auth.authority, this.now + next_auth.wait_next_authority);
       }
+
+      this.sendSuggestedSpeedMessage(train_id, block_id);
     }
+  }
+
+  // Called when a train moves onto a block on its route
+  sendSuggestedSpeedMessage(train_id, block_id) {
+    // Get the suggested speed to send
+    const train = this.trains[train_id];
+    if(train === undefined) {
+      console.log("Warning: unknown train ID in sendSuggestedSpeedMessage '", train_id, "'");
+      return;
+    }
+
+    const speed_mps = this.trains[train_id].speed_table[block_id];
+    if(!(speed_mps >= 0)) { // undefined
+      console.log("Warning: unknown speed for (train_id, block_id) = ", train_id, block_id);
+      return;
+    }
+
+    const value_in_kmh = speed_mps * 3.6;
+    window.electronAPI.sendTrainControllerMessage({
+      payload: 'suggestedSpeed',
+      suggestedSpeed: value_in_kmh
+    });
   }
 
   // trivial, no test
