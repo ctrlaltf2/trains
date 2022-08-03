@@ -479,12 +479,6 @@ class TrackModel extends React.Component {
   //  need to send messages based on block info that train is entering
   sendGreenMessages = (greenObj) => {
     const interval = setInterval(() => {
-      //  Track rail Status GreenLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'GreenlineRailStatus',
-        RailStatus: greenRailStatus,
-      });
-
       //  Tracks block occupancy
       window.electronAPI.sendTrackControllerMessage({
         type: 'GreenBlockOccupancy',
@@ -496,12 +490,6 @@ class TrackModel extends React.Component {
 
   sendRedMessages = (redObj) => {
     const interval = setInterval(() => {
-      //  Track rail Status RedLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'RedlineRailStatus',
-        RailStatus: redRailStatus,
-      });
-
       //  Tracks block occupancy
       window.electronAPI.sendTrackControllerMessage({
         type: 'RedBlockOccupancy',
@@ -513,93 +501,112 @@ class TrackModel extends React.Component {
   //  GETS TRIGGERED IN CONSTRUCTOR, CHECKS FOR TRACK FAILURES
   checkTrackFailures = () =>
   {
-    let trainIDs = [];
-    //  check the red line
-    if(redTrackPowerStatus === 'broken' || redTrackSignalPickup === 'broken' || redRailStatus === 'broken')
-    {
-
-      //  check for the trains that need to stop
-      for( let t = 0; t < trainDispatchArr.length; t++)
+    const interval = setInterval(() => {
+      let trainIDs = [];
+      //  check the red line
+      if(redTrackPowerStatus === 'broken' || redTrackSignalPickup === 'broken' || redRailStatus === 'broken')
       {
-        if(trainDispatchArr[t].trackLine === 'Red')
+        //  check if the red rail is broken
+        if(redRailStatus === 'broken')
         {
-          //  add the train IDs to be stopped
-          trainIDs.push(trainDispatchArr[t].TrainID);
+          //  Track rail Status RedLine
+          window.electronAPI.sendTrackControllerMessage({
+            type: 'RedlineRailStatus',
+            RailStatus: redRailStatus,
+          });
         }
+        
+
+        //  check for the trains that need to stop
+        for( let t = 0; t < trainDispatchArr.length; t++)
+        {
+          if(trainDispatchArr[t].trackLine === 'Red')
+          {
+            //  add the train IDs to be stopped
+            trainIDs.push(trainDispatchArr[t].TrainID);
+          }
+        }
+        //  send train model message to stop
+        window.electronAPI.sendTrainModelMessage({
+          type: 'Stop',
+          'trainIDArray' : trainIDs,
+        });
+
+        //  after message is sent, clear the array
+        trainIDs.length = 0;    //  fasted way to clear array; better performance
       }
-      //  send train model message to stop
-      window.electronAPI.sendTrainModelMessage({
-        type: 'Stop',
-        'trainIDArray' : trainIDs,
-      });
-
-      //  after message is sent, clear the array
-      trainIDs.length = 0;    //  fasted way to clear array; better performance
-    }
-    else if (redTrackPowerStatus === 'functional' && redTrackSignalPickup === 'functional' && redRailStatus === 'functional')
-    {
-      //  check for the trains that need to started
-      for( let t = 0; t < trainDispatchArr.length; t++)
+      else if (redTrackPowerStatus === 'functional' && redTrackSignalPickup === 'functional' && redRailStatus === 'functional')
       {
-        if(trainDispatchArr[t].trackLine === 'Red')
+        //  check for the trains that need to started
+        for( let t = 0; t < trainDispatchArr.length; t++)
         {
-          //  add the train IDs to be started
-          trainIDs.push(trainDispatchArr[t].TrainID);
+          if(trainDispatchArr[t].trackLine === 'Red')
+          {
+            //  add the train IDs to be started
+            trainIDs.push(trainDispatchArr[t].TrainID);
+          }
         }
-      }
 
-      window.electronAPI.sendTrainModelMessage({
-        type: 'Go',
-        'trainIDArray' : trainIDs,
-      });
+        window.electronAPI.sendTrainModelMessage({
+          type: 'Go',
+          'trainIDArray' : trainIDs,
+        });
 
-      //  after message is sent, clear the array
-      trainIDs.length = 0;    //  fasted way to clear array; better performance
-    }
-
-    //  GREEN LINE
-    if(greenTrackPowerStatus === 'broken' || greenTrackSignalPickup === 'broken' || greenRailStatus === 'broken')
-    {
-
-      //  check for the trains that need to stop
-      for( let t = 0; t < trainDispatchArr.length; t++)
-      {
-        if(trainDispatchArr[t].trackLine === 'Green')
-        {
-          //  add the train IDs to be stopped
-          trainIDs.push(trainDispatchArr[t].TrainID);
-        }
-      }
-      //  send train model message to stop
-      window.electronAPI.sendTrainModelMessage({
-        type: 'Stop',
-        'trainIDArray' : trainIDs,
-      });
-
-      //  after message is sent, clear the array
-      trainIDs.length = 0;    //  fasted way to clear array; better performance
-    }
-    else if (greenTrackPowerStatus === 'functional' && greenTrackSignalPickup === 'functional' && greenRailStatus === 'functional')
-    {
-      //  check for the trains that need to started
-      for( let t = 0; t < trainDispatchArr.length; t++)
-      {
-        if(trainDispatchArr[t].trackLine === 'Green')
-        {
-          //  add the train IDs to be started
-          trainIDs.push(trainDispatchArr[t].TrainID);
-        }
+        //  after message is sent, clear the array
+        trainIDs.length = 0;    //  fasted way to clear array; better performance
       }
 
-      window.electronAPI.sendTrainModelMessage({
-        type: 'Go',
-        'trainIDArray' : trainIDs,
-      });
+      //  GREEN LINE
+      if(greenTrackPowerStatus === 'broken' || greenTrackSignalPickup === 'broken' || greenRailStatus === 'broken')
+      {
+        if(greenRailStatus === 'broken')
+        {
+          //  Track rail Status GreenLine
+          window.electronAPI.sendTrackControllerMessage({
+            type: 'GreenlineRailStatus',
+            RailStatus: greenRailStatus,
+          });
+        }
 
-      //  after message is sent, clear the array
-      trainIDs.length = 0;    //  fasted way to clear array; better performance
-    }
+        //  check for the trains that need to stop
+        for( let t = 0; t < trainDispatchArr.length; t++)
+        {
+          if(trainDispatchArr[t].trackLine === 'Green')
+          {
+            //  add the train IDs to be stopped
+            trainIDs.push(trainDispatchArr[t].TrainID);
+          }
+        }
+        //  send train model message to stop
+        window.electronAPI.sendTrainModelMessage({
+          type: 'Stop',
+          'trainIDArray' : trainIDs,
+        });
 
+        //  after message is sent, clear the array
+        trainIDs.length = 0;    //  fasted way to clear array; better performance
+      }
+      else if (greenTrackPowerStatus === 'functional' && greenTrackSignalPickup === 'functional' && greenRailStatus === 'functional')
+      {
+        //  check for the trains that need to started
+        for( let t = 0; t < trainDispatchArr.length; t++)
+        {
+          if(trainDispatchArr[t].trackLine === 'Green')
+          {
+            //  add the train IDs to be started
+            trainIDs.push(trainDispatchArr[t].TrainID);
+          }
+        }
+
+        window.electronAPI.sendTrainModelMessage({
+          type: 'Go',
+          'trainIDArray' : trainIDs,
+        });
+
+        //  after message is sent, clear the array
+        trainIDs.length = 0;    //  fasted way to clear array; better performance
+      }
+    })
   };
 
   //  function for updating block occupancy and exchanging information with train model
