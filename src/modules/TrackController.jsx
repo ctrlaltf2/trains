@@ -165,7 +165,7 @@ class TrackController extends React.Component {
       new Wayside(3, this.tracks[0].blocks.slice(56, 57), 57, 'green')
     );
     this.controllers.push(
-      new Wayside(4, this.tracks[0].blocks.slice(61, 76), 62, 'green')
+      new Wayside(4, this.tracks[0].blocks.slice(61, 76), 63, 'green')
     );
     temp = this.tracks[0].blocks.slice(100, 149);
     temp.push(this.tracks[0].blocks[76]);
