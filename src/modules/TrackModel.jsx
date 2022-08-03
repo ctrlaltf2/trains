@@ -465,7 +465,7 @@ class TrackModel extends React.Component {
   //  send leaving yard info
   sendYardExitInfo = (trainID, trackLine) => {
     //  send message to train model about leaving the yard
-    window.electronAPI.sendTrackModelMessage({
+    window.electronAPI.sendTrainModelMessage({
       type: 'exitYard',
       // trainID: trainDispatchArr[]
       trainID,
