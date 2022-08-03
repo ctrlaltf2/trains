@@ -195,3 +195,19 @@
 #switchPositionCombobox {
   width: 20ch;
 }
+
+#leftMapToggle, #rightMapToggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100vh;
+  z-index: 1;
+}
+
+#rightMapToggle {
+  right: 0;
+}
+
+#leftMapToggle {
+  left: 0;
+}

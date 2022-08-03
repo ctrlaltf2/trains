@@ -10,12 +10,16 @@ import {
   FormControlLabel,
   Box,
   Typography,
+  IconButton,
 } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+
 import cytoscape from 'cytoscape';
 
 import _ from 'lodash';
@@ -311,21 +315,14 @@ class CTCOffice extends React.Component {
     this.initCy();
   }
 
-  // too complex for unit tests?
+  // tested
   checkShouldDispatch() {
     const deleted = [];
     for(const pendingTimestamp_ of Array.from(Object.keys(this.pendingDispatches))) {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
 
-      if(this.now < pendingTimestamp) {
-        const payload = {
-          type: 'dispatch',
-          value: this.pendingDispatches[pendingTimestamp]
-        };
-
-        console.log('Sending dispatch message of ', payload);
-
-        window.electronAPI.sendTrackControllerMessage(payload);
+      if(this.now > pendingTimestamp) {
+        this.sendDispatchMessage(this.pendingDispatches[pendingTimestamp]);
 
         deleted.push(pendingTimestamp_);
 
@@ -338,8 +335,18 @@ class CTCOffice extends React.Component {
     }
   }
 
+  // tested
+  sendDispatchMessage(train) {
+    const payload = {
+      type: 'dispatch',
+      value: train
+    };
+
+    window.electronAPI.sendTrackControllerMessage(payload);
+  }
+
   // With list of stations, generate a route/path of blocks to go to meet station ordering
-  // TODO: test
+  // tested
   generateYardRoute(line, stations, return_last = false) {
     const windowedSlice = function(arr, size) {
       let result = [];
@@ -361,6 +368,9 @@ class CTCOffice extends React.Component {
     for(let station_pair of windowedSlice(stations, 2)) {
       // Get best route from previous stop segment to next station
       let route = this.getIntersegmentRoute(line, previous_segment, station_pair[1]);
+
+      // Pop off the first segment, since that was covered in the previous loop/initial route
+      route = route.slice(1);
 
       // Add to segment-routes
       segment_route = segment_route.concat(...route);
@@ -471,8 +481,6 @@ class CTCOffice extends React.Component {
     this.pendingDispatches[leave_time] = pain;
 
     ++this.nextTrainID;
-
-    // console.log('Dispatch pending: ', pain, ' at ', leave_time, 'ms.');
   }
 
   // TODO: test
@@ -853,6 +861,30 @@ class CTCOffice extends React.Component {
     });
   }
 
+  handleMapSwitcherClick() {
+    const { activeLine } = this.state;
+
+    if(activeLine === 'red')
+      this.setState({
+        activeLine: 'green'
+      });
+    else
+      this.setState({
+        activeLine: 'red'
+      });
+
+    // Clean up modals and stuff
+    this.setState({
+      lineSelection: undefined,
+      blockSelection: undefined,
+      trainSelection: undefined,
+      editingSwitch: undefined,
+      editingBlock: undefined,
+      switchModalOpen: false,
+      blockModalOpen: false
+    });
+  }
+
   renderTest() {
     const { lineSelection, trainSelection, blockSelection, throughputValue } = this.state.testUI;
     const { activeTrainIDs, occupancy } = this.state;
@@ -1040,6 +1072,28 @@ class CTCOffice extends React.Component {
               <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
             </div>
           </div>
+          <div id="leftMapToggle" className="floating">
+            <IconButton
+              color="default"
+              aria-label="switch map"
+              component="span"
+              size="large"
+              onClick={() => { this.handleMapSwitcherClick(); }}
+            >
+              <ChevronLeftIcon/>
+            </IconButton>
+          </div>
+          <div id="rightMapToggle" className="floating">
+            <IconButton
+              color="default"
+              aria-label="switch map"
+              component="span"
+              size="large"
+              onClick={() => { this.handleMapSwitcherClick(); }}
+            >
+              <ChevronRightIcon/>
+            </IconButton>
+          </div>
           <div id="bottomLeftButtonGroup" className="floating">
             <FormGroup id="manualModeGroup">
               <FormControlLabel checked={manualMode} control={<Switch onChange={(ev) => {
@@ -1081,7 +1135,7 @@ class CTCOffice extends React.Component {
                   }}
                 />
                 <Button variant="contained" component="span">
-                  Upload
+                  Upload Schedule
                 </Button>
               </label>
             </label>
