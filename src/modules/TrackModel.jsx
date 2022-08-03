@@ -573,16 +573,19 @@ class TrackModel extends React.Component {
         window.electronAPI.sendTrainModelMessage({
           type: 'CurrentCommandedSpeed',
           CommandedSpeed: blocks[currBlock].spdLimit,
+          TrainID: TRAIN_ID,
         });
         window.electronAPI.sendTrainModelMessage({
           type: 'CurrentBlockLength',
           BlockLength: blocks[currBlock].length,
+          TrainID: TRAIN_ID,
         });
         if(currBlock < blocks.length)
         {
           window.electronAPI.sendTrainModelMessage({
             type: 'NextBlockLength',
             BlockLength: blocks[currBlock + 1].length,
+            TrainID: TRAIN_ID,
           });
         }
 
@@ -596,16 +599,19 @@ class TrackModel extends React.Component {
         window.electronAPI.sendTrainModelMessage({
           type: 'Beacon',
           Beacon : blocks[currBlock].beacon,
+          TrainID: TRAIN_ID,
         });
 
         window.electronAPI.sendTrainModelMessage({
           type: 'Underground',
           Underground : blocks[currBlock].underground,
+          TrainID: TRAIN_ID,
         });
 
         window.electronAPI.sendTrainModelMessage({
           type: 'Grade',
           Grade : blocks[currBlock].grade,
+          TrainID: TRAIN_ID,
         });
       }
       //  Train progresses to next block
