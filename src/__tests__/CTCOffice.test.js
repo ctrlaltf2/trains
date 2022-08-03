@@ -136,7 +136,7 @@ test(`CTCOffice::inferTrainMovement, unknown source`, () => {
 
 test(`CTCOffice::inferTrainMovement, single possible source`, () => {
   const CTC = new CTCOffice();
-  CTC.trainPositions['Thomas'] = '42';
+  CTC.trainPositions['green']['Thomas'] = '42';
 
   expect(
     CTC.inferTrainMovement('green', '43', true)
@@ -147,7 +147,7 @@ test(`CTCOffice::inferTrainMovement, single possible source`, () => {
 
 test(`CTCOffice::inferTrainMovement, multiple possible sources`, () => {
   const CTC = new CTCOffice();
-  CTC.trainPositions['Thomas'] = '42';
+  CTC.trainPositions['green']['Thomas'] = '42';
 
   expect(
     CTC.inferTrainMovement('green', '43', true)
@@ -158,7 +158,7 @@ test(`CTCOffice::inferTrainMovement, multiple possible sources`, () => {
 
 test(`CTCOffice::inferTrainMovement, across switch junction, single source`, () => {
   const CTC = new CTCOffice();
-  CTC.trainPositions['Thomas'] = '42';
+  CTC.trainPositions['green']['Thomas'] = '42';
 
   expect(
     CTC.inferTrainMovement('green', '43', true)
@@ -169,7 +169,7 @@ test(`CTCOffice::inferTrainMovement, across switch junction, single source`, () 
 
 test(`CTCOffice::inferTrainMovement, across switch junction, multiple source`, () => {
   const CTC = new CTCOffice();
-  CTC.trainPositions['Thomas'] = '29';
+  CTC.trainPositions['green']['Thomas'] = '29';
 
   expect(
     CTC.inferTrainMovement('green', '30', true)
@@ -181,7 +181,7 @@ test(`CTCOffice::inferTrainMovement, across switch junction, multiple source`, (
 describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
   test(`green junction, no 100 -> 86 movement`, () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '100';
+    CTC.trainPositions['green']['Thomas'] = '100';
 
     expect(
       CTC.inferTrainMovement('green', '86', true)
@@ -192,7 +192,7 @@ describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
 
   test(`green junction, no 76 -> 101 movement`, () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '76';
+    CTC.trainPositions['green']['Thomas'] = '76';
 
     expect(
       CTC.inferTrainMovement('green', '101', true)
@@ -203,7 +203,7 @@ describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
 
   test(`green junction, no 101 -> 76 movement`, () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '101';
+    CTC.trainPositions['green']['Thomas'] = '101';
 
     expect(
       CTC.inferTrainMovement('green', '76', true)
@@ -214,7 +214,7 @@ describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
 
   test(`green junction, no 150 -> 30 movement`, () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '150';
+    CTC.trainPositions['green']['Thomas'] = '150';
 
     expect(
       CTC.inferTrainMovement('green', '30', true)
@@ -225,7 +225,7 @@ describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
 
   test(`green junction, no 1 -> 12 movement`, () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '1';
+    CTC.trainPositions['green']['Thomas'] = '1';
 
     expect(
       CTC.inferTrainMovement('green', '12', true)

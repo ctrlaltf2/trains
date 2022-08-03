@@ -88,14 +88,15 @@ class CTCOffice extends React.Component {
     window.electronAPI.subscribeTimerMessage( (_event, payload) => {
       this.now = payload.timestamp;
       this.checkShouldDispatch();
+      this.checkShouldSendAuthority();
     });
 
     this.state = {
       UIMode: UIState.Main,
       isDispatchModalOpen: false,
       throughput: {
-        'red': 0,
-        'green': 1,
+        'red': '-',
+        'green': '-',
       },
       testUI: {
         lineSelection: undefined,
@@ -103,7 +104,7 @@ class CTCOffice extends React.Component {
         blockSelection: undefined,
         throughputValue: undefined,
       },
-      occupancy: { // occupancy[line][block_id] = is_occupied: bool
+      occupancy: { // occupancy[line][block_id] = is_occupied: trainID of occupee
         'red': {},
         'green': {},
       },
@@ -157,11 +158,13 @@ class CTCOffice extends React.Component {
       )
     };
     this.trainPositions = {
+      'red': {},
+      'green': {},
     }; // str(train id) -> str(block_id)
 
     this.systemMapRef = React.createRef();
     this.pendingDispatches = {}; // timestamp to send off
-    this.pendingAuthorities = {}; // timestamp to send
+    this.pendingAuthorities = []; // { time, train_id, authority }
 
     // Off-screen cytoscape element for routing algos and other shenanigans
     // Indexed by line
@@ -335,6 +338,23 @@ class CTCOffice extends React.Component {
     }
   }
 
+  checkShouldSendAuthority() {
+    // Send things that need to be sent
+    const sentItems = [];
+    for(let i = 0; i < this.pendingAuthorities.length; ++i) {
+      const scheduledAuth = this.pendingAuthorities[i];
+      if(this.now > scheduledAuth.timestamp) {
+        this.sendAuthorityMessage(train_id, authority);
+        sentItems.push(i);
+      }
+    }
+
+    // Remove ones that got sent
+    this.pendingAuthorities = this.pendingAuthorities.filter( (_, index) => {
+      return !(sentItems.includes(index));
+    });
+  }
+
   // tested
   sendDispatchMessage(train) {
     const payload = {
@@ -343,6 +363,15 @@ class CTCOffice extends React.Component {
     };
 
     window.electronAPI.sendTrackControllerMessage(payload);
+  }
+
+  sendAuthorityMessage(train_id, authority) {
+    // TODO: Check this is the right module
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'authority',
+      'train': train_id,
+      'value': authority,
+    });
   }
 
   // With list of stations, generate a route/path of blocks to go to meet station ordering
@@ -769,7 +798,7 @@ class CTCOffice extends React.Component {
       return edge.data('block_id');
     });
 
-    for(const [train_id, current_block_id] of Object.entries(this.trainPositions)) {
+    for(const [train_id, current_block_id] of Object.entries(this.trainPositions[line])) {
       if(possible_sources.includes(current_block_id))
         return train_id;
     }
@@ -795,14 +824,42 @@ class CTCOffice extends React.Component {
       if(this.trains[train_id].authority == 0) {
         const next_auth = this.trains[train_id].auth_table[0];
         if(next_auth)
-          scheduleAuthoritySend(next_auth.authority, next_auth.wait_next_authority);
+          scheduleAuthoritySend(train_id, next_auth.authority, this.now + next_auth.wait_next_authority);
       }
+
+      this.sendSuggestedSpeedMessage(train_id, block_id);
     }
   }
 
-  // too complex to unit test?
-  scheduleAuthoritySend(authority, delay) {
-    
+  // Called when a train moves onto a block on its route
+  sendSuggestedSpeedMessage(train_id, block_id) {
+    // Get the suggested speed to send
+    const train = this.trains[train_id];
+    if(train === undefined) {
+      console.log("Warning: unknown train ID in sendSuggestedSpeedMessage '", train_id, "'");
+      return;
+    }
+
+    const speed_mps = this.trains[train_id].speed_table[block_id];
+    if(!(speed_mps >= 0)) { // undefined
+      console.log("Warning: unknown speed for (train_id, block_id) = ", train_id, block_id);
+      return;
+    }
+
+    const value_in_kmh = speed_mps * 3.6;
+    window.electronAPI.sendTrainControllerMessage({
+      payload: 'suggestedSpeed',
+      suggestedSpeed: value_in_kmh
+    });
+  }
+
+  // trivial, no test
+  scheduleAuthoritySend(train_id, authority, when) {
+    this.pendingAuthorities.append({
+      timestamp: when,
+      authority: authority,
+      train_id: train_id
+    });
   }
 
   // too trivial to be worth testing?
