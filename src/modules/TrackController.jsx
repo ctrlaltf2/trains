@@ -35,8 +35,8 @@ import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 import SW13 from './PLC/Green/SW13.json';
 import SW29 from './PLC/Green/SW29.json';
 import SW57 from './PLC/Green/SW57.json';
-import SW63 from './PLC/Green/SW62.json';
-import SW76 from './PLC/Green/SW76.json';
+import SW63 from './PLC/Green/SW63.json';
+import SW77 from './PLC/Green/SW77.json';
 import SW85 from './PLC/Green/SW85.json';
 
 // red plc
@@ -95,6 +95,15 @@ class TrackController extends React.Component {
           break;
         case 'GreenlineTrackPower':
           window.electronAPI.sendCTCMessage(payload);
+          break;
+
+        // Occ from Track model 
+        case 'GreenBlockOccupancy':
+
+          break;
+
+        case 'RedBlockOccupancy':
+
           break;
 
         // From CTC
@@ -194,7 +203,7 @@ class TrackController extends React.Component {
     this.controllers[1].setPLC(SW29);
     this.controllers[2].setPLC(SW57);
     this.controllers[3].setPLC(SW63);
-    this.controllers[4].setPLC(SW76);
+    this.controllers[4].setPLC(SW77);
     this.controllers[5].setPLC(SW85);
 
     // red
