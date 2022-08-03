@@ -138,6 +138,10 @@ class TrainControllerSW extends React.Component {
     this.T = 2000;       // Sample period of the train model
     this.setSpeed = 0;
     this.setSpeedkilo = 0.0; // Desired speed converted to km/h for velocity calculation in Train Model
+    this.setSpeedmeters = 0; // Desired speed converted to m/s for power calculation
+    this.currentSpeedmeters = 0;
+    this.powerCalc_vitality = []; // Array where the power calculations will be stored
+    this.bestPower = 0; // The result of taking the mode of the 3 power calculations
 
 
     this.temperature = 70;
@@ -181,8 +185,10 @@ class TrainControllerSW extends React.Component {
     this.setStationName = this.setStationName.bind(this);
 
     //  Conversion functions
-    this.meters_to_miles = this.meters_to_miles.bind(this);
+    this.kilo_to_miles = this.kilo_to_miles.bind(this);
+    this.miles_to_kilo = this.miles_to_kilo.bind(this);
     this.miles_to_meters = this.miles_to_meters.bind(this);
+    this.meters_to_miles = this.meters_to_miles.bind(this);
   };
 
   componentDidMount(){ // This acts as the Main program - where the functions are called
@@ -197,22 +203,11 @@ class TrainControllerSW extends React.Component {
       }
 
 
-      // Setting values for UI display
-      this.setState({k_i_UI: this.k_i});
-      this.setState({k_p_UI: this.k_p});
-      this.setState({authorityUI: this.authority});
-      this.setState({stationNameUI: this.stationName});
-      this.setState({setSpeedUI: this.setSpeed});
-      this.setState({temperatureUI: this.temperature});
-
-
-
       // Automatic Mode
       if(this.state.automaticMode == true){
 
-        // // Train speed should be set to suggested speed in automatic mode
-        // this.setState({setSpeedUI: this.state.suggestedSpeedUI_MPH});
-
+        this.setSpeed = Math.round(this.kilo_to_miles(this.suggestedSpeed));
+        this.setState({setSpeedUI: this.setSpeed});
         // If there's a brake failure, engine failure, or signal pickup failure, decrease the speed and stop
         if (this.state.brakeFailureDisplay || this.state.engineFailureDisplay || this.state.signalPickupFailureDisplay){
           this.setState({emergencyButton: true});
@@ -233,6 +228,8 @@ class TrainControllerSW extends React.Component {
 
       // Manual Mode
       else{
+
+        this.setState({setSpeedUI: this.setSpeed});
 
         // If the service brake is activated while train is moving,
         // set the desired speed to 0 and toggle service brake UI
@@ -266,6 +263,9 @@ class TrainControllerSW extends React.Component {
       this.temperature = event.target.value;
       //this.temperature = this.trainID[this.state.currentTrain].temperature
     }
+
+    // Display to the UI
+    this.setState({temperatureUI: this.temperature});
 
     // Send temperature to train model
     window.electronAPI.sendTrainModelMessage({
@@ -315,9 +315,12 @@ class TrainControllerSW extends React.Component {
       this.setSpeed = event.target.value;
     }
 
+    // Setting speed for UI display
+    //this.setState({setSpeedUI: this.setSpeed});
+
 
     // Convert from miles per hour to km/h
-    this.setSpeedkilo = this.miles_to_meters(this.setSpeed);
+    this.setSpeedkilo = this.miles_to_kilo(this.setSpeed);
 
     // Send desired speed  to train model
     window.electronAPI.sendTrainModelMessage({
@@ -346,10 +349,10 @@ class TrainControllerSW extends React.Component {
     this.setState({currentSpeedUI: this.currentSpeed});
 
     if (this.currentSpeed == 70){
-      this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))-1});
+      this.setState({currentSpeedUI_MPH: Math.round(this.kilo_to_miles(this.currentSpeed))-1});
     }
     else{
-      this.setState({currentSpeedUI_MPH: Math.round(this.meters_to_miles(this.currentSpeed))});
+      this.setState({currentSpeedUI_MPH: Math.round(this.kilo_to_miles(this.currentSpeed))});
     }
   }
 
@@ -371,10 +374,10 @@ class TrainControllerSW extends React.Component {
     this.setState({commandedSpeedUI: this.commandedSpeed});
 
     if (this.commandedSpeed == 70){
-      this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))-1});
+      this.setState({commandedSpeedUI_MPH: Math.round(this.kilo_to_miles(this.commandedSpeed))-1});
     }
     else{
-      this.setState({commandedSpeedUI_MPH: Math.round(this.meters_to_miles(this.commandedSpeed))});
+      this.setState({commandedSpeedUI_MPH: Math.round(this.kilo_to_miles(this.commandedSpeed))});
     }
 
   }
@@ -396,10 +399,10 @@ class TrainControllerSW extends React.Component {
     this.setState({suggestedSpeedUI: this.suggestedSpeed});
 
     if (this.suggestedSpeed == 70){
-      this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))-1});
+      this.setState({suggestedSpeedUI_MPH: Math.round(this.kilo_to_miles(this.suggestedSpeed))-1});
     }
     else{
-      this.setState({suggestedSpeedUI_MPH: Math.round(this.meters_to_miles(this.suggestedSpeed))});
+      this.setState({suggestedSpeedUI_MPH: Math.round(this.kilo_to_miles(this.suggestedSpeed))});
     }
   }
 
@@ -411,10 +414,16 @@ class TrainControllerSW extends React.Component {
     else{
       this.authority = event.target.value;
     }
+
+    // Display to the UI
+    this.setState({authorityUI: this.authority});
   }
 
   setStationName(event){ // Sets the station
     this.stationName = event.target.value;
+
+    // Display to the UI
+    this.setState({stationNameUI: this.stationName});
   }
 
   // Engineer Functions
@@ -425,6 +434,9 @@ class TrainControllerSW extends React.Component {
     else{
       this.k_p = event.target.value;
     }
+
+    // Display to the UI
+    this.setState({k_p_UI: this.k_p});
   }
 
   setKi(event){
@@ -434,46 +446,84 @@ class TrainControllerSW extends React.Component {
     else{
       this.k_i = event.target.value;
     }
+
+    // Display to the UI
+    this.setState({k_i_UI: this.k_i});
   }
 
   // Conversion and calculation functions
   // Speed comes from Train Model calculation
 
-  meters_to_miles(speed){ // 1 km/h = approx. 1.609 mph
+  kilo_to_miles(speed){ // 1 km/h = approx. 1.609 mph
     return (speed / 1.609)
   }
 
-  miles_to_meters(speed){
+  miles_to_kilo(speed){
     return (speed * 1.609)
   }
 
+  miles_to_meters(speed){
+    return (speed / 2.237)
+  }
+
+  meters_to_miles(speed){ // 1 m/s = approx. 2.237 mph
+    return (speed * 2.237)
+  }
+
+  meters_to_miles
   calculatePower() { // Function that calculates the current power of the train
 
-    // Convert speeds from km/h to m/s
-    // this.setSpeed = this.setSpeed / 3.6;
-    // this.currentSpeed = this.currentSpeed / 3.6;
+
     for (let i = 0; i < 3; i++){
-      //todo
+
+      // Converting from mph to m/s
+      this.setSpeedmeters = Math.round(this.miles_to_meters(this.setSpeed));
+      // Converting km/h to m/s
+      this.currentSpeedmeters = Math.round(this.currentSpeed / 3.6);
+
+
+      // Calculate error
+      this.error_kprev = this.error_k;
+      this.error_k = this.setSpeedmeters - this.currentSpeedmeters;
+
+      // If P_cmd < P_max, use this equation
+      if (this.power < this.maxPower){
+        this.cumulative_err = ((this.T/2000)*(this.error_k + this.error_kprev));
+      }
+
+      // If P_cmd >= P_max, use this equation
+      else if (this.power >= this.maxPower){
+        this.cumulative_err = this.cumulative_err;
+      }
+
+      // Final Power Calculation
+      this.powerCalc_vitality[i] = ((this.k_p*this.error_k) + (this.k_i*this.cumulative_err));
+
     }
 
-
-    // Calculate error
-    this.error_kprev = this.error_k;
-    this.error_k = Math.abs(this.setSpeed - this.currentSpeed);
-
-    // If P_cmd < P_max, use this equation
-    if (this.power < this.maxPower){
-      this.cumulative_err = ((this.T/2000)*(this.error_k + this.error_kprev));
+    // Take the mode of the 3 calculations
+    if (this.powerCalc_vitality[0] == this.powerCalc_vitality[1]){
+      this.bestPower = this.powerCalc_vitality[0];
+    }
+    else if (this.powerCalc_vitality[0] == this.powerCalc_vitality[2]){
+      this.bestPower = this.powerCalc_vitality[0];
+    }
+    else if (this.powerCalc_vitality[1] == this.powerCalc_vitality[2]){
+      this.bestPower = this.powerCalc_vitality[1];
     }
 
-    // If P_cmd >= P_max, use this equation
-    else if (this.power >= this.maxPower){
-      this.cumulative_err = this.cumulative_err;
+    // If 2 of the 3 do not match, set best power to the minimum value
+    else if (this.powerCalc_vitality[0] <= this.powerCalc_vitality[1] && this.powerCalc_vitality[0] <= this.powerCalc_vitality[2]){
+      this.bestPower = this.powerCalc_vitality[0];
+    }
+    else if (this.powerCalc_vitality[1] <= this.powerCalc_vitality[0] && this.powerCalc_vitality[1] <= this.powerCalc_vitality[2]){
+      this.bestPower = this.powerCalc_vitality[1];
+    }
+    else{
+      this.bestPower = this.powerCalc_vitality[2];
     }
 
-    // Final Power Calculation
-    this.power = ((this.k_p*this.error_k) + (this.k_i*this.cumulative_err));
-
+    this.power = this.bestPower;
 
     // Send power command to train model
     window.electronAPI.sendTrainModelMessage({
