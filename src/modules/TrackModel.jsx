@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 /* eslint-disable react/sort-comp */
 /* eslint-disable no-plusplus */
 /* eslint-disable react/destructuring-assignment */
@@ -77,7 +78,7 @@ let lineName = '';
 // let trainOccupancy = 25;
 // let personsAtStation = 10;
 
-let redCurrBlock; let greenCurrBlock = 1; //  Block that the train model is currently entering // default to 1
+let redCurrBlock = 1; let greenCurrBlock = 1; //  Block that the train model is currently entering // default to 1
 
 let Authority = 0; //  will be given via track controller
 
@@ -150,30 +151,35 @@ class TrackModel extends React.Component {
           break;
         case 'switch':
           //  only set up for green line rn
-          // blocks[payload.root].next = payload.pointing_to;
-          // blocks[payload.pointing_to].prev = payload.root;
-          // console.log(
-          //   'blocks root, next, prev',
-          //   blocks[payload.root].id,
-          //   blocks[payload.root].next,
-          //   blocks[payload.root].prev
-          // );
+          // eslint-disable-next-line no-case-declarations
+          const LINE = payload.line;
+          if(LINE === 'Green')
+          {
+            greenBlocks[payload.root].next = payload.pointing_to;
+            greenBlocks[payload.pointing_to].prev = payload.root;
+          }
+          if(LINE === 'Red')
+          {
+            redBlocks[payload.root].next = payload.pointing_to;
+            redBlocks[payload.pointing_to].prev = payload.root;
+          }
           break;
         case 'light':
           this.state.TransitLightStatus = payload.payload;
-          break;
+        break;
         case 'authority':
           Authority = payload.payload;
-          break;
+        break;
 
         //  signals from Train Model
         case 'signalPickupFailure':
           this.state.TrackSignalPickup = payload.payload;
-          break;
+        break;
+        
         case 'updateBlockOccupancy':
           // eslint-disable-next-line no-case-declarations
-          trackLine = payload.payload;
-          this.trainModelHandshake(trackLine);
+          const blockOccInfo = payload.payload;
+          this.trainModelHandshake(blockOccInfo);
           break;
         default:
       }
@@ -205,6 +211,7 @@ class TrackModel extends React.Component {
     this.sendGreenMessages = this.sendGreenMessages.bind(this);
     this.sendRedMessages = this.sendRedMessages.bind(this);
     this.checkTrackFailures = this.checkTrackFailures.bind(this);
+    this.getTrackModelArrays = this.getTrackModelArrays.bind(this);
 
 
     //  Create multiple track model instances (one for each line)
@@ -472,46 +479,33 @@ class TrackModel extends React.Component {
   //  need to send messages based on block info that train is entering
   sendGreenMessages = (greenObj) => {
     const interval = setInterval(() => {
-
-      //  Track Signal Pickup GreenLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'GreenlineTrackSignalPickup',
-        TrackSignalPickup: greenTrackSignalPickup,
-      });
-
       //  Track rail Status GreenLine
       window.electronAPI.sendTrackControllerMessage({
         type: 'GreenlineRailStatus',
         RailStatus: greenRailStatus,
       });
 
-      //  Track Power Stat GreenLine
+      //  Tracks block occupancy
       window.electronAPI.sendTrackControllerMessage({
-        type: 'GreenlineTrackPower',
-        TrackPowerStatus: greenTrackPowerStatus,
+        type: 'GreenBlockOccupancy',
+        GreenBlocks: greenBlocks,
       });
+
     }, 1000);
   };
 
   sendRedMessages = (redObj) => {
     const interval = setInterval(() => {
-
-      //  Track Signal Pickup RedLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'RedlineTrackSignalPickup',
-        TrackSignalPickup: redTrackSignalPickup,
-      });
-
       //  Track rail Status RedLine
       window.electronAPI.sendTrackControllerMessage({
         type: 'RedlineRailStatus',
         RailStatus: redRailStatus,
       });
 
-      //  Track Power Stat RedLine
+      //  Tracks block occupancy
       window.electronAPI.sendTrackControllerMessage({
-        type: 'RedlineTrackPower',
-        TrackPowerStatus: redTrackPowerStatus,
+        type: 'RedBlockOccupancy',
+        RedBlocks: redBlocks,
       });
     }, 1000);
   };
@@ -538,11 +532,26 @@ class TrackModel extends React.Component {
 
   //  function for updating block occupancy and exchanging information with train model
   //  GETS TRIGGERED FROM TRAIN MODEL MESSAGE
-  trainModelHandshake = (trainID, trackLine) => {
+  trainModelHandshake = (blockOccInfo) => {
 
+    //  dissect the blockOccInfo object into its parts
+    const TRAIN_ID = blockOccInfo.trainID;
+    const IS_TRAIN_MOVING =  blockOccInfo.isTrainMoving;
+    const ENTERED_BLOCK =  blockOccInfo.enteredBlock;
+    const EXITED_BLOCK = blockOccInfo.exitedBlock;
+    
     let blocks;
     let currBlock;
     //  decide whick track is getting updated
+
+    //  find the train ID to update authority
+    const ind = trainDispatchArr.findIndex(
+      (TrainID) => TrainID === TRAIN_ID
+    );
+
+    //  find the line that the train is on
+    const trackLine = trainDispatchArr[ind].trackLine
+
     if(trackLine === 'red line')
     {
       blocks = redBlocks;
@@ -557,7 +566,7 @@ class TrackModel extends React.Component {
     //  expect a message from train that it is moving/entering a new block
     while (currBlock < blocks[blocks.length]) {
       //  check if the train is moving
-      if (isTrainMoving) {
+      if (IS_TRAIN_MOVING) {
         //  occupy the current block
         blocks[currBlock].Occupied = true;
         //  send the train model a message about the length of the current block and speed
@@ -576,11 +585,6 @@ class TrackModel extends React.Component {
             BlockLength: blocks[currBlock + 1].length,
           });
         }
-
-        //  find the train ID to update authority
-        const ind = trainDispatchArr.findIndex(
-          (TrainID) => TrainID === trainID
-        );
 
         //  SEND TRAIN MODEL OTHER VARIABLES
         //  authority, beacon, underground, grade
@@ -605,11 +609,11 @@ class TrackModel extends React.Component {
         });
       }
       //  Train progresses to next block
-      if (enteredBlock) {
+      if (ENTERED_BLOCK) {
         //  update the next block
         currBlock++;
         //  check if the old block has been vacatted
-        if (exitedBlock) {
+        if (EXITED_BLOCK) {
           //  loop through blocks, first occupied block becomes unoccupied
           const searchInd = blocks.Occupied.indexOf.true;
           //  set occupancy to false
@@ -633,6 +637,11 @@ class TrackModel extends React.Component {
     this.state.personsAtStation = personsAtStation;
     // this.state.currBlock = currBlock;
     this.state.Authority = Authority;
+  };
+
+  //  Function to get the arrays in the track model
+  getTrackModelArrays = () => {
+    return ({'redBlocks': redBlocks, 'greenBlocks': greenBlocks});
   };
 
   toggle() {
@@ -910,7 +919,7 @@ class TrackModel extends React.Component {
             <Grid item xs={4}>
               <Grid container spacing={1}>
                 <Grid item xs={12}>
-                  <div>Track Line: {lineName}</div>
+                  <div>Track Line: {this.state.lineName}</div>
                 </Grid>
                 <Grid item xs={12} />
                 <Grid item xs={12}>
