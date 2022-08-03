@@ -76,7 +76,42 @@ class TrainModel extends React.Component {
           this.state.beacon = payload.Beacon;
           this.state.underground = payload.UndergroundBlocks;
           this.state.grade = payload.grade;
-          break;
+        break;
+
+        //  UPDATED MESSAGES FROM TRACK CONTROLLER
+        //  TODO:
+        //  Need to replace 'name' in the second line of each function with property that you want to store it in
+        case 'Stop':
+          console.log('Need to stop the trains on the line');
+        break;
+
+        case 'Go':
+          console.log('Let the train on the line run again');
+        break;
+
+        case 'CurrentCommandedSpeed':
+          'CommandedSpeed' = payload.payload;
+        break;
+
+        case 'CurrentBlockLength':
+          'CurrentBlockLength' = payload.payload;
+        break;
+
+        case 'NextBlockLength':
+          'NextBlockLength' = payload.payload;
+        break;
+
+        case 'Beacon':
+          'Beacon' = payload.payload;
+        break;
+
+        case 'Underground':
+          'Underground' = payload.payload;
+        break;
+
+        case 'Grade':
+          'Grade' = payload.payload;
+        break;
 
 
 
@@ -298,13 +333,7 @@ class TrainModel extends React.Component {
     this.intermediatePosition = this.currentSpeed * 0.5;
     this.position += this.intermediatePosition;
 
-    if(this.currentSpeed > 0) {
-      // Send isTrainMoving to track model
-    window.electronAPI.sendTrackModelMessage({
-      'type': 'isTrainMoving',
-      'isTrainMoving': this.isTrainMoving,
-    });
-    }
+    
   }
 
   // determine block occupancy
@@ -329,17 +358,17 @@ class TrainModel extends React.Component {
     this.positionInBlock += this.intermediatePosition;
     this.caboosePositionInBlock += this.intermediatePosition;
 
-    // Send enteredNewBlock to track model
+    if(this.currentSpeed > 0) {
+      // Send isTrainMoving to track model
+      //  TODO: NEED TO SEND TRAINiD ALONG WITH OTHER PROPERTIES
     window.electronAPI.sendTrackModelMessage({
-      'type': 'enteredNewBlock',
-      'enteredNewBlock': this.enteredNewBlock,
+      'type': 'updateBlockOccupancy',
+      'trainID': 'Specify the TrainID',
+      'isTrainMoving': this.isTrainMoving,
+      'enteredBlock': this.enteredNewBlock,
+      'exitedBlock' : this.exitedBlock,
     });
-
-    // Send exitedBlock to track model
-    window.electronAPI.sendTrackModelMessage({
-      'type': 'exitedBlock',
-      'exitedBlock': this.exitedBlock,
-    });
+    }
   }
 
   // update temp at interval
