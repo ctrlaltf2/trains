@@ -101,7 +101,8 @@ class TrackController extends React.Component {
         case 'GreenBlockOccupancy':
           for (let i = 1; i < this.tracks[0].blocks.length + 1; i++) {
             if (
-              payload.GreenBlocks[i].occupancy != this.tracks[0].blocks[i - 1].occupancy
+              payload.GreenBlocks[i].occupancy !=
+              this.tracks[0].blocks[i - 1].occupancy
             ) {
               this.tracks[0].blocks[i - 1].occupancy =
                 payload.GreenBlocks[i].occupancy;
@@ -144,7 +145,7 @@ class TrackController extends React.Component {
           break;
         case 'switchOverride':
           this.setSwitchCTC(payload.root, payload.goingTo, payload.line);
-        break;
+          break;
         case 'releaseMaintenanceMode':
           this.CTCMMode(payload.root, payload.line, false);
           break;
@@ -740,8 +741,7 @@ class TrackController extends React.Component {
             !this.tracks[line].blocks[
               parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
             ].crossing
-          ) 
-          {
+          ) {
             this.tracks[line].blocks[
               parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
             ].crossing = true;
@@ -763,9 +763,11 @@ class TrackController extends React.Component {
               line: this.tracks[line].blocks[
                 parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
               ].line,
-              id: parseInt(this.tracks[line].blocks[
-                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].id),
+              id: parseInt(
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].id
+              ),
               status:
                 this.tracks[line].blocks[
                   parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
@@ -799,9 +801,11 @@ class TrackController extends React.Component {
               line: this.tracks[line].blocks[
                 parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
               ].line,
-              id: parseInt(this.tracks[line].blocks[
-                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].id),
+              id: parseInt(
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].id
+              ),
               status:
                 this.tracks[line].blocks[
                   parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
@@ -889,12 +893,11 @@ class TrackController extends React.Component {
   // Set specific swithc to position
   setSwitchCTC(block, position, line) {
     if (line === 'green') {
-      this.tracks[0].blocks[block-1].maintenanceMode = true;
+      this.tracks[0].blocks[block - 1].maintenanceMode = true;
       this.tracks[0].blocks[block - 1].switch.setPosition(position);
     } else if (line === 'red') {
-      this.tracks[1].blocks[block-1].maintenanceMode = true;
+      this.tracks[1].blocks[block - 1].maintenanceMode = true;
       this.tracks[1].blocks[block - 1].switch.setPosition(position);
-    
     }
 
     window.electronAPI.sendTrackModelMessage({
@@ -903,7 +906,6 @@ class TrackController extends React.Component {
       root: block,
       pointing_to: position,
     });
-  
 
     this.setState((prevState) => ({
       appState: !prevState.appState,
