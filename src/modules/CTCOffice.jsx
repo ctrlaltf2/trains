@@ -309,12 +309,12 @@ class CTCOffice extends React.Component {
     this.control_points = {
       'green': {
         '57': {
-          '152': 1 // Going from 57 to 152 requires authority 1 at 57
+          '151': 1 // Going from 57 to 152 requires authority 1 at 57
         }
       },
       'red': {
         '9': {
-          '152': 1 // Going from 9 to 152 requires authority 1 at 9
+          '0': 1 // Going from 9 to 152 requires authority 1 at 9
         }
       }
     };
@@ -363,7 +363,7 @@ class CTCOffice extends React.Component {
   sendDispatchMessage(train) {
     const payload = {
       type: 'dispatch',
-      value: train
+      train: train
     };
 
     window.electronAPI.sendTrackControllerMessage(payload);
@@ -470,7 +470,7 @@ class CTCOffice extends React.Component {
     const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]), [10*1000]);
 
     // Generate a safe speed table (safe meaning that it's easy for train to stop, when it respects commanded speed)
-    const speed_table = this.generateSpeedTable(line, route);
+    let speed_table = this.generateSpeedTable(line, route);
     const safe_speed_table = this.makeSpeedTableSafe(speed_table);
 
     // Get travel time, used for timing dispatch at the right time
@@ -485,6 +485,7 @@ class CTCOffice extends React.Component {
     // And get a return path- send it at full speed who cares when it gets back to the yard
     const return_segment_path = this.getIntersegmentRoute(line, last_segment, '(yard-enter)');
     const return_block_path = this.resolveSegmentRoutes(line, return_segment_path);
+    speed_table = speed_table.concat(this.generateSpeedTable(line, return_block_path));
 
     // commanded speed here == speed_limit
     const return_authority_table = this.getAuthorityTable(line, return_block_path, [], []);
@@ -503,13 +504,15 @@ class CTCOffice extends React.Component {
     const pain = new Train( // constant pain from trains
       this.nextTrainID,
       line,
-      'unused - refactor',
       75,
-      1, // TODO: Settle on a good authority
+      1,
       total_route
     );
 
     pain.auth_table = total_auth;
+    pain.speed_table = speed_table;
+
+    console.log(pain);
 
     this.pendingDispatches[leave_time] = pain;
 
@@ -518,6 +521,7 @@ class CTCOffice extends React.Component {
 
   // TODO: test
   getAuthorityTable(line, block_route, blocks_stopped_at = [], stop_times = []) {
+    console.log(line, block_route, blocks_stopped_at, stop_times);
     const control_points = this.control_points[line];
 
     // Get indexes in route where the train will have to drop its authority to 0 (not necessarily stop)
@@ -552,6 +556,8 @@ class CTCOffice extends React.Component {
         }
       }
     }
+
+    console.log(auth_0);
 
     // Initialize with yard-to-first-auth-0 stop
     const auth_table = [
@@ -1297,7 +1303,7 @@ class CTCOffice extends React.Component {
                         >
                           {
                             lineSelection ?
-                              Array.from(new Set(Object.values(this.stations[activeLine]))).map((block_id) => {
+                              Array.from(new Set(Object.values(this.stations[lineSelection.toLowerCase()]))).map((block_id) => {
                                 return <MenuItem value={block_id}>{block_id}</MenuItem>;
                               })
                               :
