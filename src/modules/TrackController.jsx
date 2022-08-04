@@ -97,33 +97,40 @@ class TrackController extends React.Component {
           window.electronAPI.sendCTCMessage(payload);
           break;
 
-        // Occ from Track model 
+        // Occ from Track model
         case 'GreenBlockOccupancy':
-          payload.GreenBlocks.forEach((block) => {
-            if (this.tracks[0].blocks[block.id - 1].occupancy != block.occupancy) {
-              this.tracks[0].blocks[block.id - 1].occupancy = block.occupancy;
+          for (let i = 1; i < this.tracks[0].blocks.length + 1; i++) {
+            if (
+              payload.GreenBlocks[i].occupancy != this.tracks[0].blocks[i - 1]
+            ) {
+              this.tracks[0].blocks[i - 1].occupancy =
+                payload.GreenBlocks[i].occupancy;
               window.electronAPI.sendCTCMessage({
                 type: 'occupancy',
-                line: this.tracks[0].blocks[block.id - 1].line,
-                block_id: this.tracks[0].blocks[block.id - 1].id,
-                value: this.tracks[0].blocks[block.id - 1].occupancy
+                line: this.tracks[0].blocks[i - 1].line,
+                block_id: this.tracks[0].blocks[i - 1].id,
+                value: this.tracks[0].blocks[i - 1].occupancy,
               });
             }
-          })
+          }
           break;
 
         case 'RedBlockOccupancy':
-          payload.RedBlocks.forEach((block) => {
-            if (this.tracks[1].blocks[block.id - 1].occupancy != block.occupancy) {
-              this.tracks[1].blocks[block.id - 1].occupancy = block.occupancy;
+          for (let i = 1; i < this.tracks[1].blocks.length + 1; i++) {
+            if (
+              payload.RedBlocks[i].occupancy !=
+              this.tracks[1].blocks[i - 1].occupancy
+            ) {
+              this.tracks[1].blocks[i - 1].occupancy =
+                payload.RedBlocks[i].occupancy;
               window.electronAPI.sendCTCMessage({
                 type: 'occupancy',
-                line: this.tracks[1].blocks[block.id - 1].line,
-                block_id: this.tracks[1].blocks[block.id - 1].id,
-                value: this.tracks[1].blocks[block.id - 1].occupancy
+                line: 'Red',
+                block_id: this.tracks[1].blocks[i - 1].id,
+                value: this.tracks[1].blocks[i - 1].occupancy,
               });
             }
-          })
+          }
           break;
 
         // From CTC
@@ -292,7 +299,7 @@ class TrackController extends React.Component {
       } else if (controller.line === 'red') {
         this.tracks[1].blocks[controller.swBlock - 1].override = false;
       }
-    })
+    });
 
     this.setState((prevState) => ({
       maintenanceMode: !prevState.maintenanceMode,
@@ -317,7 +324,7 @@ class TrackController extends React.Component {
       } else if (controller.line === 'red') {
         this.tracks[1].blocks[controller.swBlock - 1].override = false;
       }
-    })
+    });
 
     this.setState({
       maintenanceMode: status,
@@ -1029,7 +1036,8 @@ class TrackController extends React.Component {
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
                         this.tracks[this.state.line].blocks[
-                          this.controllers[this.state.currController].swBlock - 1
+                          this.controllers[this.state.currController].swBlock -
+                            1
                         ].switch.position
                       }`}
                       color={'success'}
