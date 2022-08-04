@@ -41,18 +41,29 @@ test('Track Model creates Track Object block arrayys', () => {
 
   console.log('arrays', TM.getTrackModelArrays());
 });
-// test('Track Model objects have no block occupancy by default', () => {
-//   const TM = new TrackModel();
-//   let OccuBool = false;
-//   const f = TM.redBlocks.length;
-//   for(let i = 0; i < f; i++)
-//   {
-//     if(TM.redBlocks[i].Occupied !== 'Unoccupied')
-//     {
-//       OccuBool = true;
-//     }
-//   }
-//   expect(OccuBool).toBe(false);
-// });
+
+
+test('Track Model objects have no block occupancy by default', () => {
+  const TM = new TrackModel();
+  let OccuBool = false;
+  const Blocks = TM.getBlocks();
+  const r = Blocks.redBlocks.length;
+  const g  = Blocks.greenBlocks.length;
+  for(let i = 0; i < r; i++)
+  {
+    if(Blocks.redBlocks[i].occupancy !== false)
+    {
+      OccuBool = true;
+    }
+  }
+  for(let i = 0; i < g; i++)
+  {
+    if(Blocks.greenBlocks[i].occupancy !== false)
+    {
+      OccuBool = true;
+    }
+  }
+  expect(OccuBool).toBe(false);
+});
 
 

@@ -193,6 +193,14 @@ class TrackModel extends React.Component {
           }
         break;
 
+        case 'suggestedSpeed':
+          //  block_id, suggestedSpeed, 
+          window.electronAPI.sendTrainModelMessage({
+            type: 'suggestedSpeed',
+            payload: payload.payload,
+          });
+          break;
+
         case 'crossing':
           //  line, id, and status
           if(payload.line === "Green")
