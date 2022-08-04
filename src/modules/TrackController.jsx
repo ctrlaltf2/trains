@@ -155,6 +155,7 @@ class TrackController extends React.Component {
           window.electronAPI.sendTrackModelMessage(payload);
           break;
         case 'suggestedSpeed':
+          window.electronAPI.sendTrackModelMessage(payload);
           break;
         case 'switchOverride':
           // Set mmode for the block, override switch
