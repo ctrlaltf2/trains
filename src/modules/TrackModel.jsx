@@ -196,8 +196,7 @@ class TrackModel extends React.Component {
         case 'suggestedSpeed':
           //  block_id, suggestedSpeed, 
           window.electronAPI.sendTrainModelMessage({
-            type: 'suggestedSpeed',
-            payload: payload.payload,
+            payload,
           });
           break;
 
