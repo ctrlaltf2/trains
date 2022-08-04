@@ -76,14 +76,49 @@ class CTCOffice extends React.Component {
           // console.log(payload);
           this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
           break;
+        case 'switch':
+          const { line, root, pointing_to } = payload;
+          const switches = _.cloneDeep(this.state.switches);
+
+          if(!switches[line]) {
+            console.warn('Received invalid switch update on line', line);
+            break;
+          }
+
+          if(!switches[line][root]) {
+            console.warn('Unknown root block on switch update', line, root);
+            break;
+          }
+
+          if(!switches[line][root].pointing_to) {
+            console.warn('Something happened :(');
+            break;
+          }
+
+          const new_pos = switches[line][root].pointing_to.toString();
+          switches[line][root]._going_to = new_pos;
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
     });
 
     window.electronAPI.subscribeFileMessage( (_event, payload) => {
-      // console.log(payload);
+      console.log(payload);
+
+      if(payload.status !== 'success')
+        return;
+
+      switch(payload.tag) {
+        case 'schedule':
+          this.parseSchedule(payload.payload);
+          break;
+        default:
+          console.warn(`Unknown file tag sent '${payload.tag}'`);
+          break;
+      };
     });
+
 
     window.electronAPI.subscribeTimerMessage( (_event, payload) => {
       this.now = payload.timestamp;
@@ -110,7 +145,8 @@ class CTCOffice extends React.Component {
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
         'red': {
-          '1-15-16':   new TrackSwitch(undefined, '15', ['1', ' 16']),
+          '1-15-16':   new TrackSwitch(undefined, '15', [ '1', '16']),
+          '0-9-10':    new TrackSwitch(undefined,  '9', [ '0', '10']),
           '27-28-76':  new TrackSwitch(undefined, '27', ['28', '76']),
           '32-33-72':  new TrackSwitch(undefined, '33', ['32', '72']),
           '38-39-71':  new TrackSwitch(undefined, '38', ['39', '71']),
@@ -309,17 +345,37 @@ class CTCOffice extends React.Component {
     this.control_points = {
       'green': {
         '57': {
-          '151': 1 // Going from 57 to 152 requires authority 1 at 57
+          '151': 1 // Going from 57 to 151 requires authority 1 at 57
         }
       },
       'red': {
         '9': {
-          '0': 1 // Going from 9 to 152 requires authority 1 at 9
+          '0': 1 // Going from 9 to 0 requires authority 1 at 9
         }
       }
     };
 
     this.initCy();
+  }
+
+  parseSchedule(data) {
+    // Ayo, pipe-and-filter???
+    data
+      .replace('\r', '')  // Remove stupid carriage returns (thanks microsoft)
+      .split('\n')        // Split by newline
+      .map( (line) => {   // Split by comma
+        return line.split(',');
+      })
+      .filter( (line_array, index) => { // Filter empty lines and header
+        return (index !== 0) && line_array.length === 3;
+      })
+      .forEach( (row) => { // Parse out each row
+        const [line, station, eta_str] = row;
+        console.log('Scheduling dispatch for ', line.toLowerCase(), station, eta_str);
+        this.manualDispatch(line.toLowerCase(), station, eta_str);
+      });
+
+    console.log('Pending dispatches present after loading schedule: ', this.pendingDispatches);
   }
 
   // tested
@@ -329,7 +385,21 @@ class CTCOffice extends React.Component {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
 
       if(this.now > pendingTimestamp) {
-        this.sendDispatchMessage(this.pendingDispatches[pendingTimestamp]);
+        const train = this.pendingDispatches[pendingTimestamp]
+        this.sendDispatchMessage(train);
+
+        // This should be a queue but you're hilarious if you think we're going to be dispatching multiple trains
+        // Better yet, trackmodel sends a confirmation message on train deployment, confirmation has the ID that got deployed, things get initialized there.
+        // Give train inference algo some initial values
+        const occupancy = _.cloneDeep(this.state.occupancy);
+        occupancy[train.line][0] = true;
+
+        // Initialize position
+        this.trainPositions[train.line][0] = train.id;
+
+        this.setState({
+          occupancy: occupancy,
+        });
 
         deleted.push(pendingTimestamp_);
 
@@ -853,16 +923,17 @@ class CTCOffice extends React.Component {
       // Decrement authority on train object
       this.trains[train_id].authority--;
 
+      window.electronAPI.sendTrackControllerMessage({
+        type: 'authorityUpdated',
+        line: line,
+        block_id: block_id,
+        authority: this.trains[train_id].authority,
+      });
+
       if(this.trains[train_id].authority === 0) {
         const next_auth = this.trains[train_id].auth_table[0];
         // Send (block_id, authority) to TC
         // Workaround until TrainModel relays its authority down to nearby waysides
-        window.electronAPI.sendTrackControllerMessage({
-          type: 'authority',
-          line: line,
-          block_id: block_id,
-          authority: 0,
-        });
 
         if(next_auth)
           scheduleAuthoritySend(train_id, next_auth.authority, this.now + next_auth.wait_next_authority);
@@ -891,6 +962,12 @@ class CTCOffice extends React.Component {
     window.electronAPI.sendTrainControllerMessage({
       payload: 'suggestedSpeed',
       suggestedSpeed: value_in_kmh
+    });
+
+    window.electronAPI.sendTrackControllerMessage({
+      payload: 'suggestedSpeed',
+      suggestedSpeed: value_in_kmh,
+      block_id, block_id
     });
   }
 
@@ -1224,16 +1301,13 @@ class CTCOffice extends React.Component {
           <div id="bottomRightButtonGroup" className="floating">
             <label htmlFor="systemScheduleButton">
               <label htmlFor="systemScheduleButton">
-                <Input
-                  accept="text/csv"
-                  id="systemScheduleButton"
-                  multiple
-                  type="file"
-                  onChange={(ev) => {
-                    return;
+                <Button
+                  variant="contained"
+                  component="span"
+                  onClick={() => {
+                    window.electronAPI.openFileDialog('schedule');
                   }}
-                />
-                <Button variant="contained" component="span">
+                >
                   Upload Schedule
                 </Button>
               </label>
@@ -1522,6 +1596,7 @@ class CTCOffice extends React.Component {
 
                     window.electronAPI.sendTrackControllerMessage({
                       'type': 'closure',
+                      'line': activeLine,
                       'block_id': editingBlock,
                       'is_closed': ev.target.checked
                     });

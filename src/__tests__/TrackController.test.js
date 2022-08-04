@@ -56,7 +56,7 @@ test('Track::setInfrastructure - no crossing', () => {
   track.setInfrastructure();
 
   // initializes to false 
-  expect(track.blocks[17].crossing).toEqual('no crossing data');
+  expect(track.blocks[17].crossing).toEqual("false");
 });
 
 test('TrackController::setPLC - per controller without any plc', () => {
@@ -149,12 +149,12 @@ test('TrackController::plcLight - yellow', () => {
 test('TrackController::plcLight - red', () => {
   const TC = new TrackController();
 
-  TC.occupy(1, 'green', true);
+  TC.occupy(2, 'green', true);
   TC.plc();
   expect(TC.getBlock(13, 'green').transitLight).toEqual('red');
 
   // Resets properly back to green 
-  TC.occupy(1, 'green', false);
+  TC.occupy(2, 'green', false);
   TC.plc();
   expect(TC.getBlock(13, 'green').transitLight).toEqual('green');
 });
