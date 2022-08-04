@@ -458,6 +458,9 @@ class TrackController extends React.Component {
                 parseInt(controller.plc.switchLogic[j].switchNumber) - 1
               ].switch.positionBool
             ) {
+              this.tracks[line].blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position = true;
               window.electronAPI.sendCTCMessage({
                 type: 'switch',
                 line: this.tracks[line].blocks[
@@ -485,15 +488,15 @@ class TrackController extends React.Component {
                   ].switch.position,
               });
             }
-            this.tracks[line].blocks[
-              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].switch.position = true;
           } else {
             if (
               this.tracks[line].blocks[
                 parseInt(controller.plc.switchLogic[j].switchNumber) - 1
               ].switch.positionBool
             ) {
+              this.tracks[line].blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position = false;
               window.electronAPI.sendCTCMessage({
                 type: 'switch',
                 line: this.tracks[line].blocks[
@@ -521,9 +524,6 @@ class TrackController extends React.Component {
                   ].switch.position,
               });
             }
-            this.tracks[line].blocks[
-              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].switch.position = false;
           }
         }
       }
