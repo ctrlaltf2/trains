@@ -284,7 +284,7 @@ class TrackModel extends React.Component {
     //  instantiate new track object
     console.log('Track File contents: ', trackFile);
 
-    //  assign the line to the lineName property
+    //  assign the line to the state lineName property
     this.state.lineName = trackFile[1].Line;
 
     if(this.state.lineName === 'Red')
@@ -292,7 +292,7 @@ class TrackModel extends React.Component {
     else if(this.state.lineName === 'Green')
       this.state.blocks = greenBlocks;
     //  load the first block by default
-    this.state.blockIndex = 1;
+    this.setState({blockIndex : 1});
     this.loadBlockInfo();
     
   
@@ -300,10 +300,10 @@ class TrackModel extends React.Component {
 
   //  Load's blocks information from the Track Model File - alpha = blockIndex
   loadBlockInfo = () => {
-    let alpha;
     const interval = setInterval(() => {
-     alpha = this.state.blockIndex;
+    const alpha = this.state.blockIndex;
     //  convert to imperials for display only
+    // eslint-disable-next-line react/no-access-state-in-setstate
     const curBlock = this.state.blocks[alpha]; //  get the block selected
     const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
     const speedLimitImperial = (curBlock.spdLimit * 0.621371).toFixed(3);
@@ -322,23 +322,17 @@ class TrackModel extends React.Component {
     this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].occupancy;
 
     //  check the status of the line name
-    if(curBlock[1].lineName === "Green")
+    if(curBlock.line === "Green")
     {
       this.setState({enviornmentTemp : greenEVTemp});
     }
-    else if (curBlock[1].lineName === "Red")
+    else if (curBlock.line === "Red")
     {
       this.setState({enviornmentTemp : redEVTemp});
     }
-
-    //  check if the current block has a railroad crossing
-    // console.log('Cross should appear under here');
-    // console.log('Cross', curBlock.crossing);
-    // console.log(alpha);
     this.setState({
       crossing: curBlock.crossing,
     });
-    // this.state.crossing = curBlock.crossing;
   }, 1000);
   };
 
@@ -493,7 +487,8 @@ class TrackModel extends React.Component {
 
   //  handle the select change
   handleChange = (event) => {
-    this.state.blockIndex = event.target.value;
+    this.setState({blockIndex : event.target.value});
+    // this.state.blockIndex = event.target.value;
     // this.loadBlockInfo(event.target.value);
   };
 
