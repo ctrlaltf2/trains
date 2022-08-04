@@ -142,8 +142,13 @@ class TrackController extends React.Component {
         case 'dispatch':
           window.electronAPI.sendTrackModelMessage(payload);
           break;
-        case 'closure':
-        // MMode ?
+        case 'switchOverride':
+          this.setSwitchCTC(payload.root, payload.goingTo, payload.line);
+        break;
+        case 'releaseMaintenanceMode':
+          this.CTCMMode(payload.root, payload.line, false);
+          break;
+
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -286,50 +291,50 @@ class TrackController extends React.Component {
   }
 
   mmMode() {
-    // this.tracks[this.state.line].blocks[
-    //   this.state.currBlock.id - 1
-    // ].maintenanceMode =
-    //   !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
-    //     .maintenanceMode;
+    this.tracks[this.state.line].blocks[
+      this.state.currBlock.id - 1
+    ].maintenanceMode =
+      !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
+        .maintenanceMode;
 
     // reset all overrides to false on change
-    this.controllers.forEach((controller) => {
-      if (controller.line === 'green') {
-        this.tracks[0].blocks[controller.swBlock - 1].override = false;
-      } else if (controller.line === 'red') {
-        this.tracks[1].blocks[controller.swBlock - 1].override = false;
-      }
-    });
+    // this.controllers.forEach((controller) => {
+    //   if (controller.line === 'green') {
+    //     this.tracks[0].blocks[controller.swBlock - 1].override = false;
+    //   } else if (controller.line === 'red') {
+    //     this.tracks[1].blocks[controller.swBlock - 1].override = false;
+    //   }
+    // });
 
     this.setState((prevState) => ({
       maintenanceMode: !prevState.maintenanceMode,
     }));
   }
 
-  // CTCMMode(id, line, value) {
-  //   if (line === 'green') {
-  //     this.tracks[0].blocks[id - 1].maintenanceMode = value;
-  //   } else if (line === 'red') {
-  //     this.tracks[1].blocks[id - 1].maintenanceMode = value;
-  //   }
-  //   this.setState((prevState) => ({
-  //     appState: !prevState.appState,
-  //   }));
-  // }
-  CTCMMode(value) {
-    // reset all overrides to false on change
-    this.controllers.forEach((controller) => {
-      if (controller.line === 'green') {
-        this.tracks[0].blocks[controller.swBlock - 1].override = false;
-      } else if (controller.line === 'red') {
-        this.tracks[1].blocks[controller.swBlock - 1].override = false;
-      }
-    });
-
-    this.setState({
-      maintenanceMode: status,
-    });
+  CTCMMode(id, line, value) {
+    if (line === 'green') {
+      this.tracks[0].blocks[id - 1].maintenanceMode = value;
+    } else if (line === 'red') {
+      this.tracks[1].blocks[id - 1].maintenanceMode = value;
+    }
+    this.setState((prevState) => ({
+      appState: !prevState.appState,
+    }));
   }
+  // CTCMMode(value) {
+  //   // reset all overrides to false on change
+  //   this.controllers.forEach((controller) => {
+  //     if (controller.line === 'green') {
+  //       this.tracks[0].blocks[controller.swBlock - 1].override = false;
+  //     } else if (controller.line === 'red') {
+  //       this.tracks[1].blocks[controller.swBlock - 1].override = false;
+  //     }
+  //   });
+
+  //   this.setState({
+  //     maintenanceMode: status,
+  //   });
+  // }
 
   loadNewPLC = (event) => {
     var PLC = window.electronAPI.openFileDialog('PLC');
@@ -887,13 +892,22 @@ class TrackController extends React.Component {
 
   // Set specific swithc to position
   setSwitchCTC(block, position, line) {
-    if (line === 'green' && this.state.maintenanceMode) {
+    if (line === 'green') {
+      this.tracks[0].blocks[block-1].maintenanceMode = true;
       this.tracks[0].blocks[block - 1].switch.setPosition(position);
-      this.tracks[0].blocks[block - 1].switch.override = true;
-    } else if (line === 'red' && this.state.maintenanceMode) {
+    } else if (line === 'red') {
+      this.tracks[1].blocks[block-1].maintenanceMode = true;
       this.tracks[1].blocks[block - 1].switch.setPosition(position);
-      this.tracks[1].blocks[block - 1].switch.override = true;
+    
     }
+
+    window.electronAPI.sendTrackModelMessage({
+      type: 'switch',
+      line: line,
+      root: block,
+      pointing_to: position,
+    });
+  
 
     this.setState((prevState) => ({
       appState: !prevState.appState,
@@ -1056,10 +1070,9 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {/* {this.tracks[this.state.line].blocks[
+                  {this.tracks[this.state.line].blocks[
                     this.state.currBlock.id - 1
-                  ].maintenanceMode  */}
-                  {this.state.maintenanceMode ? (
+                  ].maintenanceMode ? (
                     <Chip
                       onClick={this.mmMode}
                       label="Maintenence Mode Activated"
