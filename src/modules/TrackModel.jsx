@@ -176,6 +176,7 @@ class TrackModel extends React.Component {
         break;
         case 'authority':
           Authority = payload.payload;
+          sendAuthority(payload.payload);
         break;
 
         case 'crossing':
@@ -183,6 +184,7 @@ class TrackModel extends React.Component {
           if(payload.line === "Green")
           {
             greenBlocks[payload.id].crossing = payload.status;
+            // console.log('Crossing from message: ', greenBlocks[payload.id].crossing);
           }
           if(payload.line === 'Red')
           {
@@ -231,7 +233,7 @@ class TrackModel extends React.Component {
     // this.sendRedMessages = this.sendRedMessages.bind(this);
     this.checkTrackFailures = this.checkTrackFailures.bind(this);
     this.getTrackModelArrays = this.getTrackModelArrays.bind(this);
-
+    this.sendAuthority = this.sendAuthority.bind(this);
 
     //  Create multiple track model instances (one for each line)
     const redLineObject = new Track();
@@ -290,17 +292,23 @@ class TrackModel extends React.Component {
     else if(this.state.lineName === 'Green')
       this.state.blocks = greenBlocks;
     //  load the first block by default
-    this.loadBlockInfo(1);
+    this.state.blockIndex = 1;
+    this.loadBlockInfo();
+    
   
   };
 
   //  Load's blocks information from the Track Model File - alpha = blockIndex
-  loadBlockInfo = (alpha) => {
+  loadBlockInfo = () => {
+    let alpha;
+    const interval = setInterval(() => {
+     alpha = this.state.blockIndex;
     //  convert to imperials for display only
     const curBlock = this.state.blocks[alpha]; //  get the block selected
     const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
     const speedLimitImperial = (curBlock.spdLimit * 0.621371).toFixed(3);
     const elevationImperial = (curBlock.elevation * 3.28084).toFixed(3);
+  
     //  Assign values from the Blocks array to State vars
     this.setState({
       blockLength: blockLengthImperial,
@@ -313,10 +321,25 @@ class TrackModel extends React.Component {
     });
     this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].occupancy;
 
+    //  check the status of the line name
+    if(curBlock[1].lineName === "Green")
+    {
+      this.setState({enviornmentTemp : greenEVTemp});
+    }
+    else if (curBlock[1].lineName === "Red")
+    {
+      this.setState({enviornmentTemp : redEVTemp});
+    }
+
     //  check if the current block has a railroad crossing
-    console.log('Cross should appear under here');
-    console.log('Cross', curBlock.crossing);
-    this.state.crossing = curBlock.crossing;
+    // console.log('Cross should appear under here');
+    // console.log('Cross', curBlock.crossing);
+    // console.log(alpha);
+    this.setState({
+      crossing: curBlock.crossing,
+    });
+    // this.state.crossing = curBlock.crossing;
+  }, 1000);
   };
 
   loadFile = (event) => {
@@ -460,6 +483,7 @@ class TrackModel extends React.Component {
       redTHStatus = 'disabled';
     }
 
+
     if (g < 32) {
       greenTHStatus = 'enabled';
     } else if (!(g < 32)) {
@@ -470,7 +494,7 @@ class TrackModel extends React.Component {
   //  handle the select change
   handleChange = (event) => {
     this.state.blockIndex = event.target.value;
-    this.loadBlockInfo(event.target.value);
+    // this.loadBlockInfo(event.target.value);
   };
 
   resetAllSettings = (event) => {
@@ -654,6 +678,16 @@ class TrackModel extends React.Component {
         trainIDs.length = 0;    //  fasted way to clear array; better performance
       }
     }, 1000);
+  };
+
+  //  gets authority directly from Track Controller and passes to Train Model
+  sendAuthority = (payload) => 
+  {
+    window.electronAPI.sendTrainModelMessage({
+      type : 'Authority',
+      'TrainID' : payload.trainID,
+      'Authority' : payload.Authority,
+    });
   };
 
   //  function for updating block occupancy and exchanging information with train model
