@@ -564,7 +564,7 @@ describe(`CTCOffice::generateYardRoute`, () => {
       expect(
         CTC.generateYardRoute('red', ['Herron Ave.', 'Penn Station'], false)
       ).toEqual(
-        [151, 9, 8, 7, 6, 5, 4, 3, 2, 1, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+        [0, 9, 8, 7, 6, 5, 4, 3, 2, 1, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
       );
     });
   });
