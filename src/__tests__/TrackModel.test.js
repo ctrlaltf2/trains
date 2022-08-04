@@ -46,7 +46,7 @@ test('Track Model creates Track Object block arrayys', () => {
 test('Track Model objects have no block occupancy by default', () => {
   const TM = new TrackModel();
   let OccuBool = false;
-  const Blocks = TM.getBlocks();
+  const Blocks = TM.getTrackModelArrays();
   const r = Blocks.redBlocks.length;
   const g  = Blocks.greenBlocks.length;
   for(let i = 0; i < r; i++)
@@ -66,4 +66,67 @@ test('Track Model objects have no block occupancy by default', () => {
   expect(OccuBool).toBe(false);
 });
 
+test('Track Model creates persons waiting at station', () => {
+  const TM = new TrackModel();
+  //  look at both sets of blocks
+  //  red and green -- all the blocks with stations should have pos ints of people
+  //  that are waiting at station
+  const Blocks = TM.getTrackModelArrays()
+  const greenBlocks = Blocks.greenBlocks;
+  const redBlocks = Blocks.redBlocks;
 
+  for (let i = 0; i < greenBlocks.length; i++)
+  {
+    if(!(greenBlocks[i].stationSide === ''))
+    {
+      expect(greenBlocks[i].peopleAtStation >= 1).toBeTruthy();
+    }
+  }
+  for (let i = 0; i < redBlocks.length; i++)
+  {
+    if(!(redBlocks[i].stationSide === ''))
+    {
+      expect(redBlocks[i].peopleAtStation >= 1).toBeTruthy();
+    }
+  }
+
+});
+
+test('Track Model creates an enviornment temperature for green line', () => {
+  const TM = new TrackModel();
+  let sysVars = TM.getSystemVars();
+  //  variable greenEVTemp
+  expect(sysVars.greenEVTemp >= 0 ).toBeTruthy();
+});
+
+
+test('Track Model creates an enviornment temperature for red line', () => {
+  const TM = new TrackModel();
+  let sysVars = TM.getSystemVars();
+  //  variable greenEVTemp
+  expect(sysVars.redEVTemp >= 0 ).toBeTruthy();
+});
+
+test('Track model heaters kick in when temps are below freezing', () => {
+  const TM = new TrackModel();
+  let sys = TM.getSystemVars();
+
+  sys.greenEVTemp = 20;
+  sys.redEVTemp = 15;
+  TM.checkTrackHeaters(sys.redEVTemp, sys.greenEVTemp);
+  sys = TM.getSystemVars(); //  update
+  expect(sys.greenTHStatus).toBe('enabled');
+  expect(sys.redTHStatus).toBe('enabled');
+});
+
+test('Track model heaters are disabled in when temps are above freezing', () => {
+  const TM = new TrackModel();
+  let sys = TM.getSystemVars();
+
+  sys.greenEVTemp = 35;
+  sys.redEVTemp = 115;
+  TM.checkTrackHeaters(sys.redEVTemp, sys.greenEVTemp);
+  sys = TM.getSystemVars(); //  update
+  expect(sys.greenTHStatus).toBe('disabled');
+  expect(sys.redTHStatus).toBe('disabled');
+});
