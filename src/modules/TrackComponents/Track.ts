@@ -75,7 +75,7 @@ export class Track {
 
         //  If station is included, tell if left or right of track
         let dir;
-        const stationSide = this.blocks[i]['Station Side'];
+        const stationSide = this.blocks[i].stationSide;
         switch (stationSide) {
           case 'Left/Right':
             dir = 'b';
