@@ -35,8 +35,8 @@ import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 import SW13 from './PLC/Green/SW13.json';
 import SW29 from './PLC/Green/SW29.json';
 import SW57 from './PLC/Green/SW57.json';
-import SW63 from './PLC/Green/SW62.json';
-import SW76 from './PLC/Green/SW76.json';
+import SW63 from './PLC/Green/SW63.json';
+import SW77 from './PLC/Green/SW77.json';
 import SW85 from './PLC/Green/SW85.json';
 
 // red plc
@@ -95,6 +95,42 @@ class TrackController extends React.Component {
           break;
         case 'GreenlineTrackPower':
           window.electronAPI.sendCTCMessage(payload);
+          break;
+
+        // Occ from Track model
+        case 'GreenBlockOccupancy':
+          for (let i = 1; i < this.tracks[0].blocks.length + 1; i++) {
+            if (
+              payload.GreenBlocks[i].occupancy != this.tracks[0].blocks[i - 1].occupancy
+            ) {
+              this.tracks[0].blocks[i - 1].occupancy =
+                payload.GreenBlocks[i].occupancy;
+              window.electronAPI.sendCTCMessage({
+                type: 'occupancy',
+                line: this.tracks[0].blocks[i - 1].line,
+                block_id: this.tracks[0].blocks[i - 1].id,
+                value: this.tracks[0].blocks[i - 1].occupancy,
+              });
+            }
+          }
+          break;
+
+        case 'RedBlockOccupancy':
+          for (let i = 1; i < this.tracks[1].blocks.length + 1; i++) {
+            if (
+              payload.RedBlocks[i].occupancy !=
+              this.tracks[1].blocks[i - 1].occupancy
+            ) {
+              this.tracks[1].blocks[i - 1].occupancy =
+                payload.RedBlocks[i].occupancy;
+              window.electronAPI.sendCTCMessage({
+                type: 'occupancy',
+                line: 'Red',
+                block_id: this.tracks[1].blocks[i - 1].id,
+                value: this.tracks[1].blocks[i - 1].occupancy,
+              });
+            }
+          }
           break;
 
         // From CTC
@@ -156,7 +192,7 @@ class TrackController extends React.Component {
       new Wayside(3, this.tracks[0].blocks.slice(56, 57), 57, 'green')
     );
     this.controllers.push(
-      new Wayside(4, this.tracks[0].blocks.slice(61, 76), 62, 'green')
+      new Wayside(4, this.tracks[0].blocks.slice(61, 76), 63, 'green')
     );
     temp = this.tracks[0].blocks.slice(100, 149);
     temp.push(this.tracks[0].blocks[76]);
@@ -194,7 +230,7 @@ class TrackController extends React.Component {
     this.controllers[1].setPLC(SW29);
     this.controllers[2].setPLC(SW57);
     this.controllers[3].setPLC(SW63);
-    this.controllers[4].setPLC(SW76);
+    this.controllers[4].setPLC(SW77);
     this.controllers[5].setPLC(SW85);
 
     // red
@@ -263,7 +299,7 @@ class TrackController extends React.Component {
       } else if (controller.line === 'red') {
         this.tracks[1].blocks[controller.swBlock - 1].override = false;
       }
-    })
+    });
 
     this.setState((prevState) => ({
       maintenanceMode: !prevState.maintenanceMode,
@@ -288,7 +324,7 @@ class TrackController extends React.Component {
       } else if (controller.line === 'red') {
         this.tracks[1].blocks[controller.swBlock - 1].override = false;
       }
-    })
+    });
 
     this.setState({
       maintenanceMode: status,
@@ -759,9 +795,9 @@ class TrackController extends React.Component {
               line: this.tracks[line].blocks[
                 parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
               ].line,
-              id: this.tracks[line].blocks[
+              id: parseInt(this.tracks[line].blocks[
                 parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].id,
+              ].id),
               status:
                 this.tracks[line].blocks[
                   parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
@@ -1000,7 +1036,8 @@ class TrackController extends React.Component {
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
                         this.tracks[this.state.line].blocks[
-                          this.controllers[this.state.currController].swBlock - 1
+                          this.controllers[this.state.currController].swBlock -
+                            1
                         ].switch.position
                       }`}
                       color={'success'}
