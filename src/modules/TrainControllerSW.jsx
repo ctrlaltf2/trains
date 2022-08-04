@@ -102,14 +102,14 @@ class TrainControllerSW extends React.Component {
           }
 
           break;
-        case 'newTrain':
-          this.handleDropdownChange(payload.newTrain);
+        case 'emergencyBrake':
+          this.emergencyBrake(payload.emergencyBrake);
           break;
         case 'Underground':
           this.under = payload.Underground;
 
           this.underground();
-
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
