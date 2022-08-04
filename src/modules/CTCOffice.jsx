@@ -184,8 +184,8 @@ class CTCOffice extends React.Component {
     const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
     this.route_lookup = {
       'green': {
-        '(yard-enter)': [152],
-        '(yard-exit)': [151],
+        '(yard-enter)': [151],
+        '(yard-exit)': [0],
         '(yard-Glenbury)': [63, 64],
         'Glenbury::S': [65],
         '(Glenbury-Dormont)': range(66, 72, 1),
@@ -251,7 +251,7 @@ class CTCOffice extends React.Component {
         'First Ave.::U': [45],
         'Steel Plaza::U': [35],
         'Penn Station::U': [25],
-        '(yard-exit)': [151],
+        '(yard-exit)': [0],
         '(yard-Shadyside)': [9, 8],
         'Shadyside::D': [7],
         '(Shadyside-Herron Ave.)': range(6, 1, -1),
@@ -266,7 +266,7 @@ class CTCOffice extends React.Component {
         '(Herron Ave.-Shadyside)': range(1, 6, 1),
         'Shadyside::U': [7],
         '(Shadyside-yard)': [8, 9],
-        '(yard-enter)': [152],
+        '(yard-enter)': [0],
         '(yard-Herron Ave.)': range(10, 15, 1)
       }
     };
