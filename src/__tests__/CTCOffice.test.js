@@ -136,7 +136,7 @@ test(`CTCOffice::inferTrainMovement, unknown source`, () => {
 
 test(`CTCOffice::inferTrainMovement, single possible source`, () => {
   const CTC = new CTCOffice();
-  CTC.trainPositions['Thomas'] = '42';
+  CTC.trainPositions['green']['Thomas'] = ['42', '41'];
 
   expect(
     CTC.inferTrainMovement('green', '43', true)
@@ -145,92 +145,107 @@ test(`CTCOffice::inferTrainMovement, single possible source`, () => {
   );
 });
 
-test(`CTCOffice::inferTrainMovement, multiple possible sources`, () => {
-  const CTC = new CTCOffice();
-  CTC.trainPositions['Thomas'] = '42';
-
-  expect(
-    CTC.inferTrainMovement('green', '43', true)
-  ).toStrictEqual(
-    'Thomas'
-  );
-});
-
-test(`CTCOffice::inferTrainMovement, across switch junction, single source`, () => {
-  const CTC = new CTCOffice();
-  CTC.trainPositions['Thomas'] = '42';
-
-  expect(
-    CTC.inferTrainMovement('green', '43', true)
-  ).toStrictEqual(
-    'Thomas'
-  );
-});
-
-test(`CTCOffice::inferTrainMovement, across switch junction, multiple source`, () => {
-  const CTC = new CTCOffice();
-  CTC.trainPositions['Thomas'] = '29';
-
-  expect(
-    CTC.inferTrainMovement('green', '30', true)
-  ).toStrictEqual(
-    'Thomas'
-  );
-});
-
-describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
-  test(`green junction, no 100 -> 86 movement`, () => {
+describe('Inferring train movement, moving onto block detected right', () => {
+  test(`CTCOffice::inferTrainMovement, multiple possible sources`, () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '100';
+    CTC.trainPositions['green']['Thomas'] = ['42', '41'];
 
     expect(
-      CTC.inferTrainMovement('green', '86', true)
-    ).toBe(
-      undefined
+      CTC.inferTrainMovement('green', '43', true)
+    ).toStrictEqual(
+      'Thomas'
     );
   });
 
-  test(`green junction, no 76 -> 101 movement`, () => {
+  test(`CTCOffice::inferTrainMovement, across switch junction, single source`, () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '76';
+    CTC.trainPositions['green']['Thomas'] = ['42', '41'];
 
     expect(
-      CTC.inferTrainMovement('green', '101', true)
-    ).toBe(
-      undefined
+      CTC.inferTrainMovement('green', '43', true)
+    ).toStrictEqual(
+      'Thomas'
     );
   });
 
-  test(`green junction, no 101 -> 76 movement`, () => {
+  test(`CTCOffice::inferTrainMovement, across switch junction, multiple source`, () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '101';
-
-    expect(
-      CTC.inferTrainMovement('green', '76', true)
-    ).toBe(
-      undefined
-    );
-  });
-
-  test(`green junction, no 150 -> 30 movement`, () => {
-    const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '150';
+    CTC.trainPositions['green']['Thomas'] = ['29', '28'];
 
     expect(
       CTC.inferTrainMovement('green', '30', true)
-    ).toBe(
-      undefined
+    ).toStrictEqual(
+      'Thomas'
     );
   });
 
-  test(`green junction, no 1 -> 12 movement`, () => {
+  describe(`CTCOffice::inferTrainMovement, green junctions`, () => {
+    test(`green junction, no 100 -> 86 movement`, () => {
+      const CTC = new CTCOffice();
+      CTC.trainPositions['green']['Thomas'] = ['100'];
+
+      expect(
+        CTC.inferTrainMovement('green', '86', true)
+      ).toBe(
+        undefined
+      );
+    });
+
+    test(`green junction, no 76 -> 101 movement`, () => {
+      const CTC = new CTCOffice();
+      CTC.trainPositions['green']['Thomas'] = ['76'];
+
+      expect(
+        CTC.inferTrainMovement('green', '101', true)
+      ).toBe(
+        undefined
+      );
+    });
+
+    test(`green junction, no 101 -> 76 movement`, () => {
+      const CTC = new CTCOffice();
+      CTC.trainPositions['green']['Thomas'] = ['101'];
+
+      expect(
+        CTC.inferTrainMovement('green', '76', true)
+      ).toBe(
+        undefined
+      );
+    });
+
+    test(`green junction, no 150 -> 30 movement`, () => {
+      const CTC = new CTCOffice();
+      CTC.trainPositions['green']['Thomas'] = ['150'];
+
+      expect(
+        CTC.inferTrainMovement('green', '30', true)
+      ).toBe(
+        undefined
+      );
+    });
+
+    test(`green junction, no 1 -> 12 movement`, () => {
+      const CTC = new CTCOffice();
+      CTC.trainPositions['green']['Thomas'] = ['1'];
+
+      expect(
+        CTC.inferTrainMovement('green', '12', true)
+      ).toBe(
+        undefined
+      );
+    });
+  });
+});
+
+describe('Inferring train movement, train leaves a block', () => {
+  test('Train leaving a block, simple single source', () => {
     const CTC = new CTCOffice();
-    CTC.trainPositions['Thomas'] = '1';
+    CTC.trainPositions['green']['Thomas'] = ['1', '2'];
 
     expect(
-      CTC.inferTrainMovement('green', '12', true)
+      CTC.inferTrainMovement('green', '2', false)
     ).toBe(
-      undefined
+      'Thomas'
     );
   });
 });
