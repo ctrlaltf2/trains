@@ -132,6 +132,10 @@ class CTCOffice extends React.Component {
         'red': {},
         'green': {},
       },
+      switchesOverridden: {
+        'red': {},
+        'green': {},
+      },
       activeTrainIDs: {
         'red': [],
         'green': [],
@@ -1132,6 +1136,7 @@ class CTCOffice extends React.Component {
       closures,
       switchGoingToPosition,
       activeLine,
+      switchesOverridden,
     } = this.state;
 
     const { lineSelection, blockSelection } = this.state.testUI;
@@ -1374,30 +1379,92 @@ class CTCOffice extends React.Component {
                 <Typography variant="h6" component="h2">
                   Editing Switch {editingSwitch}
                 </Typography>
-                {
-                  editingSwitch ?
-                    <p>Coming from block {switches[activeLine][editingSwitch].coming_from}</p>
-                  :
-                    []
-                }
-                <FormControl id="switchPositionCombobox">
-                  <InputLabel id="switch-to-label">Set Going To</InputLabel>
-                  <Select
-                    labelId="block-select-label"
-                    value={switchGoingToPosition}
-                    label="Set Going To"
-                    onChange={(ev, elem) => {}}
-                  >
+                <div id="switchControlGroup">
+                  {
+                    editingSwitch ?
+                      <p>Join {switches[activeLine][editingSwitch].coming_from} to </p>
+                    :
+                      []
+                  }
+                  <FormControl id="switchPositionCombobox">
                     {
-                      editingSwitch ?
-                        switches[activeLine][editingSwitch].going_to_options.map( (sw) => {
-                          return <MenuItem value={sw}>{sw}</MenuItem>;
-                        })
-                        :
-                        []
+                      switchesOverridden[activeLine][editingSwitch] ?
+                        <Select
+                          labelId="block-select-label"
+                          value={switches[activeLine][editingSwitch]._going_to || ''}
+                          label="join root to"
+                          onChange={(ev, elem) => {
+                            console.log(switches);
+                            // Get value selected
+                            const point_to = ev.target.value;
+
+                            // Update state
+                            const switches_ = _.cloneDeep(switches);
+                            console.log(switches_[activeLine][editingSwitch]);
+                            switches_[activeLine][editingSwitch]._going_to = point_to;
+
+                            this.setState({
+                              switches: switches_,
+                            });
+
+                            window.electronAPI.sendTrackControllerMessage({
+                              'type': 'switchOverride',
+                              'line': activeLine,
+                              'root': switches[activeLine][editingSwitch].coming_from,
+                              'goingTo': point_to,
+                            });
+                          }}
+                        >
+                        {
+                          editingSwitch ?
+                            switches[activeLine][editingSwitch].going_to_options.map( (sw) => {
+                              return <MenuItem value={sw}>{sw}</MenuItem>;
+                            })
+                            :
+                            []
+                        }
+                        </Select>
+                      :
+                        <Select
+                          disabled={true}
+                          labelId="block-select-label"
+                          value={(switches[activeLine][editingSwitch] && switches[activeLine][editingSwitch]._going_to) || ''}
+                          label="join root to"
+                          onChange={(ev, elem) => {}}
+                        >
+                          {
+                            editingSwitch ?
+                              switches[activeLine][editingSwitch].going_to_options.map( (sw) => {
+                                return <MenuItem value={sw}>{sw}</MenuItem>;
+                              })
+                              :
+                              []
+                          }
+                        </Select>
                     }
-                  </Select>
-                </FormControl>
+                  </FormControl>
+                  <FormControlLabel
+                    checked={switchesOverridden[activeLine][editingSwitch]}
+                    control={<Switch onChange={(ev) => {
+                      const switchesOverridden_ = _.cloneDeep(switchesOverridden);
+                      switchesOverridden_[activeLine][editingSwitch] = !!ev.target.checked;
+
+                      // Ending maintenance mode
+                      if(!ev.target.checked) {
+                        // Send reset message
+                        const root = switches[activeLine][editingSwitch].coming_from;
+                        window.electronAPI.sendTrackControllerMessage({
+                          type: 'releaseMaintenanceMode',
+                          line: activeLine,
+                          root: root
+                        });
+                      }
+
+                      this.setState({
+                        switchesOverridden: switchesOverridden_,
+                      });
+                  }}/>} label="Maintenance Mode"/>
+                </div>
               </div>
             </Box>
           </Modal>
