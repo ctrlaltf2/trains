@@ -330,7 +330,20 @@ class CTCOffice extends React.Component {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
 
       if(this.now > pendingTimestamp) {
-        this.sendDispatchMessage(this.pendingDispatches[pendingTimestamp]);
+        const train = this.pendingDispatches[pendingTimestamp]
+        this.sendDispatchMessage(train);
+
+        // This should be a queue but you're hilarious if you think we're going to be dispatching multiple trains
+        // Give train inference algo some initial values
+        const occupancy = _.cloneDeep(this.state.occupancy);
+        occupancy[line][0] = true;
+
+        // Initialize position
+        this.trainPositions[train.line][0] = train.id;
+
+        this.setState({
+          occupancy: occupancy,
+        });
 
         deleted.push(pendingTimestamp_);
 
