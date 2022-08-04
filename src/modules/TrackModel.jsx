@@ -60,6 +60,7 @@ let greenEVTemp;
 let redEVTemp;
 let greenTHStatus;
 let redTHStatus;
+let crossingArray = [];
 
 // variables for the two tracks failures
 let redTrackSignalPickup; let greenTrackSignalPickup;
@@ -115,6 +116,7 @@ class TrackModel extends React.Component {
       blockOccupancy: 'false',
       personsAtStation: 10,
       TransitLightStatus: 'Red',
+      crossing: false,
 
       // beacon
       beacon: 'defaultBeacon',
@@ -174,6 +176,15 @@ class TrackModel extends React.Component {
         break;
         case 'authority':
           Authority = payload.payload;
+        break;
+
+        case 'crossing':
+          //  line, id, and status
+          crossingArray.push ({
+            'line' : payload.line,
+            'id' : payload.id,
+            'status' : payload.status,
+          });
         break;
 
         //  signals from Train Model
@@ -298,6 +309,24 @@ class TrackModel extends React.Component {
       elevation: elevationImperial,
     });
     this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].occupancy;
+
+    //  check if the current block has a railroad crossing
+    if(this.lineName === "Red")
+    {
+      const cross = crossingArray.indexOf({
+        id: alpha,
+        line: 'Red',
+      });
+      this.state.crossing = cross.status;
+    }
+    else if(this.lineName === "Green")
+    {
+      const cross = crossingArray.indexOf({
+        id: alpha,
+        line: 'Green',
+      });
+      this.state.crossing = cross.status;
+    }
   };
 
   loadFile = (event) => {
@@ -1080,16 +1109,10 @@ class TrackModel extends React.Component {
                   <div className="label">{this.state.personsAtStation}</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">Beacon Status</div>
+                  <div className="label">Railroad Crossing</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">{this.state.beaconStatus}</div>
-                </Grid>
-                <Grid item xs={6}>
-                  <div className="label">Railway Crossing (mi)</div>
-                </Grid>
-                <Grid item xs={6}>
-                  <div className="label">0 miles</div>
+                  <div className="label">{String(this.state.crossing)}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Elevation (feet)</div>
