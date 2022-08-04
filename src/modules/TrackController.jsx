@@ -740,48 +740,11 @@ class TrackController extends React.Component {
             !this.tracks[line].blocks[
               parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
             ].crossing
-          ) {
-            window.electronAPI.sendCTCMessage({
-              type: 'crossing',
-              line: this.tracks[line].blocks[
-                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].line,
-              id: this.tracks[line].blocks[
-                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].id,
-              status:
-                this.tracks[line].blocks[
-                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                ].crossing,
-            });
-            window.electronAPI.sendTrackModelMessage({
-              type: 'crossing',
-              line: this.tracks[line].blocks[
-                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].line,
-              id: this.tracks[line].blocks[
-                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].id,
-              status:
-                this.tracks[line].blocks[
-                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-                ].crossing,
-            });
-          }
-          this.tracks[line].blocks[
-            parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-          ].crossing = true;
-          console.log(
+          ) 
+          {
             this.tracks[line].blocks[
               parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-            ].crossing
-          );
-        } else {
-          if (
-            this.tracks[line].blocks[
-              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-            ].crossing
-          ) {
+            ].crossing = true;
             window.electronAPI.sendCTCMessage({
               type: 'crossing',
               line: this.tracks[line].blocks[
@@ -809,9 +772,42 @@ class TrackController extends React.Component {
                 ].crossing,
             });
           }
-          this.tracks[line].blocks[
-            parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-          ].crossing = false;
+        } else {
+          if (
+            this.tracks[line].blocks[
+              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+            ].crossing
+          ) {
+            this.tracks[line].blocks[
+              parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+            ].crossing = false;
+            window.electronAPI.sendCTCMessage({
+              type: 'crossing',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].line,
+              id: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].id,
+              status:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].crossing,
+            });
+            window.electronAPI.sendTrackModelMessage({
+              type: 'crossing',
+              line: this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].line,
+              id: parseInt(this.tracks[line].blocks[
+                parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+              ].id),
+              status:
+                this.tracks[line].blocks[
+                  parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
+                ].crossing,
+            });
+          }
         }
       }
     });
