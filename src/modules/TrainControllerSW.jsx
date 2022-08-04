@@ -478,7 +478,7 @@ class TrainControllerSW extends React.Component {
     // Send power command to train model
     window.electronAPI.sendTrainModelMessage({
       'type': 'power',
-      'power': this.power,
+      'power': this.power / 1000,
     });
 
   }
