@@ -16,14 +16,14 @@ class Switch {
     this.going_to_options = going_to_options;
   }
 
-  set point_to(where: Block) {
+  public set point_to(where: Block) {
     if(this.going_to_options.indexOf(where) === -1)
       throw `Tried to point switch to block it's not connected to.`;
 
     this._going_to = where;
   }
 
-  get pointing_to(): Block {
+  public get pointing_to(): Block {
     return this._going_to;
   }
 };
