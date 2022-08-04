@@ -35,8 +35,8 @@ import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 import SW13 from './PLC/Green/SW13.json';
 import SW29 from './PLC/Green/SW29.json';
 import SW57 from './PLC/Green/SW57.json';
-import SW63 from './PLC/Green/SW62.json';
-import SW76 from './PLC/Green/SW76.json';
+import SW63 from './PLC/Green/SW63.json';
+import SW77 from './PLC/Green/SW77.json';
 import SW85 from './PLC/Green/SW85.json';
 
 // red plc
@@ -77,20 +77,63 @@ class TrackController extends React.Component {
       console.log('IPC:TrackController: ', payload);
 
       switch (payload.type) {
-        case 'trackModelStatus':
-          // TODO
-          // window.electronAPI.sendCTCMessage({
-          //   type: 'occupancy',
-          //   line: this.tracks[this.state.line].blocks[].line,
-          //   block_id: ,
-          //   value: ,
-          // });
-          // window.electronAPI.sendCTCMessage({
-          //   type: 'throughput',
-          //   line: this.tracks[this.state.line].blocks[].line,
-          //   value: ,
-          // });
+        // Failures from track model
+        case 'RedlineTrackSignalPickup':
+          window.electronAPI.sendCTCMessage(payload);
           break;
+        case 'GreenlineTrackSignalPickup':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+        case 'GreenlineRailStatus':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+        case 'RedlineRailStatus':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+        case 'RedlineTrackPower':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+        case 'GreenlineTrackPower':
+          window.electronAPI.sendCTCMessage(payload);
+          break;
+
+        // Occ from Track model
+        case 'GreenBlockOccupancy':
+          for (let i = 1; i < this.tracks[0].blocks.length + 1; i++) {
+            if (
+              payload.GreenBlocks[i].occupancy != this.tracks[0].blocks[i - 1].occupancy
+            ) {
+              this.tracks[0].blocks[i - 1].occupancy =
+                payload.GreenBlocks[i].occupancy;
+              window.electronAPI.sendCTCMessage({
+                type: 'occupancy',
+                line: this.tracks[0].blocks[i - 1].line,
+                block_id: this.tracks[0].blocks[i - 1].id,
+                value: this.tracks[0].blocks[i - 1].occupancy,
+              });
+            }
+          }
+          break;
+
+        case 'RedBlockOccupancy':
+          for (let i = 1; i < this.tracks[1].blocks.length + 1; i++) {
+            if (
+              payload.RedBlocks[i].occupancy !=
+              this.tracks[1].blocks[i - 1].occupancy
+            ) {
+              this.tracks[1].blocks[i - 1].occupancy =
+                payload.RedBlocks[i].occupancy;
+              window.electronAPI.sendCTCMessage({
+                type: 'occupancy',
+                line: 'Red',
+                block_id: this.tracks[1].blocks[i - 1].id,
+                value: this.tracks[1].blocks[i - 1].occupancy,
+              });
+            }
+          }
+          break;
+
+        // From CTC
         case 'authority':
           // TODO Add other line
           this.tracks[this.state.line].blocks[payload.block].authority =
@@ -143,13 +186,13 @@ class TrackController extends React.Component {
       new Wayside(1, this.tracks[0].blocks.slice(0, 13), 13, 'green')
     );
     let temp = this.tracks[0].blocks.slice(11, 28);
-    temp.push(this.tracks[0].blocks[150]);
+    temp.push(this.tracks[0].blocks[149]);
     this.controllers.push(new Wayside(2, temp, 29, 'green'));
     this.controllers.push(
       new Wayside(3, this.tracks[0].blocks.slice(56, 57), 57, 'green')
     );
     this.controllers.push(
-      new Wayside(4, this.tracks[0].blocks.slice(61, 76), 62, 'green')
+      new Wayside(4, this.tracks[0].blocks.slice(61, 76), 63, 'green')
     );
     temp = this.tracks[0].blocks.slice(100, 149);
     temp.push(this.tracks[0].blocks[76]);
@@ -187,7 +230,7 @@ class TrackController extends React.Component {
     this.controllers[1].setPLC(SW29);
     this.controllers[2].setPLC(SW57);
     this.controllers[3].setPLC(SW63);
-    this.controllers[4].setPLC(SW76);
+    this.controllers[4].setPLC(SW77);
     this.controllers[5].setPLC(SW85);
 
     // red
@@ -211,6 +254,7 @@ class TrackController extends React.Component {
     this.CTCMMode = this.CTCMMode.bind(this);
     this.getSwitchPos = this.getSwitchPos.bind(this);
     this.occupy = this.occupy.bind(this);
+    this.getController = this.getController.bind(this);
 
     this.handleChangeController = this.handleChangeController.bind(this);
     this.plc = this.plc.bind(this);
@@ -224,7 +268,7 @@ class TrackController extends React.Component {
   getBlock(id, line) {
     if (line === 'green') {
       return this.tracks[0].blocks[id - 1];
-    } else if (line === 'yellow') {
+    } else if (line === 'red') {
       return this.tracks[1].blocks[id - 1];
     }
   }
@@ -237,27 +281,54 @@ class TrackController extends React.Component {
     }
   }
 
+  getController(id) {
+    return this.controllers[id];
+  }
+
   mmMode() {
-    this.tracks[this.state.line].blocks[
-      this.state.currBlock.id - 1
-    ].maintenanceMode =
-      !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
-        .maintenanceMode;
+    // this.tracks[this.state.line].blocks[
+    //   this.state.currBlock.id - 1
+    // ].maintenanceMode =
+    //   !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
+    //     .maintenanceMode;
+
+    // reset all overrides to false on change
+    this.controllers.forEach((controller) => {
+      if (controller.line === 'green') {
+        this.tracks[0].blocks[controller.swBlock - 1].override = false;
+      } else if (controller.line === 'red') {
+        this.tracks[1].blocks[controller.swBlock - 1].override = false;
+      }
+    });
 
     this.setState((prevState) => ({
-      appSate: !prevState.appState,
+      maintenanceMode: !prevState.maintenanceMode,
     }));
   }
 
-  CTCMMode(id, line, value) {
-    if (line === 'green') {
-      this.tracks[0].blocks[id - 1].maintenanceMode = value;
-    } else if (line === 'red') {
-      this.tracks[1].blocks[id - 1].maintenanceMode = value;
-    }
-    this.setState((prevState) => ({
-      appSate: !prevState.appState,
-    }));
+  // CTCMMode(id, line, value) {
+  //   if (line === 'green') {
+  //     this.tracks[0].blocks[id - 1].maintenanceMode = value;
+  //   } else if (line === 'red') {
+  //     this.tracks[1].blocks[id - 1].maintenanceMode = value;
+  //   }
+  //   this.setState((prevState) => ({
+  //     appState: !prevState.appState,
+  //   }));
+  // }
+  CTCMMode(value) {
+    // reset all overrides to false on change
+    this.controllers.forEach((controller) => {
+      if (controller.line === 'green') {
+        this.tracks[0].blocks[controller.swBlock - 1].override = false;
+      } else if (controller.line === 'red') {
+        this.tracks[1].blocks[controller.swBlock - 1].override = false;
+      }
+    });
+
+    this.setState({
+      maintenanceMode: status,
+    });
   }
 
   loadNewPLC = (event) => {
@@ -277,7 +348,7 @@ class TrackController extends React.Component {
     // this.tracks[this.state.line].blocks = this.currTrack.blocks;
 
     this.setState((prevState) => ({
-      appSate: !prevState.appState,
+      appState: !prevState.appState,
     }));
   }
 
@@ -302,7 +373,7 @@ class TrackController extends React.Component {
 
       if (controller.line === 'green') {
         line = 0;
-      } else if (controller.line == 'red') {
+      } else if (controller.line === 'red') {
         line = 1;
       }
       for (let j = 0; j < controller.plc.switchLogic.length; j++) {
@@ -357,10 +428,17 @@ class TrackController extends React.Component {
         }
         // Vitality check before setting switch position
         // Also send to CTC/Track Model
+        // if (
+        //   !this.tracks[line].blocks[
+        //     parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+        //   ].maintenanceMode
+        // )
         if (
-          !this.tracks[line].blocks[
-            parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-          ].maintenanceMode
+          !this.state.maintenanceMode ||
+          (this.state.maintenanceMode &&
+            this.tracks[line].blocks[
+              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+            ].switch.override === false)
         ) {
           if (status.every((val) => val === true)) {
             if (
@@ -469,34 +547,39 @@ class TrackController extends React.Component {
               }
             }
           }
-          if (controller.plc.lightLogic[j].yellow != ''){
-          for (let k = 0; k < controller.plc.lightLogic[j].yellow.length; k++) {
-            // AND
-            if (controller.plc.lightLogic[j].yellow[k] === '&&') {
-            }
-            // NOT
-            else if (controller.plc.lightLogic[j].yellow[k].includes('!')) {
-              if (
-                !this.tracks[line].blocks[
-                  parseInt(controller.plc.lightLogic[j].yellow[k].substring(1)) -
-                    1
-                ].occupancy
-              ) {
-                status[vitality] = 'yellow';
+          if (controller.plc.lightLogic[j].yellow != '') {
+            for (
+              let k = 0;
+              k < controller.plc.lightLogic[j].yellow.length;
+              k++
+            ) {
+              // AND
+              if (controller.plc.lightLogic[j].yellow[k] === '&&') {
               }
-            }
-            // Regular
-            else {
-              if (
-                this.tracks[line].blocks[
-                  parseInt(controller.plc.lightLogic[j].yellow[k]) - 1
-                ].occupancy
-              ) {
-                status[vitality] = 'yellow';
+              // NOT
+              else if (controller.plc.lightLogic[j].yellow[k].includes('!')) {
+                if (
+                  !this.tracks[line].blocks[
+                    parseInt(
+                      controller.plc.lightLogic[j].yellow[k].substring(1)
+                    ) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = 'yellow';
+                }
+              }
+              // Regular
+              else {
+                if (
+                  this.tracks[line].blocks[
+                    parseInt(controller.plc.lightLogic[j].yellow[k]) - 1
+                  ].occupancy
+                ) {
+                  status[vitality] = 'yellow';
+                }
               }
             }
           }
-        }
         }
         // console.log(status);
         // Vitality check before setting light position
@@ -504,7 +587,7 @@ class TrackController extends React.Component {
           let temp =
             this.tracks[line].blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight == ('red' || 'yellow');
+            ].transitLight === ('red' || 'yellow');
 
           this.tracks[line].blocks[
             parseInt(controller.plc.lightLogic[j].block) - 1
@@ -538,7 +621,7 @@ class TrackController extends React.Component {
           let temp =
             this.tracks[line].blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight == ('green' || 'yellow');
+            ].transitLight === ('green' || 'yellow');
 
           this.tracks[line].blocks[
             parseInt(controller.plc.lightLogic[j].block) - 1
@@ -568,12 +651,11 @@ class TrackController extends React.Component {
                 ].transitLight,
             });
           }
-        }
-        else if (status.every((val) => val === 'yellow')) {
+        } else if (status.every((val) => val === 'yellow')) {
           let temp =
             this.tracks[line].blocks[
               parseInt(controller.plc.lightLogic[j].block) - 1
-            ].transitLight ==( 'green' || 'red');
+            ].transitLight === ('green' || 'red');
 
           this.tracks[line].blocks[
             parseInt(controller.plc.lightLogic[j].block) - 1
@@ -713,9 +795,9 @@ class TrackController extends React.Component {
               line: this.tracks[line].blocks[
                 parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
               ].line,
-              id: this.tracks[line].blocks[
+              id: parseInt(this.tracks[line].blocks[
                 parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].id,
+              ].id),
               status:
                 this.tracks[line].blocks[
                   parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
@@ -730,7 +812,7 @@ class TrackController extends React.Component {
     });
 
     this.setState((prevState) => ({
-      appSate: !prevState.appState,
+      appState: !prevState.appState,
     }));
   }
 
@@ -755,36 +837,46 @@ class TrackController extends React.Component {
       this.state.currBlock.suggSpeed = e.target.value;
 
       this.setState((prevState) => ({
-        appSate: !prevState.appState,
+        appState: !prevState.appState,
       }));
     }
   }
 
   // Toggles switch
   setSwitch() {
+    this.tracks[this.state.line].blocks[
+      this.controllers[this.state.currController].swBlock - 1
+    ].switch.override = true;
+
     if (
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-        .position ==
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-        .outBlockHigh
+      this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.position ==
+      this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.outBlockHigh
     ) {
       this.tracks[this.state.line].blocks[
-        this.state.currBlock.id - 1
+        this.controllers[this.state.currController].swBlock - 1
       ].switch.setPosition(
-        this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-          .outBlockLow
+        this.tracks[this.state.line].blocks[
+          this.controllers[this.state.currController].swBlock - 1
+        ].switch.outBlockLow
       );
     } else if (
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-        .position ==
-      this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-        .outBlockLow
+      this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.position ==
+      this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.outBlockLow
     ) {
       this.tracks[this.state.line].blocks[
-        this.state.currBlock.id - 1
+        this.controllers[this.state.currController].swBlock - 1
       ].switch.setPosition(
-        this.tracks[this.state.line].blocks[this.state.currBlock.id - 1].switch
-          .outBlockHigh
+        this.tracks[this.state.line].blocks[
+          this.controllers[this.state.currController].swBlock - 1
+        ].switch.outBlockHigh
       );
     }
 
@@ -795,11 +887,14 @@ class TrackController extends React.Component {
 
   // Set specific swithc to position
   setSwitchCTC(block, position, line) {
-    if (line === 'green') {
+    if (line === 'green' && this.state.maintenanceMode) {
       this.tracks[0].blocks[block - 1].switch.setPosition(position);
-    } else if (line === 'red') {
+      this.tracks[0].blocks[block - 1].switch.override = true;
+    } else if (line === 'red' && this.state.maintenanceMode) {
       this.tracks[1].blocks[block - 1].switch.setPosition(position);
+      this.tracks[1].blocks[block - 1].switch.override = true;
     }
+
     this.setState((prevState) => ({
       appState: !prevState.appState,
     }));
@@ -941,7 +1036,8 @@ class TrackController extends React.Component {
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
                         this.tracks[this.state.line].blocks[
-                          this.currBlock.id - 1
+                          this.controllers[this.state.currController].swBlock -
+                            1
                         ].switch.position
                       }`}
                       color={'success'}
@@ -960,9 +1056,10 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {this.tracks[this.state.line].blocks[
+                  {/* {this.tracks[this.state.line].blocks[
                     this.state.currBlock.id - 1
-                  ].maintenanceMode ? (
+                  ].maintenanceMode  */}
+                  {this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.mmMode}
                       label="Maintenence Mode Activated"
@@ -1158,13 +1255,6 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs>
                 <div className="centered">
-                  <TextField
-                    value={this.state.schedule}
-                    onChange={this.schedule}
-                    id="standard-basic"
-                    label="Schedule train"
-                    variant="standard"
-                  />
                   <div style={{ margin: '1rem' }}>
                     <Button
                       className="button"
@@ -1293,9 +1383,10 @@ class TrackController extends React.Component {
                     this.controllers[this.state.currController].swBlock - 1
                   ].switch == undefined ? (
                     <div></div>
-                  ) : this.tracks[this.state.line].blocks[
-                      this.controllers[this.state.currController].swBlock - 1
-                    ].maintenanceMode ? (
+                  ) : // this.tracks[this.state.line].blocks[
+                  //     this.controllers[this.state.currController].swBlock - 1
+                  //   ].maintenanceMode
+                  this.state.maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
@@ -1331,9 +1422,10 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {this.tracks[this.state.line].blocks[
+                  {/* {this.tracks[this.state.line].blocks[
                     this.state.currBlock.id - 1
-                  ].maintenanceMode ? (
+                  ].maintenanceMode  */}
+                  {this.state.maintenanceMode ? (
                     <Chip
                       label="Maintenence Mode Activated"
                       color="warning"
