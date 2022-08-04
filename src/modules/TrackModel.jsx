@@ -85,7 +85,6 @@ let redSendingTrackCircuit = "enabled";
 
 let redCurrBlock = 1; let greenCurrBlock = 1; //  Block that the train model is currently entering // default to 1
 
-let Authority = 0; //  will be given via track controller
 
 //  -----TRACK MODEL CLASS----- //
 
@@ -109,12 +108,17 @@ class TrackModel extends React.Component {
       elevation: 0,
       enviornmentTemp: 0,
       beaconStatus: 'functional',
+      beacon: 'No beacon',
       directionOfTravel: 'forwards',
       trackHeaterStatus: 'disabled',
       trainOccupancy: 25,
       blockOccupancy: 'false',
-      personsAtStation: 10,
-      TransitLightStatus: 'Red',
+      peopleAtStation: 10,
+      peopleLeavingTrain: 0,
+      peopleEnteringTrain: 0,
+      TransitLightStatus: 'Green',
+      crossing: false,
+      peopleAtStation: 0,
 
       // beacon
       beacon: 'defaultBeacon',
@@ -123,8 +127,6 @@ class TrackModel extends React.Component {
       //  is an array of blocks, one block has block info for the track
       blocks: [],
       currBlock: 1, //  Block that the train model is currently entering // default to 1
-
-      Authority: 0, //  will be given via track controller
 
       testUISpeedLimit: 30,
       testUIEnvtemp: 80,
@@ -157,7 +159,7 @@ class TrackModel extends React.Component {
         case 'switch':
           //  only set up for green line rn
           // eslint-disable-next-line no-case-declarations
-          const LINE = payload.line;
+          let LINE = payload.line;
           if(LINE === 'Green')
           {
             greenBlocks[payload.root].next = payload.pointing_to;
@@ -168,12 +170,40 @@ class TrackModel extends React.Component {
             redBlocks[payload.root].next = payload.pointing_to;
             redBlocks[payload.pointing_to].prev = payload.root;
           }
-          break;
-        case 'light':
-          this.state.TransitLightStatus = payload.payload;
         break;
-        case 'authority':
-          Authority = payload.payload;
+        case 'lights':
+          // eslint-disable-next-line no-case-declarations
+          const LINE2 = payload.line;
+          if(LINE2 === 'Green')
+          {
+            if(!(payload.value.isNUll))
+            {
+              console.log('payload.value: ', payload.value);
+              greenBlocks[payload.id].transitLightStatus = payload.value;
+            }
+            
+          }
+          if(LINE2 === 'Red')
+          {
+            if(!(payload.value.isNull))
+            {
+              redBlocks[payload.id].transitLightStatus = payload.value;
+            }
+            
+          }
+        break;
+
+        case 'crossing':
+          //  line, id, and status
+          if(payload.line === "Green")
+          {
+            greenBlocks[payload.id].crossing = payload.status;
+            // console.log('Crossing from message: ', greenBlocks[payload.id].crossing);
+          }
+          if(payload.line === 'Red')
+          {
+            redBlocks[payload.id].crossing = payload.status;
+          }
         break;
 
         //  signals from Train Model
@@ -218,7 +248,6 @@ class TrackModel extends React.Component {
     this.checkTrackFailures = this.checkTrackFailures.bind(this);
     this.getTrackModelArrays = this.getTrackModelArrays.bind(this);
 
-
     //  Create multiple track model instances (one for each line)
     const redLineObject = new Track();
     const greenLineObject = new Track();
@@ -248,6 +277,31 @@ class TrackModel extends React.Component {
     redBlocks.forEach((a) => {a.occupancy = false});
     greenBlocks.forEach((b) => {b.occupancy = false});
 
+    //  check for a track station and generate a random number of people at the station
+    redBlocks.forEach((block) => {
+      if(!(block.stationSide === ""))
+      {
+        //  generate a random amount
+        block.peopleAtStation = Math.floor(Math.random() * 20) + 1;
+      }
+      else
+      {
+        block.peopleAtStation = "null";
+      }
+    });
+
+    greenBlocks.forEach((block) => {
+      if(!(block.stationSide === ""))
+      {
+        //  generate a random amount
+        block.peopleAtStation = Math.floor(Math.random() * 20) + 1;
+      }
+      else
+      {
+        block.peopleAtStation = "null";
+      }
+    });
+
     //  send the track controller an empty set of arrays (block unoccupied)
     window.electronAPI.sendTrackControllerMessage({
       type: 'GreenBlockOccupancy',
@@ -268,25 +322,31 @@ class TrackModel extends React.Component {
     //  instantiate new track object
     console.log('Track File contents: ', trackFile);
 
-    //  assign the line to the lineName property
+    //  assign the line to the state lineName property
     this.state.lineName = trackFile[1].Line;
 
     if(this.state.lineName === 'Red')
-      this.state.blocks = redBlocks;
+      {this.state.blocks = redBlocks;}
     else if(this.state.lineName === 'Green')
-      this.state.blocks = greenBlocks;
+      {this.state.blocks = greenBlocks;}
     //  load the first block by default
-    this.loadBlockInfo(1);
+    this.setState({blockIndex : 1});
+    this.loadBlockInfo();
+    
   
   };
 
   //  Load's blocks information from the Track Model File - alpha = blockIndex
-  loadBlockInfo = (alpha) => {
+  loadBlockInfo = () => {
+    const interval = setInterval(() => {
+    // const alpha = this.state.blockIndex;
     //  convert to imperials for display only
-    const curBlock = this.state.blocks[alpha]; //  get the block selected
+    // eslint-disable-next-line react/no-access-state-in-setstate
+    const curBlock = this.state.blocks[this.state.blockIndex]; //  get the block selected
     const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
     const speedLimitImperial = (curBlock.spdLimit * 0.621371).toFixed(3);
     const elevationImperial = (curBlock.elevation * 3.28084).toFixed(3);
+  
     //  Assign values from the Blocks array to State vars
     this.setState({
       blockLength: blockLengthImperial,
@@ -297,7 +357,51 @@ class TrackModel extends React.Component {
     this.setState({
       elevation: elevationImperial,
     });
-    this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].occupancy;
+   
+    this.state.blockOccupancy = curBlock.occupancy.toString();
+    // console.log(this.state.blockOccupancy.toString());
+    this.setState({
+      beacon: curBlock.beacon,
+    });
+    //  check the status of the line name
+    if(curBlock.line === "Green")
+    {
+      this.setState({enviornmentTemp : greenEVTemp});
+      this.setState({trackHeaterStatus : greenTHStatus});
+    }
+    else if (curBlock.line === "Red")
+    {
+      this.setState({enviornmentTemp : redEVTemp});
+      this.setState({trackHeaterStatus : redTHStatus});
+    }
+    this.setState({
+      crossing: curBlock.crossing,
+    });
+    this.setState({
+      TransitLightStatus: curBlock.transitLightStatus,
+    });
+    this.setState({
+      peopleAtStation : curBlock.peopleAtStation
+    });
+    if(this.state.peopleAtStation === 'null')
+    {
+      this.setState({
+        peopleEnteringTrain : 0,
+        peopleLeavingTrain : 0,
+      });
+    }
+    else
+    {
+      this.setState({
+        peopleEnteringTrain : this.state.peopleAtStation,
+        peopleLeavingTrain : this.state.peopleAtStation,
+      });
+    }
+    
+    this.setState({
+      switchPos : curBlock.next,
+    })
+  }, 1000);
   };
 
   loadFile = (event) => {
@@ -320,7 +424,7 @@ class TrackModel extends React.Component {
     }
   };
 
-  failTrackPower = (event) => {
+  failTrackPower = (event) => {    
     //  check the state of track power and change it
     if (this.state.trackPower === 'functional') {
       this.setState({ trackPower: 'broken' });
@@ -441,6 +545,7 @@ class TrackModel extends React.Component {
       redTHStatus = 'disabled';
     }
 
+
     if (g < 32) {
       greenTHStatus = 'enabled';
     } else if (!(g < 32)) {
@@ -450,8 +555,9 @@ class TrackModel extends React.Component {
 
   //  handle the select change
   handleChange = (event) => {
-    this.state.blockIndex = event.target.value;
-    this.loadBlockInfo(event.target.value);
+    this.setState({blockIndex : event.target.value});
+    // this.state.blockIndex = event.target.value;
+    // this.loadBlockInfo(event.target.value);
   };
 
   resetAllSettings = (event) => {
@@ -651,7 +757,7 @@ class TrackModel extends React.Component {
     let currBlock;
     //  decide whick track is getting updated
 
-    //  find the train ID to update authority
+    //  find the train ID to update
     const ind = trainDispatchArr.findIndex(
       (TrainID) => TrainID === TRAIN_ID
     );
@@ -819,9 +925,8 @@ class TrackModel extends React.Component {
     this.state.enviornmentTemp = enviornmentTemp;
     this.state.trackHeaterStatus = trackHeaterStatus;
     this.state.trainOccupancy = trainOccupancy;
-    this.state.personsAtStation = personsAtStation;
+    // this.state.personsAtStation = personsAtStation;
     // this.state.currBlock = currBlock;
-    this.state.Authority = Authority;
   };
 
   //  Function to get the arrays in the track model
@@ -841,91 +946,11 @@ class TrackModel extends React.Component {
       <Container maxWidth="lg">
         <ThemeProvider theme={darkMode}>
           <Grid container spacing={12} direction="row" justifyContent="center">
-            <Grid item xs={3} justifySelf="center">
+            <Grid item xs={12} justifySelf="center">
               <div className="HeaderText">Test UI</div>
             </Grid>
-          </Grid>
-          <Grid
-            container
-            spacing={1}
-            className="topThreeButtons"
-            direction="row"
-          >
-            <Grid item xs={4}>
-              <Button
-                variant="contained"
-                sx={{ fontSize: 14 }}
-                className="LoadTrack"
-              >
-                <AddIcon /> Load New Track Model
-                <input type="file" />
-              </Button>
-            </Grid>
-            <Grid item xs={4}>
-              <Grid item>
-                <Button
-                  variant="contained"
-                  sx={{ fontSize: 14 }}
-                  onClick={this.toggle}
-                >
-                  {' '}
-                  Toggle Track Model UI
-                </Button>
-              </Grid>
-            </Grid>
-            <Grid item xs={4} spacing={1}>
-              <Button
-                variant="contained"
-                sx={{ fontSize: 14 }}
-                className="RestoreDefaults"
-                onClick={this.resetAllSettings}
-              >
-                Reset to Default Settings
-              </Button>
-            </Grid>
-          </Grid>
-
-          <Grid
-            container
-            spacing={12}
-            className="A few settings"
-            direction="row"
-          >
-            <Grid item xs={4}>
-              <div>Speed limit</div>
-            </Grid>
-            <Grid item xs={4}>
-              <div>{this.state.testUISpeedLimit}</div>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                value={this.state.testUISpeedLimit}
-                onChange={this.testUISpeedLimitFun}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <div>Enviornment Temp</div>
-            </Grid>
-            <Grid item xs={4}>
-              <div>{this.state.testUIEnvtemp}</div>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                value={this.state.testUIEnvtemp}
-                onChange={this.testUIEnvtempFun}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <div>Track Heater Status</div>
-            </Grid>
-            <Grid item xs={4}>
-              <div>{this.state.testUITrackHeaterStatus}</div>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                value={this.state.testUITrackHeaterStatus}
-                onChange={this.testUITrackHeaterStatusFun}
-              />
+            <Grid item xs={6}>
+              <div> People at stations</div>
             </Grid>
           </Grid>
         </ThemeProvider>
@@ -1024,7 +1049,7 @@ class TrackModel extends React.Component {
                 </Grid>
 
                 <Grid item xs={6}>
-                  <div className="label">Switch Position</div>
+                  <div className="label">Next Block</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label"> {this.state.switchPos}</div>
@@ -1057,9 +1082,7 @@ class TrackModel extends React.Component {
                   <div className="label">Block Occupancy</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label" defaultValue="false">
-                    {this.state.blockOccupancy}
-                  </div>
+                  <div className="label">{this.state.blockOccupancy}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Track Heater Status</div>
@@ -1077,19 +1100,43 @@ class TrackModel extends React.Component {
                   <div className="label">Persons at Station</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">{this.state.personsAtStation}</div>
+                  <div className="label">{this.state.peopleAtStation}</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">Beacon Status</div>
+                  <div className="label">Railroad Crossing</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">{this.state.beaconStatus}</div>
+                  <div className="label">{String(this.state.crossing)}</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">Railway Crossing (mi)</div>
+                  <div className="label">People At Station</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">0 miles</div>
+                  <div className="label">{this.state.peopleAtStation}</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">People leaving train</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.peopleLeavingTrain}</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">People entering train</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.peopleEnteringTrain}</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">Beacon</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.beacon}</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">TransitLightStatus</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.TransitLightStatus}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Elevation (feet)</div>
