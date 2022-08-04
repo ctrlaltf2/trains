@@ -223,8 +223,8 @@
     "webpack-merge": "^5.8.0"
   },
   "build": {
-    "productName": "ElectronReact",
-    "appId": "org.erb.ElectronReact",
+    "productName": "PAAC Light Rail System",
+    "appId": "edu.pitt.ece1140",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [
