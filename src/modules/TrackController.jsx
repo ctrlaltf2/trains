@@ -142,8 +142,13 @@ class TrackController extends React.Component {
         // From CTC
         case 'authority':
           // TODO Add other line
-          this.tracks[this.state.line].blocks[payload.block].authority =
+          if (payload.line === 'green'){
+          this.tracks[0].blocks[payload.block_id].authority =
             payload.authority;
+          } else {
+            this.tracks[1].blocks[payload.block_id].authority =
+            payload.authority;
+          }
           break;
         case 'dispatch':
           // Transmit message to track model
@@ -157,7 +162,8 @@ class TrackController extends React.Component {
           // Release mmode and resume plc on the block
           this.CTCMMode(payload.root, payload.line, false);
           break;
-
+        case 'closure':
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -405,7 +411,7 @@ class TrackController extends React.Component {
               }
             }
 
-            // Authority part will be in format '<blockNum>A<authNumber>'
+            // Authority part will be in format '<blockNum>A'
             else if (controller.plc.switchLogic[j].logicTrue[k].includes('A')) {
               // If authority of train on block is less than - return false
               if (
@@ -413,8 +419,7 @@ class TrackController extends React.Component {
                   parseInt(
                     controller.plc.switchLogic[j].logicTrue[k].split('A')[0]
                   ) - 1
-                ].authority <
-                controller.plc.switchLogic[j].logicTrue[k].split('A')[1]
+                ].authority === 0
               ) {
                 status[vitality] = false;
               }
@@ -432,8 +437,6 @@ class TrackController extends React.Component {
           }
 
         }
-        if (controller.line === 'red'){ console.log(status, controller)};
-
         // Vitality check before setting switch position
         // Also send to CTC/Track Model
         if (
