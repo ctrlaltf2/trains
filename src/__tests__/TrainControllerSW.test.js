@@ -6,23 +6,22 @@ test('Train Controller exists', () => {
   expect(TrainControl).toBeTruthy();
 });
 
-test('Train Controller checks current speed bounds', () => {
+test('Train Controller checks suggested speed bounds', () => {
 
 
 
-  TrainControl.trainAttributes[1].currentSpdover = 75;
+  let suggestedSpdover = 75;
 
+  TrainControl.handleCurrentSpeedChange(suggestedSpdover);
+  expect(TrainControl.trainAttributes[1].suggestedSpeed).toBe(43);
 
-  TrainControl.handleCurrentSpeedChange(TrainControl.trainAttributes[1].currentSpdover);
-  expect(TrainControl.currentSpeed).toBe(43);
+  let suggestedSpdunder = -5;
 
-  TrainControl.trainAttributes[1].currentSpdunder = -5;
+  TrainControl.handleCurrentSpeedChange(suggestedSpdunder);
+  expect(TrainControl.trainAttributes[1].suggestedSpeed).toBe(0);
 
-  TrainControl.handleCurrentSpeedChange(TrainControl.trainAttributes[1].currentSpdunder);
-  expect(TrainControl.currentSpeed).toBe(0);
+  let suggestedSpdmiddle = 30;
 
-  TrainControl.trainAttributes[1].currentSpdmiddle = 30;
-
-  TrainControl.handleCurrentSpeedChange(TrainControl.trainAttributes[1].currentSpdmiddle);
-  expect(TrainControl.currentSpeed).toBe('19');
+  TrainControl.handleCurrentSpeedChange(suggestedSpdmiddle);
+  expect(TrainControl.trainAttributes[1].suggestedSpeed).toBe('19');
 });
