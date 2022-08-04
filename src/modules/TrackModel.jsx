@@ -180,11 +180,14 @@ class TrackModel extends React.Component {
 
         case 'crossing':
           //  line, id, and status
-          crossingArray.push ({
-            'line' : payload.line,
-            'id' : payload.id,
-            'status' : payload.status,
-          });
+          if(payload.line === "Green")
+          {
+            greenBlocks[payload.id].crossing = payload.status;
+          }
+          if(payload.line === 'Red')
+          {
+            redBlocks[payload.id].crossing = payload.status;
+          }
         break;
 
         //  signals from Train Model
@@ -311,22 +314,9 @@ class TrackModel extends React.Component {
     this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].occupancy;
 
     //  check if the current block has a railroad crossing
-    if(this.lineName === "Red")
-    {
-      const cross = crossingArray.indexOf({
-        id: alpha,
-        line: 'Red',
-      });
-      this.state.crossing = cross.status;
-    }
-    else if(this.lineName === "Green")
-    {
-      const cross = crossingArray.indexOf({
-        id: alpha,
-        line: 'Green',
-      });
-      this.state.crossing = cross.status;
-    }
+    console.log('Cross should appear under here');
+    console.log('Cross', curBlock.crossing);
+    this.state.crossing = curBlock.crossing;
   };
 
   loadFile = (event) => {
