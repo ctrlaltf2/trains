@@ -155,6 +155,7 @@ class TrackController extends React.Component {
           window.electronAPI.sendTrackModelMessage(payload);
           break;
         case 'suggestedSpeed':
+          window.electronAPI.sendTrackModelMessage(payload);
           break;
         case 'switchOverride':
           // Set mmode for the block, override switch
@@ -904,6 +905,31 @@ class TrackController extends React.Component {
         ].switch.outBlockHigh
       );
     }
+
+    window.electronAPI.sendTrackModelMessage({
+      type: 'switch',
+      line: this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].line,
+      root: this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.swBlock.toString(),
+      pointing_to: this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch._position,
+    });
+    window.electronAPI.sendCTCMessage({
+      type: 'switch',
+      line: this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].line,
+      root: this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch.swBlock.toString(),
+      pointing_to: this.tracks[this.state.line].blocks[
+        this.controllers[this.state.currController].swBlock - 1
+      ].switch._position,
+    });
 
     this.setState((prevState) => ({
       appState: !prevState.appState,
