@@ -715,7 +715,6 @@
     "Block Length (m)": "50",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "30",
-    "Infrastructure": "SWITCH  (62-0; 62-63)",
     "ELEVATION (M)": "0",
     "CUMALTIVE ELEVATION (M)": "0.5",
     "seconds to traverse block": "6.0"
@@ -727,6 +726,7 @@
     "Block Length (m)": "100",
     "Block Grade (%)": "0",
     "Speed Limit (Km/Hr)": "70",
+    "Infrastructure": "SWITCH  (63-0; 63-62)",
     "ELEVATION (M)": "0",
     "CUMALTIVE ELEVATION (M)": "0.5",
     "seconds to traverse block": "5.1"
@@ -1727,11 +1727,5 @@
     "ELEVATION (M)": "0",
     "CUMALTIVE ELEVATION (M)": "0.5",
     "seconds to traverse block": "6.3"
-  },
-  {
-    "seconds to traverse block": "4.846153846"
-  },
-  {
-    "seconds to traverse block": "4.038461538"
   }
 ]

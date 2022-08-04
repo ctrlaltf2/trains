@@ -7,9 +7,6 @@ class Train {
   /** Line that the train is on */
   readonly line: string;
 
-  /** Destination block (station | graph edge) */
-  destination_block: Block;
-
   /** Speed the train should move forward at. */
   command_speed: number;
 
@@ -22,10 +19,12 @@ class Train {
   /** Authority table */
   auth_table: any;
 
-  constructor(id: string, line: string, destination_block: Block, command_speed: number, authority: number, route: Block[]) {
+  /** Speed table, map block_str -> speed for that block **/
+  speed_table: any;
+
+  constructor(id: string, line: string, command_speed: number, authority: number, route: Block[]) {
     this.id = id;
     this.line = line;
-    this.destination_block = destination_block;
     this.command_speed = command_speed;
     this.authority = authority;
     this.route = route;

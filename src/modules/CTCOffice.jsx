@@ -10,12 +10,16 @@ import {
   FormControlLabel,
   Box,
   Typography,
+  IconButton,
 } from '@mui/material';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import { styled } from '@mui/material/styles';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+
 import cytoscape from 'cytoscape';
 
 import _ from 'lodash';
@@ -84,14 +88,15 @@ class CTCOffice extends React.Component {
     window.electronAPI.subscribeTimerMessage( (_event, payload) => {
       this.now = payload.timestamp;
       this.checkShouldDispatch();
+      this.checkShouldSendAuthority();
     });
 
     this.state = {
       UIMode: UIState.Main,
       isDispatchModalOpen: false,
       throughput: {
-        'red': 0,
-        'green': 1,
+        'red': '-',
+        'green': '-',
       },
       testUI: {
         lineSelection: undefined,
@@ -99,13 +104,13 @@ class CTCOffice extends React.Component {
         blockSelection: undefined,
         throughputValue: undefined,
       },
-      occupancy: { // occupancy[line][block_id] = is_occupied: bool
+      occupancy: { // occupancy[line][block_id] = is_occupied: trainID of occupee
         'red': {},
         'green': {},
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
         'red': {
-          '1-15-16':   new TrackSwitch(undefined, '1',  ['15', '16']),
+          '1-15-16':   new TrackSwitch(undefined, '15', ['1', ' 16']),
           '27-28-76':  new TrackSwitch(undefined, '27', ['28', '76']),
           '32-33-72':  new TrackSwitch(undefined, '33', ['32', '72']),
           '38-39-71':  new TrackSwitch(undefined, '38', ['39', '71']),
@@ -124,6 +129,10 @@ class CTCOffice extends React.Component {
         },
       },
       closures: { // closures[line][block_id] = is_closed;
+        'red': {},
+        'green': {},
+      },
+      switchesOverridden: {
         'red': {},
         'green': {},
       },
@@ -153,11 +162,13 @@ class CTCOffice extends React.Component {
       )
     };
     this.trainPositions = {
+      'red': {},
+      'green': {},
     }; // str(train id) -> str(block_id)
 
     this.systemMapRef = React.createRef();
     this.pendingDispatches = {}; // timestamp to send off
-    this.pendingAuthorities = {}; // timestamp to send
+    this.pendingAuthorities = []; // { time, train_id, authority }
 
     // Off-screen cytoscape element for routing algos and other shenanigans
     // Indexed by line
@@ -173,8 +184,8 @@ class CTCOffice extends React.Component {
     const range = (start, stop, step) => Array.from({ length: (stop - start) / step + 1}, (_, i) => start + (i * step));
     this.route_lookup = {
       'green': {
-        '(yard-enter)': [152],
-        '(yard-exit)': [151],
+        '(yard-enter)': [151],
+        '(yard-exit)': [0],
         '(yard-Glenbury)': [63, 64],
         'Glenbury::S': [65],
         '(Glenbury-Dormont)': range(66, 72, 1),
@@ -240,7 +251,7 @@ class CTCOffice extends React.Component {
         'First Ave.::U': [45],
         'Steel Plaza::U': [35],
         'Penn Station::U': [25],
-        '(yard-exit)': [151],
+        '(yard-exit)': [0],
         '(yard-Shadyside)': [9, 8],
         'Shadyside::D': [7],
         '(Shadyside-Herron Ave.)': range(6, 1, -1),
@@ -255,7 +266,7 @@ class CTCOffice extends React.Component {
         '(Herron Ave.-Shadyside)': range(1, 6, 1),
         'Shadyside::U': [7],
         '(Shadyside-yard)': [8, 9],
-        '(yard-enter)': [152],
+        '(yard-enter)': [0],
         '(yard-Herron Ave.)': range(10, 15, 1)
       }
     };
@@ -298,12 +309,12 @@ class CTCOffice extends React.Component {
     this.control_points = {
       'green': {
         '57': {
-          '152': 1 // Going from 57 to 152 requires authority 1 at 57
+          '151': 1 // Going from 57 to 152 requires authority 1 at 57
         }
       },
       'red': {
         '9': {
-          '152': 1 // Going from 9 to 152 requires authority 1 at 9
+          '0': 1 // Going from 9 to 152 requires authority 1 at 9
         }
       }
     };
@@ -311,21 +322,14 @@ class CTCOffice extends React.Component {
     this.initCy();
   }
 
-  // too complex for unit tests?
+  // tested
   checkShouldDispatch() {
     const deleted = [];
     for(const pendingTimestamp_ of Array.from(Object.keys(this.pendingDispatches))) {
       const pendingTimestamp = parseFloat(pendingTimestamp_);
 
-      if(this.now < pendingTimestamp) {
-        const payload = {
-          type: 'dispatch',
-          value: this.pendingDispatches[pendingTimestamp]
-        };
-
-        console.log('Sending dispatch message of ', payload);
-
-        window.electronAPI.sendTrackControllerMessage(payload);
+      if(this.now > pendingTimestamp) {
+        this.sendDispatchMessage(this.pendingDispatches[pendingTimestamp]);
 
         deleted.push(pendingTimestamp_);
 
@@ -338,8 +342,44 @@ class CTCOffice extends React.Component {
     }
   }
 
+  checkShouldSendAuthority() {
+    // Send things that need to be sent
+    const sentItems = [];
+    for(let i = 0; i < this.pendingAuthorities.length; ++i) {
+      const scheduledAuth = this.pendingAuthorities[i];
+      if(this.now > scheduledAuth.timestamp) {
+        this.sendAuthorityMessage(train_id, authority);
+        sentItems.push(i);
+      }
+    }
+
+    // Remove ones that got sent
+    this.pendingAuthorities = this.pendingAuthorities.filter( (_, index) => {
+      return !(sentItems.includes(index));
+    });
+  }
+
+  // tested
+  sendDispatchMessage(train) {
+    const payload = {
+      type: 'dispatch',
+      train: train
+    };
+
+    window.electronAPI.sendTrackControllerMessage(payload);
+  }
+
+  sendAuthorityMessage(train_id, authority) {
+    // TODO: Check this is the right module
+    window.electronAPI.sendTrainControllerMessage({
+      'type': 'authority',
+      'train': train_id,
+      'value': authority,
+    });
+  }
+
   // With list of stations, generate a route/path of blocks to go to meet station ordering
-  // TODO: test
+  // tested
   generateYardRoute(line, stations, return_last = false) {
     const windowedSlice = function(arr, size) {
       let result = [];
@@ -361,6 +401,9 @@ class CTCOffice extends React.Component {
     for(let station_pair of windowedSlice(stations, 2)) {
       // Get best route from previous stop segment to next station
       let route = this.getIntersegmentRoute(line, previous_segment, station_pair[1]);
+
+      // Pop off the first segment, since that was covered in the previous loop/initial route
+      route = route.slice(1);
 
       // Add to segment-routes
       segment_route = segment_route.concat(...route);
@@ -427,7 +470,7 @@ class CTCOffice extends React.Component {
     const authority_table = this.getAuthorityTable(line, route, this.getStationStops(line, route, [station]), [10*1000]);
 
     // Generate a safe speed table (safe meaning that it's easy for train to stop, when it respects commanded speed)
-    const speed_table = this.generateSpeedTable(line, route);
+    let speed_table = this.generateSpeedTable(line, route);
     const safe_speed_table = this.makeSpeedTableSafe(speed_table);
 
     // Get travel time, used for timing dispatch at the right time
@@ -442,6 +485,7 @@ class CTCOffice extends React.Component {
     // And get a return path- send it at full speed who cares when it gets back to the yard
     const return_segment_path = this.getIntersegmentRoute(line, last_segment, '(yard-enter)');
     const return_block_path = this.resolveSegmentRoutes(line, return_segment_path);
+    speed_table = speed_table.concat(this.generateSpeedTable(line, return_block_path));
 
     // commanded speed here == speed_limit
     const return_authority_table = this.getAuthorityTable(line, return_block_path, [], []);
@@ -460,23 +504,24 @@ class CTCOffice extends React.Component {
     const pain = new Train( // constant pain from trains
       this.nextTrainID,
       line,
-      'unused - refactor',
       75,
-      1, // TODO: Settle on a good authority
+      1,
       total_route
     );
 
     pain.auth_table = total_auth;
+    pain.speed_table = speed_table;
+
+    console.log(pain);
 
     this.pendingDispatches[leave_time] = pain;
 
     ++this.nextTrainID;
-
-    // console.log('Dispatch pending: ', pain, ' at ', leave_time, 'ms.');
   }
 
   // TODO: test
   getAuthorityTable(line, block_route, blocks_stopped_at = [], stop_times = []) {
+    console.log(line, block_route, blocks_stopped_at, stop_times);
     const control_points = this.control_points[line];
 
     // Get indexes in route where the train will have to drop its authority to 0 (not necessarily stop)
@@ -511,6 +556,8 @@ class CTCOffice extends React.Component {
         }
       }
     }
+
+    console.log(auth_0);
 
     // Initialize with yard-to-first-auth-0 stop
     const auth_table = [
@@ -551,12 +598,12 @@ class CTCOffice extends React.Component {
       if(auth_stop.type === 'control') {
         auth_table.push({
           authority: auth_stop.auth_there,
-          wait_next_authority: 0
+          wait_next_authority: 1000
         });
 
         auth_table.push({
           authority: auth_next_stop.block_route_i - auth_stop.block_route_i + 1,
-          wait_next_authority: (auth_next_stop.type === 'stop') ? auth_next_stop.wait_next_authority : 0
+          wait_next_authority: (auth_next_stop.type === 'stop') ? auth_next_stop.wait_next_authority : 1000
         });
       }
     }
@@ -746,27 +793,49 @@ class CTCOffice extends React.Component {
    * Given an occupancy change on a block, infer a train movement
    */
   inferTrainMovement(line, block_id, new_occupancy) {
-    const graph_model_lite = this.cy_display[line];
+    if(new_occupancy === false) { // A train left a block
+      // Find train that was on that block
+      for(const [train_id, current_position_list] of Object.entries(this.trainPositions[line])) {
+        const back = current_position_list.slice(-1);
+        const current_positions_str = current_position_list.map( e => { return e.toString(); });
 
-    // Based on display graph's flow, get every possible edge source for this update (incl. switches- needs filtered for these still)
-    const all_possible_source_edges = graph_model_lite.$(`edge[block_id = '${block_id}']`).sources().incomers().edges(`edge[block_id != '${block_id}']`);
+        // Pop its occupancy from it
+        if(current_positions_str.includes(back.toString())) {
+          this.trainPositions[line][train_id].pop();
+          return train_id;
+        }
+      }
 
-    // Filter out invalid movements based on switch restrictions
-    const possible_sources = all_possible_source_edges.filter( (edge) => {
-      if(this.isInvalidSwitchMovement(line, edge.data('block_id'), block_id))
-        return false;
+      return undefined;
+    } else { // A train entered a block
+      const graph_model_lite = this.cy_display[line];
 
-      return true;
-    }).map( (edge) => {
-      return edge.data('block_id');
-    });
+      // Based on display graph's flow, get every possible edge source for this update (incl. switches- needs filtered for these still)
+      const all_possible_source_edges = graph_model_lite.$(`edge[block_id = '${block_id}']`).sources().incomers().edges(`edge[block_id != '${block_id}']`);
 
-    for(const [train_id, current_block_id] of Object.entries(this.trainPositions)) {
-      if(possible_sources.includes(current_block_id))
-        return train_id;
+      // Filter out invalid movements based on switch restrictions
+      const possible_sources = all_possible_source_edges.filter( (edge) => {
+        if(this.isInvalidSwitchMovement(line, edge.data('block_id'), block_id))
+          return false;
+
+        return true;
+      }).map( (edge) => {
+        return edge.data('block_id').toString();
+      });
+
+      for(const [train_id, current_position_list] of Object.entries(this.trainPositions[line])) {
+        const front = current_position_list[0];
+
+        if(possible_sources.includes(front.toString())) {
+          // Add block to front of array
+          this.trainPositions[line][train_id].unshift(block_id.toString());
+          console.log(`Train with id '`, train_id, `' with front on block`, front, 'now has leading block', block_id);
+          return train_id;
+        }
+      }
+
+      return undefined;
     }
-
-    return undefined;
   }
 
   // too complex to unit test?
@@ -784,17 +853,54 @@ class CTCOffice extends React.Component {
       // Decrement authority on train object
       this.trains[train_id].authority--;
 
-      if(this.trains[train_id].authority == 0) {
+      if(this.trains[train_id].authority === 0) {
         const next_auth = this.trains[train_id].auth_table[0];
+        // Send (block_id, authority) to TC
+        // Workaround until TrainModel relays its authority down to nearby waysides
+        window.electronAPI.sendTrackControllerMessage({
+          type: 'authority',
+          line: line,
+          block_id: block_id,
+          authority: 0,
+        });
+
         if(next_auth)
-          scheduleAuthoritySend(next_auth.authority, next_auth.wait_next_authority);
+          scheduleAuthoritySend(train_id, next_auth.authority, this.now + next_auth.wait_next_authority);
       }
+
+      this.sendSuggestedSpeedMessage(train_id, block_id);
     }
   }
 
-  // too complex to unit test?
-  scheduleAuthoritySend(authority, delay) {
-    
+  // Called when a train moves onto a block on its route
+  sendSuggestedSpeedMessage(train_id, block_id) {
+    // Get the suggested speed to send
+    const train = this.trains[train_id];
+    if(train === undefined) {
+      console.log("Warning: unknown train ID in sendSuggestedSpeedMessage '", train_id, "'");
+      return;
+    }
+
+    const speed_mps = this.trains[train_id].speed_table[block_id];
+    if(!(speed_mps >= 0)) { // undefined
+      console.log("Warning: unknown speed for (train_id, block_id) = ", train_id, block_id);
+      return;
+    }
+
+    const value_in_kmh = speed_mps * 3.6;
+    window.electronAPI.sendTrainControllerMessage({
+      payload: 'suggestedSpeed',
+      suggestedSpeed: value_in_kmh
+    });
+  }
+
+  // trivial, no test
+  scheduleAuthoritySend(train_id, authority, when) {
+    this.pendingAuthorities.append({
+      timestamp: when,
+      authority: authority,
+      train_id: train_id
+    });
   }
 
   // too trivial to be worth testing?
@@ -850,6 +956,30 @@ class CTCOffice extends React.Component {
         ...this.state.testUI,
         blockSelection: ev.target.value
       }
+    });
+  }
+
+  handleMapSwitcherClick() {
+    const { activeLine } = this.state;
+
+    if(activeLine === 'red')
+      this.setState({
+        activeLine: 'green'
+      });
+    else
+      this.setState({
+        activeLine: 'red'
+      });
+
+    // Clean up modals and stuff
+    this.setState({
+      lineSelection: undefined,
+      blockSelection: undefined,
+      trainSelection: undefined,
+      editingSwitch: undefined,
+      editingBlock: undefined,
+      switchModalOpen: false,
+      blockModalOpen: false
     });
   }
 
@@ -1021,6 +1151,7 @@ class CTCOffice extends React.Component {
       closures,
       switchGoingToPosition,
       activeLine,
+      switchesOverridden,
     } = this.state;
 
     const { lineSelection, blockSelection } = this.state.testUI;
@@ -1039,6 +1170,28 @@ class CTCOffice extends React.Component {
               <div className="throughputLabel" id="greenLineLabel">Green Line Throughput</div>
               <div className="throughputValue" id="greenLineValue">{greenLineThroughput} trains/hr</div>
             </div>
+          </div>
+          <div id="leftMapToggle" className="floating">
+            <IconButton
+              color="default"
+              aria-label="switch map"
+              component="span"
+              size="large"
+              onClick={() => { this.handleMapSwitcherClick(); }}
+            >
+              <ChevronLeftIcon/>
+            </IconButton>
+          </div>
+          <div id="rightMapToggle" className="floating">
+            <IconButton
+              color="default"
+              aria-label="switch map"
+              component="span"
+              size="large"
+              onClick={() => { this.handleMapSwitcherClick(); }}
+            >
+              <ChevronRightIcon/>
+            </IconButton>
           </div>
           <div id="bottomLeftButtonGroup" className="floating">
             <FormGroup id="manualModeGroup">
@@ -1081,7 +1234,7 @@ class CTCOffice extends React.Component {
                   }}
                 />
                 <Button variant="contained" component="span">
-                  Upload
+                  Upload Schedule
                 </Button>
               </label>
             </label>
@@ -1159,7 +1312,7 @@ class CTCOffice extends React.Component {
                         >
                           {
                             lineSelection ?
-                              Array.from(new Set(Object.values(this.stations[activeLine]))).map((block_id) => {
+                              Array.from(new Set(Object.values(this.stations[lineSelection.toLowerCase()]))).map((block_id) => {
                                 return <MenuItem value={block_id}>{block_id}</MenuItem>;
                               })
                               :
@@ -1241,30 +1394,92 @@ class CTCOffice extends React.Component {
                 <Typography variant="h6" component="h2">
                   Editing Switch {editingSwitch}
                 </Typography>
-                {
-                  editingSwitch ?
-                    <p>Coming from block {switches[activeLine][editingSwitch].coming_from}</p>
-                  :
-                    []
-                }
-                <FormControl id="switchPositionCombobox">
-                  <InputLabel id="switch-to-label">Set Going To</InputLabel>
-                  <Select
-                    labelId="block-select-label"
-                    value={switchGoingToPosition}
-                    label="Set Going To"
-                    onChange={(ev, elem) => {}}
-                  >
+                <div id="switchControlGroup">
+                  {
+                    editingSwitch ?
+                      <p>Join {switches[activeLine][editingSwitch].coming_from} to </p>
+                    :
+                      []
+                  }
+                  <FormControl id="switchPositionCombobox">
                     {
-                      editingSwitch ?
-                        switches[activeLine][editingSwitch].going_to_options.map( (sw) => {
-                          return <MenuItem value={sw}>{sw}</MenuItem>;
-                        })
-                        :
-                        []
+                      switchesOverridden[activeLine][editingSwitch] ?
+                        <Select
+                          labelId="block-select-label"
+                          value={switches[activeLine][editingSwitch]._going_to || ''}
+                          label="join root to"
+                          onChange={(ev, elem) => {
+                            console.log(switches);
+                            // Get value selected
+                            const point_to = ev.target.value;
+
+                            // Update state
+                            const switches_ = _.cloneDeep(switches);
+                            console.log(switches_[activeLine][editingSwitch]);
+                            switches_[activeLine][editingSwitch]._going_to = point_to;
+
+                            this.setState({
+                              switches: switches_,
+                            });
+
+                            window.electronAPI.sendTrackControllerMessage({
+                              'type': 'switchOverride',
+                              'line': activeLine,
+                              'root': switches[activeLine][editingSwitch].coming_from,
+                              'goingTo': point_to,
+                            });
+                          }}
+                        >
+                        {
+                          editingSwitch ?
+                            switches[activeLine][editingSwitch].going_to_options.map( (sw) => {
+                              return <MenuItem value={sw}>{sw}</MenuItem>;
+                            })
+                            :
+                            []
+                        }
+                        </Select>
+                      :
+                        <Select
+                          disabled={true}
+                          labelId="block-select-label"
+                          value={(switches[activeLine][editingSwitch] && switches[activeLine][editingSwitch]._going_to) || ''}
+                          label="join root to"
+                          onChange={(ev, elem) => {}}
+                        >
+                          {
+                            editingSwitch ?
+                              switches[activeLine][editingSwitch].going_to_options.map( (sw) => {
+                                return <MenuItem value={sw}>{sw}</MenuItem>;
+                              })
+                              :
+                              []
+                          }
+                        </Select>
                     }
-                  </Select>
-                </FormControl>
+                  </FormControl>
+                  <FormControlLabel
+                    checked={switchesOverridden[activeLine][editingSwitch]}
+                    control={<Switch onChange={(ev) => {
+                      const switchesOverridden_ = _.cloneDeep(switchesOverridden);
+                      switchesOverridden_[activeLine][editingSwitch] = !!ev.target.checked;
+
+                      // Ending maintenance mode
+                      if(!ev.target.checked) {
+                        // Send reset message
+                        const root = switches[activeLine][editingSwitch].coming_from;
+                        window.electronAPI.sendTrackControllerMessage({
+                          type: 'releaseMaintenanceMode',
+                          line: activeLine,
+                          root: root
+                        });
+                      }
+
+                      this.setState({
+                        switchesOverridden: switchesOverridden_,
+                      });
+                  }}/>} label="Maintenance Mode"/>
+                </div>
               </div>
             </Box>
           </Modal>
