@@ -30,7 +30,7 @@ import { Wayside } from './Wayside.ts';
 import greenLine from './TrackComponents/TrackJSON/VF2/green.json';
 import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 
-// plc for quicker testing. Can upload individual files 
+// plc for quicker testing. Can upload individual files
 // green plc
 import SW13 from './PLC/Green/SW13.json';
 import SW29 from './PLC/Green/SW29.json';
@@ -161,6 +161,8 @@ class TrackController extends React.Component {
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
+
+      console.log(this.controllers);
     });
 
     // Initialize controllers and tracks
@@ -183,7 +185,7 @@ class TrackController extends React.Component {
     // console.log(this.trackRed.sections);
     this.currTrack = this.tracks[0];
 
-    // State variables 
+    // State variables
     this.state = {
       testMode: false,
       track: this.trackGreen,
@@ -377,7 +379,7 @@ class TrackController extends React.Component {
       } else if (controller.line === 'red') {
         line = 1;
       }
-      
+
       for (let j = 0; j < controller.plc.switchLogic.length; j++) {
         // Run 3x for vitality
         status = [true, true, true];
@@ -386,7 +388,7 @@ class TrackController extends React.Component {
             let k = 0;
             k < controller.plc.switchLogic[j].logicTrue.length;
             k++
-          ) { 
+          ) {
             // AND
             if (controller.plc.switchLogic[j].logicTrue[k] === '&&') {
             }
@@ -441,7 +443,7 @@ class TrackController extends React.Component {
         //     this.tracks[line].blocks[
         //       parseInt(controller.plc.switchLogic[j].switchNumber) - 1
         //     ].switch.override === false)
-        // ) 
+        // )
         {
           if (status.every((val) => val === true)) {
             if (
@@ -1391,10 +1393,9 @@ class TrackController extends React.Component {
                     this.controllers[this.state.currController].swBlock - 1
                   ].switch == undefined ? (
                     <div></div>
-                  ) : // this.tracks[this.state.line].blocks[
-                  //     this.controllers[this.state.currController].swBlock - 1
-                  //   ].maintenanceMode
-                  this.state.maintenanceMode ? (
+                  ) :  this.tracks[this.state.line].blocks[
+                      this.controllers[this.state.currController].swBlock - 1
+                    ].maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
@@ -1430,10 +1431,10 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {/* {this.tracks[this.state.line].blocks[
+                  {this.tracks[this.state.line].blocks[
                     this.state.currBlock.id - 1
-                  ].maintenanceMode  */}
-                  {this.state.maintenanceMode ? (
+                  ].maintenanceMode
+                  ? (
                     <Chip
                       label="Maintenence Mode Activated"
                       color="warning"
