@@ -357,7 +357,9 @@ class TrackModel extends React.Component {
     this.setState({
       elevation: elevationImperial,
     });
-    this.state.blockOccupancy = curBlock.occupancy;
+   
+    this.state.blockOccupancy = curBlock.occupancy.toString();
+    // console.log(this.state.blockOccupancy.toString());
     this.setState({
       beacon: curBlock.beacon,
     });
