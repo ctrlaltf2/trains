@@ -114,7 +114,7 @@ class TrackModel extends React.Component {
       trainOccupancy: 25,
       blockOccupancy: 'false',
       personsAtStation: 10,
-      TransitLightStatus: 'Red',
+      TransitLightStatus: 'Green',
       crossing: false,
 
       // beacon
@@ -156,7 +156,7 @@ class TrackModel extends React.Component {
         case 'switch':
           //  only set up for green line rn
           // eslint-disable-next-line no-case-declarations
-          const LINE = payload.line;
+          let LINE = payload.line;
           if(LINE === 'Green')
           {
             greenBlocks[payload.root].next = payload.pointing_to;
@@ -167,9 +167,28 @@ class TrackModel extends React.Component {
             redBlocks[payload.root].next = payload.pointing_to;
             redBlocks[payload.pointing_to].prev = payload.root;
           }
-          break;
-        case 'light':
-          this.state.TransitLightStatus = payload.payload;
+        break;
+        case 'lights':
+          // eslint-disable-next-line no-case-declarations
+          const LINE2 = payload.line;
+          console.log(payload.value);
+          if(LINE2 === 'Green')
+          {
+            if(!(payload.value.isNUll))
+            {
+              console.log('payload.value: ', payload.value);
+              greenBlocks[payload.id].transitLightStatus = payload.value;
+            }
+            
+          }
+          if(LINE2 === 'Red')
+          {
+            if(!(payload.value.isNull))
+            {
+              redBlocks[payload.id].transitLightStatus = payload.value;
+            }
+            
+          }
         break;
 
         case 'crossing':
@@ -328,6 +347,9 @@ class TrackModel extends React.Component {
     }
     this.setState({
       crossing: curBlock.crossing,
+    });
+    this.setState({
+      TransitLightStatus: curBlock.transitLightStatus,
     });
   }, 1000);
   };
@@ -1117,7 +1139,13 @@ class TrackModel extends React.Component {
                   <div className="label">{String(this.state.crossing)}</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">Underground Status</div>
+                  <div className="label">People leaving train</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.Underground}</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">People entering train</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">{this.state.Underground}</div>
@@ -1127,6 +1155,12 @@ class TrackModel extends React.Component {
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">{this.state.beacon}</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">TransitLightStatus</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.TransitLightStatus}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Elevation (feet)</div>
