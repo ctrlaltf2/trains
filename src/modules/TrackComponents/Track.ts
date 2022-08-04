@@ -35,9 +35,9 @@ export class Track {
           file[key]['CUMALTIVE ELEVATION(M)'],
           file[key].Infrastructure,
           file[key].Oneway,
-          'no underground data',
+          'false',
           file[key]['Station Side'],
-          'no crossing data',
+          'false',
           file[key].Prev,
           file[key].Next
         )
@@ -75,7 +75,7 @@ export class Track {
 
         //  If station is included, tell if left or right of track
         let dir;
-        const stationSide = this.blocks[i]['Station Side'];
+        const stationSide = this.blocks[i].stationSide;
         switch (stationSide) {
           case 'Left/Right':
             dir = 'b';
