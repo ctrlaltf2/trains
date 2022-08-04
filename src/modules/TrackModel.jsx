@@ -73,6 +73,11 @@ let enteredBlock = false;
 let exitedBlock = false;
 
 let lineName = '';
+
+//  sending track circuits
+let greenSendingTrackCircuit = "enabled";
+let redSendingTrackCircuit = "enabled";
+
 // let enviornmentTemp = 0;
 // let trackHeaterStatus = 'disabled';
 // let trainOccupancy = 25;
@@ -208,8 +213,8 @@ class TrackModel extends React.Component {
 
     this.trainModelHandshake = this.trainModelHandshake.bind(this);
     this.sendYardExitInfo = this.sendYardExitInfo.bind(this);
-    this.sendGreenMessages = this.sendGreenMessages.bind(this);
-    this.sendRedMessages = this.sendRedMessages.bind(this);
+    // this.sendGreenMessages = this.sendGreenMessages.bind(this);
+    // this.sendRedMessages = this.sendRedMessages.bind(this);
     this.checkTrackFailures = this.checkTrackFailures.bind(this);
     this.getTrackModelArrays = this.getTrackModelArrays.bind(this);
 
@@ -240,12 +245,19 @@ class TrackModel extends React.Component {
     this.checkTrackHeaters(redEVTemp, greenEVTemp);
 
     //  make the default block occupancy unoccupied
-    redBlocks.forEach((a) => {a.Occupied = 'Unoccupied'});
-    greenBlocks.forEach((b) => {b.Occupied = 'Unoccupied'});
+    redBlocks.forEach((a) => {a.occupancy = false});
+    greenBlocks.forEach((b) => {b.occupancy = false});
 
-    //  send messages to the other modules based on the information in the Track Classes
-    this.sendGreenMessages(greenLineObject);
-    this.sendRedMessages(redLineObject);
+    //  send the track controller an empty set of arrays (block unoccupied)
+    window.electronAPI.sendTrackControllerMessage({
+      type: 'GreenBlockOccupancy',
+      GreenBlocks: greenBlocks,
+    });
+
+    window.electronAPI.sendTrackControllerMessage({
+      type: 'RedBlockOccupancy',
+      RedBlocks: redBlocks,
+    });
 
     //  start checking for track errors
     this.checkTrackFailures();
@@ -285,7 +297,7 @@ class TrackModel extends React.Component {
     this.setState({
       elevation: elevationImperial,
     });
-    this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].Occupied;
+    this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].occupancy;
   };
 
   loadFile = (event) => {
@@ -364,8 +376,25 @@ class TrackModel extends React.Component {
   changeSendingTrackCircuit = (event) => {
     if (this.state.sendingTrackCircuit === 'functional') {
       this.setState({ sendingTrackCircuit: 'broken' });
+
+      //  check the trackLine and if green, update green, else if red, update red
+      if(this.state.lineName === "Green")
+      {
+        greenSendingTrackCircuit = "disabled";
+      }
+      else{
+        redSendingTrackCircuit = "disabled";
+      }
     } else {
       this.setState({ sendingTrackCircuit: 'functional' });
+      //  check the trackLine and if green, update green, else if red, update red
+      if(this.state.lineName === "Green")
+      {
+        greenSendingTrackCircuit = "enabled";
+      }
+      else{
+        redSendingTrackCircuit = "enabled";
+      }
     }
   };
 
@@ -458,148 +487,154 @@ class TrackModel extends React.Component {
   //  send leaving yard info
   sendYardExitInfo = (trainID, trackLine) => {
     //  send message to train model about leaving the yard
-    window.electronAPI.sendTrackModelMessage({
-      type: 'exitYard',
-      // trainID: trainDispatchArr[]
-      trainID,
-      trackLine
-    });
-  };
-
-  //  ----MIGHT NOT NEED-----//
-  //  update block occupancy
-  // updateBlockOccupancy = (payload) => {
-  //   //  need to get the payload message and upate the block occupancy
-  //   const interval = setInterval(() => {
-  //     // if (payload.Enter !== null) blocks[currBlock].Occupied = true;
-  //     // if (payload.Leave !== null) blocks[currBlock].Occupied = false;
-  //   }, 10000);
-  // };
-
-  //  need to send messages based on block info that train is entering
-  sendGreenMessages = (greenObj) => {
-    const interval = setInterval(() => {
-      //  Track rail Status GreenLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'GreenlineRailStatus',
-        RailStatus: greenRailStatus,
-      });
-
-      //  Tracks block occupancy
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'GreenBlockOccupancy',
-        GreenBlocks: greenBlocks,
-      });
-
-    }, 1000);
-  };
-
-  sendRedMessages = (redObj) => {
-    const interval = setInterval(() => {
-      //  Track rail Status RedLine
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'RedlineRailStatus',
-        RailStatus: redRailStatus,
-      });
-
-      //  Tracks block occupancy
-      window.electronAPI.sendTrackControllerMessage({
-        type: 'RedBlockOccupancy',
-        RedBlocks: redBlocks,
-      });
-    }, 1000);
+    //  check the status of the sendingCircuits
+    if(trackLine === "Green"){
+      if(greenSendingTrackCircuit === 'enabled')
+      {
+        window.electronAPI.sendTrainModelMessage({
+          type: 'exitYard',
+          // trainID: trainDispatchArr[]
+          trainID,
+          trackLine
+        });
+      }
+    }
+    else if(trackLine === "Red"){
+      if(redSendingTrackCircuit === 'enabled')
+      {
+        window.electronAPI.sendTrainModelMessage({
+          type: 'exitYard',
+          // trainID: trainDispatchArr[]
+          trainID,
+          trackLine
+        });
+      }
+    }
+    
   };
 
   //  GETS TRIGGERED IN CONSTRUCTOR, CHECKS FOR TRACK FAILURES
   checkTrackFailures = () =>
   {
-    let trainIDs = [];
-    //  check the red line
-    if(redTrackPowerStatus === 'broken' || redTrackSignalPickup === 'broken' || redRailStatus === 'broken')
-    {
+    const interval = setInterval(() => {
+      let trainIDs = [];
 
-      //  check for the trains that need to stop
-      for( let t = 0; t < trainDispatchArr.length; t++)
+      //  CHECK THE RED LINE
+      if(redTrackPowerStatus === 'broken' || redTrackSignalPickup === 'broken' || redRailStatus === 'broken')
       {
-        if(trainDispatchArr[t].trackLine === 'Red')
+        //  check if the red rail is broken
+        if(redRailStatus === 'broken')
         {
-          //  add the train IDs to be stopped
-          trainIDs.push(trainDispatchArr[t].TrainID);
+          //  Track rail Status RedLine
+          window.electronAPI.sendTrackControllerMessage({
+            type: 'RedlineRailStatus',
+            RailStatus: redRailStatus,
+          });
         }
+        
+        //  check for the trains that need to stop
+        for( let t = 0; t < trainDispatchArr.length; t++)
+        {
+          if(trainDispatchArr[t].trackLine === 'Red')
+          {
+            //  add the train IDs to be stopped
+            trainIDs.push(trainDispatchArr[t].TrainID);
+          }
+        }
+        //  send train model message to stop
+        //  check if the circuit is sending
+          if(redSendingTrackCircuit === "enabled")
+          {
+            window.electronAPI.sendTrainModelMessage({
+              type: 'Stop',
+              'trainIDArray' : trainIDs,
+            });
+          }
+        //  after message is sent, clear the array
+        trainIDs.length = 0;    //  fasted way to clear array; better performance
       }
-      //  send train model message to stop
-      window.electronAPI.sendTrainModelMessage({
-        type: 'Stop',
-        'trainIDArray' : trainIDs,
-      });
-
-      //  after message is sent, clear the array
-      trainIDs.length = 0;    //  fasted way to clear array; better performance
-    }
-    else if (redTrackPowerStatus === 'functional' && redTrackSignalPickup === 'functional' && redRailStatus === 'functional')
-    {
-      //  check for the trains that need to started
-      for( let t = 0; t < trainDispatchArr.length; t++)
+      else if (redTrackPowerStatus === 'functional' && redTrackSignalPickup === 'functional' && redRailStatus === 'functional')
       {
-        if(trainDispatchArr[t].trackLine === 'Red')
+        //  check for the trains that need to started
+        for( let t = 0; t < trainDispatchArr.length; t++)
         {
-          //  add the train IDs to be started
-          trainIDs.push(trainDispatchArr[t].TrainID);
+          if(trainDispatchArr[t].trackLine === 'Red')
+          {
+            //  add the train IDs to be started
+            trainIDs.push(trainDispatchArr[t].TrainID);
+          }
         }
-      }
 
-      window.electronAPI.sendTrainModelMessage({
-        type: 'Go',
-        'trainIDArray' : trainIDs,
-      });
-
-      //  after message is sent, clear the array
-      trainIDs.length = 0;    //  fasted way to clear array; better performance
-    }
-
-    //  GREEN LINE
-    if(greenTrackPowerStatus === 'broken' || greenTrackSignalPickup === 'broken' || greenRailStatus === 'broken')
-    {
-
-      //  check for the trains that need to stop
-      for( let t = 0; t < trainDispatchArr.length; t++)
-      {
-        if(trainDispatchArr[t].trackLine === 'Green')
-        {
-          //  add the train IDs to be stopped
-          trainIDs.push(trainDispatchArr[t].TrainID);
-        }
-      }
-      //  send train model message to stop
-      window.electronAPI.sendTrainModelMessage({
-        type: 'Stop',
-        'trainIDArray' : trainIDs,
-      });
-
-      //  after message is sent, clear the array
-      trainIDs.length = 0;    //  fasted way to clear array; better performance
-    }
-    else if (greenTrackPowerStatus === 'functional' && greenTrackSignalPickup === 'functional' && greenRailStatus === 'functional')
-    {
-      //  check for the trains that need to started
-      for( let t = 0; t < trainDispatchArr.length; t++)
-      {
-        if(trainDispatchArr[t].trackLine === 'Green')
-        {
-          //  add the train IDs to be started
-          trainIDs.push(trainDispatchArr[t].TrainID);
-        }
+        //  check if the circuit is sending
+          if(redSendingTrackCircuit === "enabled")
+          {
+            window.electronAPI.sendTrainModelMessage({
+              type: 'Go',
+              'trainIDArray' : trainIDs,
+            });
+          }
+        //  after message is sent, clear the array
+        trainIDs.length = 0;    //  fasted way to clear array; better performance
       }
 
-      window.electronAPI.sendTrainModelMessage({
-        type: 'Go',
-        'trainIDArray' : trainIDs,
-      });
+      //  GREEN LINE
+      if(greenTrackPowerStatus === 'broken' || greenTrackSignalPickup === 'broken' || greenRailStatus === 'broken')
+      {
+        if(greenRailStatus === 'broken')
+        {
+          //  Track rail Status GreenLine
+          window.electronAPI.sendTrackControllerMessage({
+            type: 'GreenlineRailStatus',
+            RailStatus: greenRailStatus,
+          });
+        }
 
-      //  after message is sent, clear the array
-      trainIDs.length = 0;    //  fasted way to clear array; better performance
-    }
+        //  check for the trains that need to stop
+        for( let t = 0; t < trainDispatchArr.length; t++)
+        {
+          if(trainDispatchArr[t].trackLine === 'Green')
+          {
+            //  add the train IDs to be stopped
+            trainIDs.push(trainDispatchArr[t].TrainID);
+          }
+        }
 
+        //  check if the track circuit is sending
+          if(greenSendingTrackCircuit === "enabled")
+          {
+            //  send train model message to stop
+            window.electronAPI.sendTrainModelMessage({
+              type: 'Stop',
+              'trainIDArray' : trainIDs,
+            });
+          }
+        //  after message is sent, clear the array
+        trainIDs.length = 0;    //  fasted way to clear array; better performance
+      }
+      else if (greenTrackPowerStatus === 'functional' && greenTrackSignalPickup === 'functional' && greenRailStatus === 'functional')
+      {
+        //  check for the trains that need to started
+        for( let t = 0; t < trainDispatchArr.length; t++)
+        {
+          if(trainDispatchArr[t].trackLine === 'Green')
+          {
+            //  add the train IDs to be started
+            trainIDs.push(trainDispatchArr[t].TrainID);
+          }
+        }
+        //  check if the track circuit is sending
+          if(greenSendingTrackCircuit === "enabled")
+          {
+            //  send train model message to stop
+            window.electronAPI.sendTrainModelMessage({
+              type: 'Go',
+              'trainIDArray' : trainIDs,
+            });
+          }
+        //  after message is sent, clear the array
+        trainIDs.length = 0;    //  fasted way to clear array; better performance
+      }
+    }, 1000);
   };
 
   //  function for updating block occupancy and exchanging information with train model
@@ -624,12 +659,12 @@ class TrackModel extends React.Component {
     //  find the line that the train is on
     const trackLine = trainDispatchArr[ind].trackLine
 
-    if(trackLine === 'red line')
+    if(trackLine === 'Red')
     {
       blocks = redBlocks;
       currBlock = redCurrBlock;
     }
-    else if(trackLine === 'green line')
+    else if(trackLine === 'Green')
     {
       blocks = greenLine;
       currBlock = greenCurrBlock;
@@ -640,51 +675,106 @@ class TrackModel extends React.Component {
       //  check if the train is moving
       if (IS_TRAIN_MOVING) {
         //  occupy the current block
-        blocks[currBlock].Occupied = true;
-        //  send the train model a message about the length of the current block and speed
-        window.electronAPI.sendTrainModelMessage({
-          type: 'CurrentCommandedSpeed',
-          CommandedSpeed: blocks[currBlock].spdLimit,
-          TrainID: TRAIN_ID,
-        });
-        window.electronAPI.sendTrainModelMessage({
-          type: 'CurrentBlockLength',
-          BlockLength: blocks[currBlock].length,
-          TrainID: TRAIN_ID,
-        });
-        if(currBlock < blocks.length)
+        blocks[currBlock].occupancy = true;
+
+        //  send the track model a message about the blocks being updated
+        //  Tracks block occupancy
+        if(trackLine === 'Green' && greenSendingTrackCircuit === "enabled")
         {
+          window.electronAPI.sendTrackControllerMessage({
+            type: 'GreenBlockOccupancy',
+            GreenBlocks: blocks,
+          });
+        }
+        else if (trackLine === 'Red' && redSendingTrackCircuit === "enabled")
+        {
+          //  Tracks block occupancy
+          window.electronAPI.sendTrackControllerMessage({
+            type: 'RedBlockOccupancy',
+            RedBlocks: blocks,
+          });
+        }
+        
+        if(trackLine === "Green" && greenSendingTrackCircuit === "enabled")
+        {
+            //  send the train model a message about the length of the current block and speed
           window.electronAPI.sendTrainModelMessage({
-            type: 'NextBlockLength',
-            BlockLength: blocks[currBlock + 1].length,
+            type: 'CurrentCommandedSpeed',
+            CommandedSpeed: blocks[currBlock].spdLimit,
+            TrainID: TRAIN_ID,
+          });
+          window.electronAPI.sendTrainModelMessage({
+            type: 'CurrentBlockLength',
+            BlockLength: blocks[currBlock].length,
+            TrainID: TRAIN_ID,
+          });
+          if(currBlock < blocks.length)
+          {
+            window.electronAPI.sendTrainModelMessage({
+              type: 'NextBlockLength',
+              BlockLength: blocks[currBlock + 1].length,
+              TrainID: TRAIN_ID,
+            });
+          }
+
+          window.electronAPI.sendTrainModelMessage({
+            type: 'Beacon',
+            Beacon : blocks[currBlock].beacon,
+            TrainID: TRAIN_ID,
+          });
+
+          window.electronAPI.sendTrainModelMessage({
+            type: 'Underground',
+            Underground : blocks[currBlock].underground,
+            TrainID: TRAIN_ID,
+          });
+
+          window.electronAPI.sendTrainModelMessage({
+            type: 'Grade',
+            Grade : blocks[currBlock].grade,
             TrainID: TRAIN_ID,
           });
         }
+        else if(trackLine === "Red" && redSendingTrackCircuit === "enabled")
+        {
+            //  send the train model a message about the length of the current block and speed
+          window.electronAPI.sendTrainModelMessage({
+            type: 'CurrentCommandedSpeed',
+            CommandedSpeed: blocks[currBlock].spdLimit,
+            TrainID: TRAIN_ID,
+          });
+          window.electronAPI.sendTrainModelMessage({
+            type: 'CurrentBlockLength',
+            BlockLength: blocks[currBlock].length,
+            TrainID: TRAIN_ID,
+          });
+          if(currBlock < blocks.length)
+          {
+            window.electronAPI.sendTrainModelMessage({
+              type: 'NextBlockLength',
+              BlockLength: blocks[currBlock + 1].length,
+              TrainID: TRAIN_ID,
+            });
+          }
 
-        //  SEND TRAIN MODEL OTHER VARIABLES
-        //  authority, beacon, underground, grade
-        // window.electronAPI.sendTrainModelMessage({
-        //   type: 'Authority',
-        //   Authority = trainDispatchArr[ind].Authority,
-        // });
+          window.electronAPI.sendTrainModelMessage({
+            type: 'Beacon',
+            Beacon : blocks[currBlock].beacon,
+            TrainID: TRAIN_ID,
+          });
 
-        window.electronAPI.sendTrainModelMessage({
-          type: 'Beacon',
-          Beacon : blocks[currBlock].beacon,
-          TrainID: TRAIN_ID,
-        });
+          window.electronAPI.sendTrainModelMessage({
+            type: 'Underground',
+            Underground : blocks[currBlock].underground,
+            TrainID: TRAIN_ID,
+          });
 
-        window.electronAPI.sendTrainModelMessage({
-          type: 'Underground',
-          Underground : blocks[currBlock].underground,
-          TrainID: TRAIN_ID,
-        });
-
-        window.electronAPI.sendTrainModelMessage({
-          type: 'Grade',
-          Grade : blocks[currBlock].grade,
-          TrainID: TRAIN_ID,
-        });
+          window.electronAPI.sendTrainModelMessage({
+            type: 'Grade',
+            Grade : blocks[currBlock].grade,
+            TrainID: TRAIN_ID,
+          });
+        }
       }
       //  Train progresses to next block
       if (ENTERED_BLOCK) {
@@ -693,9 +783,26 @@ class TrackModel extends React.Component {
         //  check if the old block has been vacatted
         if (EXITED_BLOCK) {
           //  loop through blocks, first occupied block becomes unoccupied
-          const searchInd = blocks.Occupied.indexOf.true;
+          const searchInd = blocks.occupancy.indexOf.true;
           //  set occupancy to false
-          blocks[searchInd].Occupied = false;
+          blocks[searchInd].occupancy = false;
+          //  send the track model a message about the blocks being updated
+        //  Tracks block occupancy
+          if(trackLine === 'Green' && greenSendingTrackCircuit === "enabled")
+          {
+            window.electronAPI.sendTrackControllerMessage({
+              type: 'GreenBlockOccupancy',
+              GreenBlocks: blocks,
+            });
+          }
+          else if(trackLine === 'Red' && greenSendingTrackCircuit === "enabled")
+          {
+            //  Tracks block occupancy
+            window.electronAPI.sendTrackControllerMessage({
+              type: 'RedBlockOccupancy',
+              RedBlocks: blocks,
+            });
+          }
         }
       }
     }
@@ -708,7 +815,7 @@ class TrackModel extends React.Component {
     // let isTrainMoving = ;
     // let trainInNextBlock = ;
     // let trainExitedBlock = ;
-    this.state.lineName = lineName;
+    // this.state.lineName = lineName;
     this.state.enviornmentTemp = enviornmentTemp;
     this.state.trackHeaterStatus = trackHeaterStatus;
     this.state.trainOccupancy = trainOccupancy;
