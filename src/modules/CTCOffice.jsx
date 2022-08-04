@@ -64,20 +64,24 @@ class CTCOffice extends React.Component {
         case 'throughput':
           // TODO: message validation
           const throughput = _.cloneDeep(this.state.throughput);
-          throughput[payload.line] = payload.value;
+          throughput[payload.line.toLowerCase()] = payload.value;
 
           this.setState({
             throughput: throughput
           });
           break;
         case 'occupancy':
+          console.log(payload);
           // TODO: message validation
           payload.line = payload.line.toLowerCase();
           // console.log(payload);
-          this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
+          this.updateBlockOccupancy(payload.line, payload.block_id.toString(), payload.value);
           break;
         case 'switch':
-          const { line, root, pointing_to } = payload;
+          let { line, root, pointing_to } = payload;
+
+          line = line.toLowerCase();
+
           const switches = _.cloneDeep(this.state.switches);
 
           if(!switches[line]) {
@@ -187,16 +191,7 @@ class CTCOffice extends React.Component {
     };
 
     this.nextTrainID = 1;
-    this.trains = {
-      '-1': new Train(
-        '-1',
-        'green',
-        'nodestination',
-        0,
-        29,
-        []
-      )
-    };
+    this.trains = {};
     this.trainPositions = {
       'red': {},
       'green': {},
@@ -1048,6 +1043,8 @@ class CTCOffice extends React.Component {
         activeLine: 'red'
       });
 
+    const occupancy = _.cloneDeep(this.state.occupancy);
+
     // Clean up modals and stuff
     this.setState({
       lineSelection: undefined,
@@ -1056,7 +1053,8 @@ class CTCOffice extends React.Component {
       editingSwitch: undefined,
       editingBlock: undefined,
       switchModalOpen: false,
-      blockModalOpen: false
+      blockModalOpen: false,
+      occupancy: occupancy
     });
   }
 
