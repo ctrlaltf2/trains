@@ -113,9 +113,12 @@ class TrackModel extends React.Component {
       trackHeaterStatus: 'disabled',
       trainOccupancy: 25,
       blockOccupancy: 'false',
-      personsAtStation: 10,
+      peopleAtStation: 10,
+      peopleLeavingTrain: 0,
+      peopleEnteringTrain: 0,
       TransitLightStatus: 'Green',
       crossing: false,
+      peopleAtStation: 0,
 
       // beacon
       beacon: 'defaultBeacon',
@@ -171,7 +174,6 @@ class TrackModel extends React.Component {
         case 'lights':
           // eslint-disable-next-line no-case-declarations
           const LINE2 = payload.line;
-          console.log(payload.value);
           if(LINE2 === 'Green')
           {
             if(!(payload.value.isNUll))
@@ -275,6 +277,31 @@ class TrackModel extends React.Component {
     redBlocks.forEach((a) => {a.occupancy = false});
     greenBlocks.forEach((b) => {b.occupancy = false});
 
+    //  check for a track station and generate a random number of people at the station
+    redBlocks.forEach((block) => {
+      if(!(block.stationSide === ""))
+      {
+        //  generate a random amount
+        block.peopleAtStation = Math.floor(Math.random() * 20) + 1;
+      }
+      else
+      {
+        block.peopleAtStation = "null";
+      }
+    });
+
+    greenBlocks.forEach((block) => {
+      if(!(block.stationSide === ""))
+      {
+        //  generate a random amount
+        block.peopleAtStation = Math.floor(Math.random() * 20) + 1;
+      }
+      else
+      {
+        block.peopleAtStation = "null";
+      }
+    });
+
     //  send the track controller an empty set of arrays (block unoccupied)
     window.electronAPI.sendTrackControllerMessage({
       type: 'GreenBlockOccupancy',
@@ -351,6 +378,23 @@ class TrackModel extends React.Component {
     this.setState({
       TransitLightStatus: curBlock.transitLightStatus,
     });
+    this.setState({
+      peopleAtStation : curBlock.peopleAtStation
+    });
+    if(this.state.peopleAtStation === 'null')
+    {
+      this.setState({
+        peopleEnteringTrain : 0,
+        peopleLeavingTrain : 0,
+      });
+    }
+    else
+    {
+      this.setState({
+        peopleEnteringTrain : this.state.peopleAtStation,
+        peopleLeavingTrain : this.state.peopleAtStation,
+      });
+    }
   }, 1000);
   };
 
@@ -875,7 +919,7 @@ class TrackModel extends React.Component {
     this.state.enviornmentTemp = enviornmentTemp;
     this.state.trackHeaterStatus = trackHeaterStatus;
     this.state.trainOccupancy = trainOccupancy;
-    this.state.personsAtStation = personsAtStation;
+    // this.state.personsAtStation = personsAtStation;
     // this.state.currBlock = currBlock;
   };
 
@@ -896,91 +940,11 @@ class TrackModel extends React.Component {
       <Container maxWidth="lg">
         <ThemeProvider theme={darkMode}>
           <Grid container spacing={12} direction="row" justifyContent="center">
-            <Grid item xs={3} justifySelf="center">
+            <Grid item xs={12} justifySelf="center">
               <div className="HeaderText">Test UI</div>
             </Grid>
-          </Grid>
-          <Grid
-            container
-            spacing={1}
-            className="topThreeButtons"
-            direction="row"
-          >
-            <Grid item xs={4}>
-              <Button
-                variant="contained"
-                sx={{ fontSize: 14 }}
-                className="LoadTrack"
-              >
-                <AddIcon /> Load New Track Model
-                <input type="file" />
-              </Button>
-            </Grid>
-            <Grid item xs={4}>
-              <Grid item>
-                <Button
-                  variant="contained"
-                  sx={{ fontSize: 14 }}
-                  onClick={this.toggle}
-                >
-                  {' '}
-                  Toggle Track Model UI
-                </Button>
-              </Grid>
-            </Grid>
-            <Grid item xs={4} spacing={1}>
-              <Button
-                variant="contained"
-                sx={{ fontSize: 14 }}
-                className="RestoreDefaults"
-                onClick={this.resetAllSettings}
-              >
-                Reset to Default Settings
-              </Button>
-            </Grid>
-          </Grid>
-
-          <Grid
-            container
-            spacing={12}
-            className="A few settings"
-            direction="row"
-          >
-            <Grid item xs={4}>
-              <div>Speed limit</div>
-            </Grid>
-            <Grid item xs={4}>
-              <div>{this.state.testUISpeedLimit}</div>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                value={this.state.testUISpeedLimit}
-                onChange={this.testUISpeedLimitFun}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <div>Enviornment Temp</div>
-            </Grid>
-            <Grid item xs={4}>
-              <div>{this.state.testUIEnvtemp}</div>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                value={this.state.testUIEnvtemp}
-                onChange={this.testUIEnvtempFun}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <div>Track Heater Status</div>
-            </Grid>
-            <Grid item xs={4}>
-              <div>{this.state.testUITrackHeaterStatus}</div>
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                value={this.state.testUITrackHeaterStatus}
-                onChange={this.testUITrackHeaterStatusFun}
-              />
+            <Grid item xs={6}>
+              <div> People at stations</div>
             </Grid>
           </Grid>
         </ThemeProvider>
@@ -1130,7 +1094,7 @@ class TrackModel extends React.Component {
                   <div className="label">Persons at Station</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">{this.state.personsAtStation}</div>
+                  <div className="label">{this.state.peopleAtStation}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Railroad Crossing</div>
@@ -1139,16 +1103,22 @@ class TrackModel extends React.Component {
                   <div className="label">{String(this.state.crossing)}</div>
                 </Grid>
                 <Grid item xs={6}>
+                  <div className="label">People At Station</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.peopleAtStation}</div>
+                </Grid>
+                <Grid item xs={6}>
                   <div className="label">People leaving train</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">{this.state.Underground}</div>
+                  <div className="label">{this.state.peopleLeavingTrain}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">People entering train</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label">{this.state.Underground}</div>
+                  <div className="label">{this.state.peopleEnteringTrain}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Beacon</div>
