@@ -814,28 +814,28 @@ class TrainControllerSW extends React.Component {
 
   brakeFailure(status){ // Toggles the break failure display in the Test UI
     if(status === true){
-      this.trainAttributes[this.currentTrain].brakeFailure === true;
+      this.trainAttributes[this.currentTrain].brakeFail === true;
     }
     else{
-      this.trainAttributes[this.currentTrain].brakeFailure === false;
+      this.trainAttributes[this.currentTrain].brakeFail === false;
     }
   }
 
   engineFailure(status){ // Toggles the engine failure display in the Test UI
     if(status === true){
-      this.trainAttributes[this.currentTrain].engineFailure === true;
+      this.trainAttributes[this.currentTrain].engineFail === true;
     }
     else{
-      this.trainAttributes[this.currentTrain].engineFailure === false;
+      this.trainAttributes[this.currentTrain].engineFail === false;
     }
   }
 
   signalPickupFailure(status){ // Toggles the signal pickup failure display in the Test UI
     if(status === true){
-      this.trainAttributes[this.currentTrain].signalPickupFailure === true;
+      this.trainAttributes[this.currentTrain].signalPickupFail === true;
     }
     else{
-      this.trainAttributes[this.currentTrain].signalPickupFailure === false;
+      this.trainAttributes[this.currentTrain].signalPickupFail === false;
     }
   }
 
