@@ -395,6 +395,10 @@ class TrackModel extends React.Component {
         peopleLeavingTrain : this.state.peopleAtStation,
       });
     }
+    
+    this.setState({
+      switchPos : curBlock.next,
+    })
   }, 1000);
   };
 
@@ -1043,7 +1047,7 @@ class TrackModel extends React.Component {
                 </Grid>
 
                 <Grid item xs={6}>
-                  <div className="label">Switch Position</div>
+                  <div className="label">Next Block</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label"> {this.state.switchPos}</div>
