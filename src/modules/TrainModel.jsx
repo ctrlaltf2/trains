@@ -57,8 +57,6 @@ const BoxLabel = styled(FormLabel)(({ theme }) => ({
   color: theme.palette.text.primary,
 }));
 
-let trains = [];
-
 class TrainModel extends React.Component {
   constructor(props, name) {
     super(props);
@@ -76,62 +74,79 @@ class TrainModel extends React.Component {
       switch(payload.type) {
 
         case 'Stop':
-          // 'stopTrainIDs' = payload.trainIDArray;
-          console.log('Need to stop the trains on the line');
+          this.pointlessVariable = payload.trainIDArray[0];
+          this.emergencyBrake = true;
+          console.log('Need to stop the train on the line');
         break;
         case 'Go':
-          // 'goTrainIDs' = payload.trainIDArray;
+          this.pointlessVariable = payload.trainIDArray[0];
+          this.emergencyBrake = false;
           console.log('Let the train on the line run again');
         break;
 
         case 'CurrentCommandedSpeed':
-          trains[payload.TrainID].commandedSpeed = payload.CommandedSpeed; // MUST MERGE FIRST TO GET NEW CODE FROM CALEB
+          this.commandedSpeed = payload.CommandedSpeed; // MUST MERGE FIRST TO GET NEW CODE FROM CALEB
           window.electronAPI.sendTrainControllerMessage({
             'type': 'currentCommandedSpeed',
-            'currentCommandedSpeed': trains[payload.TrainID].commandedSpeed ,
+            'currentCommandedSpeed': this.commandedSpeed ,
           });
         break;
 
         case 'CurrentBlockLength':
-          trains[payload.TrainID].currBlockLength = payload.CurrentBlockLength;
+          this.trainID = payload.TrainID;
+          this.currBlockLength = payload.CurrentBlockLength;
         break;
 
         case 'NextBlockLength':
-          trains[payload.TrainID].nextBlockLengthSignal = payload.NextBlockLength;
+          this.trainID = payload.TrainID;
+          this.nextBlockLengthSignal = payload.NextBlockLength;
         break;
 
         case 'Beacon':
-          trains[payload.TrainID].beacon = payload.Beacon;
+          this.trainID = payload.TrainID;
+          this.beacon = payload.Beacon;
+          console.log('Beacon: ', this.beacon);
           window.electronAPI.sendTrainControllerMessage({
             'type': 'beacon',
-            'beacon': trains[payload.TrainID].beacon ,
+            'beacon': this.beacon ,
           });
         break;
 
         case 'Underground':
-          trains[payload.TrainID].underground = payload.Underground;
+          this.trainID = payload.TrainID;
+          this.underground = payload.Underground;
           window.electronAPI.sendTrainControllerMessage({
             'type': 'underground',
-            'underground': trains[payload.TrainID].underground ,
+            'underground': this.underground ,
           });
         break;
 
         case 'Grade':
-          trains[payload.TrainID].grade = payload.Grade;
+          this.trainID = payload.TrainID;
+          this.grade = payload.Grade;
         break;
+
+        case 'suggestedSpeed':
+          this.block_ID = payload.block_ID;
+          this.suggestedSpeed = payload.suggestedSpeed;
+          console.log('Suggested Speed is ', this.suggestedSpeed);
+          console.log('for block  ', this.block_ID);
+        break;
+
 
         // CHECK WITH CAM
         case 'Authority':
-          trains[payload.TrainID].authority = payload.Authority;
+          this.trainID = payload.TrainID;
+          this.authority = payload.Authority;
           window.electronAPI.sendTrainControllerMessage({
             'type': 'authority',
-            'authority': trains[payload.TrainID].authority ,
+            'authority': this.authority ,
           });
         break;
 
 
         // FROM TRAIN CONTROLLER
-       case 'temperature':
+        case 'temperature':
           this.setState({ temperature: payload.temperature });
           break;
         case 'serviceBrake':
@@ -141,7 +156,7 @@ class TrainModel extends React.Component {
           this.setState({emergencyBrake: payload.emergencyBrake});
           break;
         case 'power':
-          this.setState({powerCommand: payload.power});
+          this.powerCommand = payload.power;
           break;
         case 'leftDoor':
           this.setState({leftDoors: payload.leftDoor});
@@ -174,7 +189,7 @@ class TrainModel extends React.Component {
       beaconReceived: true,
       beacon: '',
       internalTemp: 70,
-      temperature: 8660, // for testing
+      temperature: 80, // for testing
       crewCount: 2,
       passengerCount: 0,
       exteriorTrainLights: true,
@@ -236,7 +251,13 @@ class TrainModel extends React.Component {
     this.serviceDecelLimit = -1.2;
     this.eDecelLimit = -2.73;
     this.nextBlockLengthSignal = 0;
-
+    this.block_ID = 0;
+    this.pointlessVariable = 0;
+    this.trainID = 0;
+    this.brakeStatusTest = true;
+    this.trainEngineStatusTest = true;
+    this.signalPickupStatusTest = true;
+    this.emergencyBrakeTest = false;
 
     // bind funcs on change
     this.toggle = this.toggle.bind(this);
@@ -342,19 +363,16 @@ class TrainModel extends React.Component {
     // if serviceBrake is true
     else if(!this.state.emergencyBrake && this.state.serviceBrake) {
       this.acceleration = this.serviceDecelLimit;
-      this.powerCommand = 0;
     }
 
     // if eBrake is true
     else if(this.state.emergencyBrake && !this.state.serviceBrake) {
       this.acceleration = this.eDecelLimit;
-      this.powerCommand = 0;
     }
 
     // if serviceBrake and eBrake is true, cancel out serviceBrake
     else if(this.state.emergencyBrake && this.state.serviceBrake) {
       this.acceleration = this.eDecelLimit;
-      this.powerCommand = 0;
     }
 
     else {
@@ -363,12 +381,12 @@ class TrainModel extends React.Component {
     }
 
     // calculate velocity, replace 0.1 with this.T
-    if(this.currentSpeed <= 0) {
+    if(this.currentSpeed < 0) {
       this.currentSpeed = 0;
       this.acceleration = 0;
       this.powerCommand = 0;
     }
-    if(this.currentSpeed >= (this.setSpeed * 0.277778)) { // convert set speed to m/s
+    if(this.currentSpeed > (this.setSpeed * 0.277778)) { // convert set speed to m/s
       this.currentSpeed = (this.setSpeed * 0.277778);
       this.acceleration = 0;
       this.powerCommand = 0;
@@ -488,6 +506,8 @@ class TrainModel extends React.Component {
       trainEngineStatus: !prevState.trainEngineStatus,
     }));
 
+    this.trainEngineStatusTest = !this.trainEngineStatusTest;
+
     // Send engine failure to train controller
     window.electronAPI.sendTrainControllerMessage({
       'type': 'engineFailure',
@@ -500,6 +520,8 @@ class TrainModel extends React.Component {
       brakeStatus: !prevState.brakeStatus,
     }));
 
+    this.brakeStatusTest = !this.brakeStatusTest;
+
     // Send brake failure to train controller
     window.electronAPI.sendTrainControllerMessage({
       'type': 'brakeFailure',
@@ -511,6 +533,8 @@ class TrainModel extends React.Component {
     this.setState((prevState) => ({
       signalPickupStatus: !prevState.signalPickupStatus,
     }));
+
+    this.signalPickupStatusTest = !this.signalPickupStatusTest;
 
     // Send signal pickup failure to train controller
     window.electronAPI.sendTrainControllerMessage({
@@ -530,16 +554,21 @@ class TrainModel extends React.Component {
       emergencyBrake: !prevState.emergencyBrake,
     }));
 
+    this.emergencyBrakeTest = !this.emergencyBrakeTest;
+
     // Send brake failure to train controller
-    /* window.electronAPI.sendTrainControllerMessage({
+    window.electronAPI.sendTrainControllerMessage({
       'type': 'emergencyBrake',
       'emergencyBrake': this.state.emergencyBrake,
-    }); */
+    });
   }
 
   resetAll() {
 
     this.setState({trainEngineStatus: true, brakeStatus: true, signalPickupStatus: true});
+    this.signalPickupStatusTest = true;
+    this.trainEngineStatusTest = true;
+    this.brakeStatusTest = true;
 
     // Send engine failure to train controller
     window.electronAPI.sendTrainControllerMessage({
