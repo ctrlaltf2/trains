@@ -85,7 +85,6 @@ let redSendingTrackCircuit = "enabled";
 
 let redCurrBlock = 1; let greenCurrBlock = 1; //  Block that the train model is currently entering // default to 1
 
-let Authority = 0; //  will be given via track controller
 
 //  -----TRACK MODEL CLASS----- //
 
@@ -109,6 +108,7 @@ class TrackModel extends React.Component {
       elevation: 0,
       enviornmentTemp: 0,
       beaconStatus: 'functional',
+      beacon: 'No beacon',
       directionOfTravel: 'forwards',
       trackHeaterStatus: 'disabled',
       trainOccupancy: 25,
@@ -124,8 +124,6 @@ class TrackModel extends React.Component {
       //  is an array of blocks, one block has block info for the track
       blocks: [],
       currBlock: 1, //  Block that the train model is currently entering // default to 1
-
-      Authority: 0, //  will be given via track controller
 
       testUISpeedLimit: 30,
       testUIEnvtemp: 80,
@@ -172,10 +170,6 @@ class TrackModel extends React.Component {
           break;
         case 'light':
           this.state.TransitLightStatus = payload.payload;
-        break;
-        case 'authority':
-          Authority = payload.payload;
-          sendAuthority(payload.payload);
         break;
 
         case 'crossing':
@@ -232,7 +226,6 @@ class TrackModel extends React.Component {
     // this.sendRedMessages = this.sendRedMessages.bind(this);
     this.checkTrackFailures = this.checkTrackFailures.bind(this);
     this.getTrackModelArrays = this.getTrackModelArrays.bind(this);
-    this.sendAuthority = this.sendAuthority.bind(this);
 
     //  Create multiple track model instances (one for each line)
     const redLineObject = new Track();
@@ -319,7 +312,9 @@ class TrackModel extends React.Component {
       elevation: elevationImperial,
     });
     this.state.blockOccupancy = curBlock.occupancy;
-
+    this.setState({
+      beacon: curBlock.beacon,
+    });
     //  check the status of the line name
     if(curBlock.line === "Green")
     {
@@ -676,16 +671,6 @@ class TrackModel extends React.Component {
     }, 1000);
   };
 
-  //  gets authority directly from Track Controller and passes to Train Model
-  sendAuthority = (payload) => 
-  {
-    window.electronAPI.sendTrainModelMessage({
-      type : 'Authority',
-      'TrainID' : payload.trainID,
-      'Authority' : payload.Authority,
-    });
-  };
-
   //  function for updating block occupancy and exchanging information with train model
   //  GETS TRIGGERED FROM TRAIN MODEL MESSAGE
   trainModelHandshake = (blockOccInfo) => {
@@ -700,7 +685,7 @@ class TrackModel extends React.Component {
     let currBlock;
     //  decide whick track is getting updated
 
-    //  find the train ID to update authority
+    //  find the train ID to update
     const ind = trainDispatchArr.findIndex(
       (TrainID) => TrainID === TRAIN_ID
     );
@@ -870,7 +855,6 @@ class TrackModel extends React.Component {
     this.state.trainOccupancy = trainOccupancy;
     this.state.personsAtStation = personsAtStation;
     // this.state.currBlock = currBlock;
-    this.state.Authority = Authority;
   };
 
   //  Function to get the arrays in the track model
@@ -1137,6 +1121,12 @@ class TrackModel extends React.Component {
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">{this.state.Underground}</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">Beacon</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.beacon}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Elevation (feet)</div>
