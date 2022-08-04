@@ -166,6 +166,7 @@ class TrackController extends React.Component {
           this.CTCMMode(payload.root, payload.line, false);
           break;
         case 'closure':
+          this.CTCMMode(payload.block_id, payload.line, payload.is_closed);
           break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
