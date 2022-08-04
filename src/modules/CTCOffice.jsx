@@ -76,6 +76,28 @@ class CTCOffice extends React.Component {
           // console.log(payload);
           this.updateBlockOccupancy(payload.line, payload.block_id, payload.value);
           break;
+        case 'switch':
+          const { line, root, pointing_to } = payload;
+          const switches = _.cloneDeep(this.state.switches);
+
+          if(!switches[line]) {
+            console.warn('Received invalid switch update on line', line);
+            break;
+          }
+
+          if(!switches[line][root]) {
+            console.warn('Unknown root block on switch update', line, root);
+            break;
+          }
+
+          if(!switches[line][root].pointing_to) {
+            console.warn('Something happened :(');
+            break;
+          }
+
+          const new_pos = switches[line][root].pointing_to.toString();
+          switches[line][root]._going_to = new_pos;
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
