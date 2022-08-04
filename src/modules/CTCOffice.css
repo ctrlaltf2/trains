@@ -211,3 +211,20 @@
 #leftMapToggle {
   left: 0;
 }
+
+#switchControlGroup {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+  align-items: center;
+}
+
+#switchControlGroup > p {
+  margin-top: revert;
+  margin-bottom: revert;
+}
+
+input:not([type=checkbox]):not([type=radio]), select, textarea {
+  margin-bottom: 0;
+}
+
