@@ -30,7 +30,7 @@ import { Wayside } from './Wayside.ts';
 import greenLine from './TrackComponents/TrackJSON/VF2/green.json';
 import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 
-// plc for testing until upload works
+// plc for quicker testing. Can upload individual files 
 // green plc
 import SW13 from './PLC/Green/SW13.json';
 import SW29 from './PLC/Green/SW29.json';
@@ -50,6 +50,7 @@ import SW52 from './PLC/Red/SW52.json';
 
 import './TrackController.css';
 
+// Dark theme for visual pleasure
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -99,6 +100,8 @@ class TrackController extends React.Component {
 
         // Occ from Track model
         case 'GreenBlockOccupancy':
+           // Get message eabout occupancy
+          // Search occ from track model list -- only send if they change
           for (let i = 1; i < this.tracks[0].blocks.length + 1; i++) {
             if (
               payload.GreenBlocks[i].occupancy !=
@@ -117,6 +120,8 @@ class TrackController extends React.Component {
           break;
 
         case 'RedBlockOccupancy':
+          // Get message eabout occupancy
+          // Search occ from track model list -- only send if they change
           for (let i = 1; i < this.tracks[1].blocks.length + 1; i++) {
             if (
               payload.RedBlocks[i].occupancy !=
@@ -141,12 +146,15 @@ class TrackController extends React.Component {
             payload.authority;
           break;
         case 'dispatch':
+          // Transmit message to track model
           window.electronAPI.sendTrackModelMessage(payload);
           break;
         case 'switchOverride':
+          // Set mmode for the block, override switch
           this.setSwitchCTC(payload.root, payload.goingTo, payload.line);
           break;
         case 'releaseMaintenanceMode':
+          // Release mmode and resume plc on the block
           this.CTCMMode(payload.root, payload.line, false);
           break;
 
@@ -155,16 +163,18 @@ class TrackController extends React.Component {
       }
     });
 
+    // Initialize controllers and tracks
     this.currTrack = null;
     this.controllers = [];
     this.tracks = [];
 
-    // Testing sub classes
+    // Green track for setting up controllers
     this.trackGreen = new Track('green', 1);
     this.trackGreen.loadTrack(greenLine);
     this.trackGreen.setInfrastructure();
     this.tracks.push(this.trackGreen);
 
+    // Red track for controllers
     this.trackRed = new Track('red', 2);
     this.trackRed.loadTrack(redLine);
     this.trackRed.setInfrastructure();
@@ -173,6 +183,7 @@ class TrackController extends React.Component {
     // console.log(this.trackRed.sections);
     this.currTrack = this.tracks[0];
 
+    // State variables 
     this.state = {
       testMode: false,
       track: this.trackGreen,
@@ -230,7 +241,7 @@ class TrackController extends React.Component {
     temp.push(this.tracks[1].blocks[65]);
     this.controllers.push(new Wayside(13, temp, 52, 'red'));
 
-    // Load PLC for testing purposes
+    // Load default plc for all controllers -- will be overridden when upload button is used
     // green
     this.controllers[0].setPLC(SW13);
     this.controllers[1].setPLC(SW29);
@@ -248,7 +259,9 @@ class TrackController extends React.Component {
     this.controllers[11].setPLC(SW44);
     this.controllers[12].setPLC(SW52);
 
-    // Functions for testing
+    console.log(this.controllers);
+
+    // Functions binding
     this.toggle = this.toggle.bind(this);
     this.mmMode = this.mmMode.bind(this);
     this.occupancy = this.occupancy.bind(this);
@@ -261,16 +274,13 @@ class TrackController extends React.Component {
     this.getSwitchPos = this.getSwitchPos.bind(this);
     this.occupy = this.occupy.bind(this);
     this.getController = this.getController.bind(this);
-
     this.handleChangeController = this.handleChangeController.bind(this);
     this.plc = this.plc.bind(this);
-
-    // this.plc = this.plc.bind(this);
     this.handleChangePLC = this.handleChangePLC.bind(this);
-
     this.reset = this.reset.bind(this);
   }
 
+  // Return block object
   getBlock(id, line) {
     if (line === 'green') {
       return this.tracks[0].blocks[id - 1];
@@ -279,6 +289,7 @@ class TrackController extends React.Component {
     }
   }
 
+  // Return switch out position
   getSwitchPos(id, line) {
     if (line === 'green') {
       return this.tracks[0].blocks[id - 1].switch.getPosition();
@@ -287,10 +298,12 @@ class TrackController extends React.Component {
     }
   }
 
+  // Return controller
   getController(id) {
     return this.controllers[id];
   }
 
+  // Toggle block mmode
   mmMode() {
     this.tracks[this.state.line].blocks[
       this.state.currBlock.id - 1
@@ -298,20 +311,12 @@ class TrackController extends React.Component {
       !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
         .maintenanceMode;
 
-    // reset all overrides to false on change
-    // this.controllers.forEach((controller) => {
-    //   if (controller.line === 'green') {
-    //     this.tracks[0].blocks[controller.swBlock - 1].override = false;
-    //   } else if (controller.line === 'red') {
-    //     this.tracks[1].blocks[controller.swBlock - 1].override = false;
-    //   }
-    // });
-
     this.setState((prevState) => ({
       maintenanceMode: !prevState.maintenanceMode,
     }));
   }
 
+  // Change mmode for ctc message
   CTCMMode(id, line, value) {
     if (line === 'green') {
       this.tracks[0].blocks[id - 1].maintenanceMode = value;
@@ -322,25 +327,13 @@ class TrackController extends React.Component {
       appState: !prevState.appState,
     }));
   }
-  // CTCMMode(value) {
-  //   // reset all overrides to false on change
-  //   this.controllers.forEach((controller) => {
-  //     if (controller.line === 'green') {
-  //       this.tracks[0].blocks[controller.swBlock - 1].override = false;
-  //     } else if (controller.line === 'red') {
-  //       this.tracks[1].blocks[controller.swBlock - 1].override = false;
-  //     }
-  //   });
 
-  //   this.setState({
-  //     maintenanceMode: status,
-  //   });
-  // }
-
+  // Action to load new plc file to a controller open dialog
   loadNewPLC = (event) => {
     var PLC = window.electronAPI.openFileDialog('PLC');
   };
 
+  // WHen the drop down line changes
   handleLineChange(event) {
     if (this.currTrack.line === 'green') {
       this.tracks[0].blocks = this.tracks[this.state.line].blocks;
@@ -358,13 +351,16 @@ class TrackController extends React.Component {
     }));
   }
 
+  // PLC change on event
   handleChangePLC(event) {
     this.setState({
       selectedPLC: event.target.value,
     });
   }
 
+  // PLC logic called in on interval once component mounts
   plc() {
+    // Check which track is current
     if (this.state.currTrack === 'green') {
       this.tracks[this.state.line].blocks = this.tracks[0].blocks;
     } else if (this.state.currTrack === 'red') {
@@ -376,12 +372,12 @@ class TrackController extends React.Component {
       var status = [];
 
       let line = 0;
-
       if (controller.line === 'green') {
         line = 0;
       } else if (controller.line === 'red') {
         line = 1;
       }
+      
       for (let j = 0; j < controller.plc.switchLogic.length; j++) {
         // Run 3x for vitality
         status = [true, true, true];
@@ -390,7 +386,7 @@ class TrackController extends React.Component {
             let k = 0;
             k < controller.plc.switchLogic[j].logicTrue.length;
             k++
-          ) {
+          ) { 
             // AND
             if (controller.plc.switchLogic[j].logicTrue[k] === '&&') {
             }
@@ -434,18 +430,19 @@ class TrackController extends React.Component {
         }
         // Vitality check before setting switch position
         // Also send to CTC/Track Model
-        // if (
-        //   !this.tracks[line].blocks[
-        //     parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-        //   ].maintenanceMode
-        // )
         if (
-          !this.state.maintenanceMode ||
-          (this.state.maintenanceMode &&
-            this.tracks[line].blocks[
-              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].switch.override === false)
-        ) {
+          !this.tracks[line].blocks[
+            parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+          ].maintenanceMode
+        )
+        // if (
+        //   !this.state.maintenanceMode ||
+        //   (this.state.maintenanceMode &&
+        //     this.tracks[line].blocks[
+        //       parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+        //     ].switch.override === false)
+        // ) 
+        {
           if (status.every((val) => val === true)) {
             if (
               !this.tracks[line].blocks[
