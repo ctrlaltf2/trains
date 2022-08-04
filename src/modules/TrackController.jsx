@@ -30,7 +30,7 @@ import { Wayside } from './Wayside.ts';
 import greenLine from './TrackComponents/TrackJSON/VF2/green.json';
 import redLine from './TrackComponents/TrackJSON/VF2/red.json';
 
-// plc for testing until upload works
+// plc for quicker testing. Can upload individual files
 // green plc
 import SW13 from './PLC/Green/SW13.json';
 import SW29 from './PLC/Green/SW29.json';
@@ -50,6 +50,7 @@ import SW52 from './PLC/Red/SW52.json';
 
 import './TrackController.css';
 
+// Dark theme for visual pleasure
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -99,6 +100,8 @@ class TrackController extends React.Component {
 
         // Occ from Track model
         case 'GreenBlockOccupancy':
+          // Get message eabout occupancy
+          // Search occ from track model list -- only send if they change
           for (let i = 1; i < this.tracks[0].blocks.length + 1; i++) {
             if (
               payload.GreenBlocks[i].occupancy !=
@@ -117,6 +120,8 @@ class TrackController extends React.Component {
           break;
 
         case 'RedBlockOccupancy':
+          // Get message eabout occupancy
+          // Search occ from track model list -- only send if they change
           for (let i = 1; i < this.tracks[1].blocks.length + 1; i++) {
             if (
               payload.RedBlocks[i].occupancy !=
@@ -135,36 +140,51 @@ class TrackController extends React.Component {
           break;
 
         // From CTC
-        case 'authority':
+        case 'authorityUpdated':
           // TODO Add other line
-          this.tracks[this.state.line].blocks[payload.block].authority =
-            payload.authority;
+          if (payload.line === 'green') {
+            this.tracks[0].blocks[payload.block_id].authority =
+              payload.authority;
+          } else {
+            this.tracks[1].blocks[payload.block_id].authority =
+              payload.authority;
+          }
           break;
         case 'dispatch':
+          // Transmit message to track model
           window.electronAPI.sendTrackModelMessage(payload);
           break;
+        case 'suggestedSpeed':
+          break;
         case 'switchOverride':
+          // Set mmode for the block, override switch
           this.setSwitchCTC(payload.root, payload.goingTo, payload.line);
           break;
         case 'releaseMaintenanceMode':
+          // Release mmode and resume plc on the block
           this.CTCMMode(payload.root, payload.line, false);
           break;
-
+        case 'closure':
+          break;
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
+
+      console.log(this.controllers);
     });
 
+    // Initialize controllers and tracks
     this.currTrack = null;
     this.controllers = [];
     this.tracks = [];
 
-    // Testing sub classes
+    // Green track for setting up controllers
     this.trackGreen = new Track('green', 1);
     this.trackGreen.loadTrack(greenLine);
     this.trackGreen.setInfrastructure();
     this.tracks.push(this.trackGreen);
 
+    // Red track for controllers
     this.trackRed = new Track('red', 2);
     this.trackRed.loadTrack(redLine);
     this.trackRed.setInfrastructure();
@@ -173,11 +193,12 @@ class TrackController extends React.Component {
     // console.log(this.trackRed.sections);
     this.currTrack = this.tracks[0];
 
+    // State variables
     this.state = {
       testMode: false,
       track: this.trackGreen,
       blocks: this.currTrack.blocks,
-      currBlock: this.currTrack.blocks[0],
+      currBlock: 1,
       maintenanceMode: false,
       currController: 0,
       appState: false,
@@ -230,7 +251,7 @@ class TrackController extends React.Component {
     temp.push(this.tracks[1].blocks[65]);
     this.controllers.push(new Wayside(13, temp, 52, 'red'));
 
-    // Load PLC for testing purposes
+    // Load default plc for all controllers -- will be overridden when upload button is used
     // green
     this.controllers[0].setPLC(SW13);
     this.controllers[1].setPLC(SW29);
@@ -248,7 +269,9 @@ class TrackController extends React.Component {
     this.controllers[11].setPLC(SW44);
     this.controllers[12].setPLC(SW52);
 
-    // Functions for testing
+    console.log(this.controllers);
+
+    // Functions binding
     this.toggle = this.toggle.bind(this);
     this.mmMode = this.mmMode.bind(this);
     this.occupancy = this.occupancy.bind(this);
@@ -261,16 +284,13 @@ class TrackController extends React.Component {
     this.getSwitchPos = this.getSwitchPos.bind(this);
     this.occupy = this.occupy.bind(this);
     this.getController = this.getController.bind(this);
-
     this.handleChangeController = this.handleChangeController.bind(this);
     this.plc = this.plc.bind(this);
-
-    // this.plc = this.plc.bind(this);
     this.handleChangePLC = this.handleChangePLC.bind(this);
-
     this.reset = this.reset.bind(this);
   }
 
+  // Return block object
   getBlock(id, line) {
     if (line === 'green') {
       return this.tracks[0].blocks[id - 1];
@@ -279,6 +299,7 @@ class TrackController extends React.Component {
     }
   }
 
+  // Return switch out position
   getSwitchPos(id, line) {
     if (line === 'green') {
       return this.tracks[0].blocks[id - 1].switch.getPosition();
@@ -287,31 +308,26 @@ class TrackController extends React.Component {
     }
   }
 
+  // Return controller
   getController(id) {
     return this.controllers[id];
   }
 
+  // Toggle block mmode
   mmMode() {
     this.tracks[this.state.line].blocks[
-      this.state.currBlock.id - 1
+      this.tracks[this.state.line].blocks[this.state.currBlock - 1].id - 1
     ].maintenanceMode =
-      !this.tracks[this.state.line].blocks[this.state.currBlock.id - 1]
-        .maintenanceMode;
-
-    // reset all overrides to false on change
-    // this.controllers.forEach((controller) => {
-    //   if (controller.line === 'green') {
-    //     this.tracks[0].blocks[controller.swBlock - 1].override = false;
-    //   } else if (controller.line === 'red') {
-    //     this.tracks[1].blocks[controller.swBlock - 1].override = false;
-    //   }
-    // });
+      !this.tracks[this.state.line].blocks[
+        this.tracks[this.state.line].blocks[this.state.currBlock - 1].id - 1
+      ].maintenanceMode;
 
     this.setState((prevState) => ({
       maintenanceMode: !prevState.maintenanceMode,
     }));
   }
 
+  // Change mmode for ctc message
   CTCMMode(id, line, value) {
     if (line === 'green') {
       this.tracks[0].blocks[id - 1].maintenanceMode = value;
@@ -322,31 +338,19 @@ class TrackController extends React.Component {
       appState: !prevState.appState,
     }));
   }
-  // CTCMMode(value) {
-  //   // reset all overrides to false on change
-  //   this.controllers.forEach((controller) => {
-  //     if (controller.line === 'green') {
-  //       this.tracks[0].blocks[controller.swBlock - 1].override = false;
-  //     } else if (controller.line === 'red') {
-  //       this.tracks[1].blocks[controller.swBlock - 1].override = false;
-  //     }
-  //   });
 
-  //   this.setState({
-  //     maintenanceMode: status,
-  //   });
-  // }
-
+  // Action to load new plc file to a controller open dialog
   loadNewPLC = (event) => {
     var PLC = window.electronAPI.openFileDialog('PLC');
   };
 
+  // WHen the drop down line changes
   handleLineChange(event) {
     if (this.currTrack.line === 'green') {
-      this.tracks[0].blocks = this.tracks[this.state.line].blocks;
+      this.state.currController = 0;
       console.log('red');
     } else if (this.currTrack.line === 'red') {
-      this.tracks[1].blocks = this.tracks[this.state.line].blocks;
+      this.state.currController = 6;
       console.log('green');
     }
     this.state.line = event.target.value - 1;
@@ -358,30 +362,33 @@ class TrackController extends React.Component {
     }));
   }
 
+  // PLC change on event
   handleChangePLC(event) {
     this.setState({
       selectedPLC: event.target.value,
     });
   }
 
+  // PLC logic called in on interval once component mounts
   plc() {
-    if (this.state.currTrack === 'green') {
-      this.tracks[this.state.line].blocks = this.tracks[0].blocks;
-    } else if (this.state.currTrack === 'red') {
-      this.tracks[this.state.line].blocks = this.tracks[1].blocks;
-    }
+    // Check which track is current
+    // if (this.state.currTrack === 'green') {
+    //   this.tracks[this.state.line].blocks = this.tracks[0].blocks;
+    // } else if (this.state.currTrack === 'red') {
+    //   this.tracks[this.state.line].blocks = this.tracks[1].blocks;
+    // }
 
     // Logic
     this.controllers.forEach((controller) => {
       var status = [];
 
       let line = 0;
-
       if (controller.line === 'green') {
         line = 0;
       } else if (controller.line === 'red') {
         line = 1;
       }
+
       for (let j = 0; j < controller.plc.switchLogic.length; j++) {
         // Run 3x for vitality
         status = [true, true, true];
@@ -394,6 +401,32 @@ class TrackController extends React.Component {
             // AND
             if (controller.plc.switchLogic[j].logicTrue[k] === '&&') {
             }
+            // Authority part will be in format 'A<blockNum>'
+            else if (controller.plc.switchLogic[j].logicTrue[k].includes('A')) {
+              // If authority of train on block is less than - return false
+              if (controller.plc.switchLogic[j].logicTrue[k].includes('!')) {
+                if (
+                  this.tracks[line].blocks[
+                    parseInt(
+                      controller.plc.switchLogic[j].logicTrue[k].substring(2)
+                    ) - 1
+                  ].authority === 1
+                ) {
+                  status[vitality] = false;
+                }
+              } else {
+                if (
+                  !this.tracks[line].blocks[
+                    parseInt(
+                      controller.plc.switchLogic[j].logicTrue[k].substring(1)
+                    ) - 1
+                  ].authority === 1
+                ) {
+                  status[vitality] = false;
+                }
+              }
+            }
+
             // NOT
             else if (controller.plc.switchLogic[j].logicTrue[k].includes('!')) {
               if (
@@ -406,24 +439,11 @@ class TrackController extends React.Component {
                 status[vitality] = false;
               }
             }
-            // Authority part will be in format '<blockNum>A<authNumber>'
-            else if (controller.plc.switchLogic[j].logicTrue[k].includes('A')) {
-              // If authority of train on block is less than - return false
-              if (
-                this.trackGreen.blocks[
-                  parseInt(
-                    controller.plc.switchLogic[j].logicTrue[k].split('A')[0]
-                  ) - 1
-                ].authority <
-                controller.plc.switchLogic[j].logicTrue[k].split('A')[1]
-              ) {
-                status[vitality] = false;
-              }
-            }
+
             // Regular
             else {
               if (
-                this.tracks[0].blocks[
+                this.tracks[line].blocks[
                   parseInt(controller.plc.switchLogic[j].logicTrue[k]) - 1
                 ].occupancy === false
               ) {
@@ -434,24 +454,27 @@ class TrackController extends React.Component {
         }
         // Vitality check before setting switch position
         // Also send to CTC/Track Model
-        // if (
-        //   !this.tracks[line].blocks[
-        //     parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-        //   ].maintenanceMode
-        // )
         if (
-          !this.state.maintenanceMode ||
-          (this.state.maintenanceMode &&
-            this.tracks[line].blocks[
-              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].switch.override === false)
+          !this.tracks[line].blocks[
+            parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+          ].maintenanceMode
         ) {
+          // if (
+          //   !this.state.maintenanceMode ||
+          //   (this.state.maintenanceMode &&
+          //     this.tracks[line].blocks[
+          //       parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+          //     ].switch.override === false)
+          // )
           if (status.every((val) => val === true)) {
             if (
               !this.tracks[line].blocks[
                 parseInt(controller.plc.switchLogic[j].switchNumber) - 1
               ].switch.positionBool
             ) {
+              this.tracks[line].blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position = true;
               window.electronAPI.sendCTCMessage({
                 type: 'switch',
                 line: this.tracks[line].blocks[
@@ -479,15 +502,15 @@ class TrackController extends React.Component {
                   ].switch.position,
               });
             }
-            this.tracks[line].blocks[
-              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].switch.position = true;
           } else {
             if (
               this.tracks[line].blocks[
                 parseInt(controller.plc.switchLogic[j].switchNumber) - 1
               ].switch.positionBool
             ) {
+              this.tracks[line].blocks[
+                parseInt(controller.plc.switchLogic[j].switchNumber) - 1
+              ].switch.position = false;
               window.electronAPI.sendCTCMessage({
                 type: 'switch',
                 line: this.tracks[line].blocks[
@@ -515,9 +538,6 @@ class TrackController extends React.Component {
                   ].switch.position,
               });
             }
-            this.tracks[line].blocks[
-              parseInt(controller.plc.switchLogic[j].switchNumber) - 1
-            ].switch.position = false;
           }
         }
       }
@@ -825,7 +845,6 @@ class TrackController extends React.Component {
   componentDidMount() {
     const interval = setInterval(() => {
       this.plc();
-      // console.log('Blocks up to date');
     }, 1000);
   }
 
@@ -839,7 +858,8 @@ class TrackController extends React.Component {
 
   suggSpeed(e) {
     if (!isNaN(e.target.value)) {
-      this.state.currBlock.suggSpeed = e.target.value;
+      this.tracks[this.state.line].blocks[this.state.currBlock - 1].suggSpeed =
+        e.target.value;
 
       this.setState((prevState) => ({
         appState: !prevState.appState,
@@ -921,19 +941,26 @@ class TrackController extends React.Component {
   }
 
   occupancy() {
-    this.state.currBlock.occupancy = !this.state.currBlock.occupancy;
+    this.tracks[this.state.line].blocks[this.state.currBlock - 1].occupancy =
+      !this.tracks[this.state.line].blocks[this.state.currBlock - 1].occupancy;
     this.setState((prevState) => ({
       appState: !prevState.appState,
     }));
 
     window.electronAPI.sendCTCMessage({
       type: 'occupancy',
-      line: this.state.currBlock.line,
-      block_id: this.state.currBlock.id.toString(),
-      value: this.state.currBlock.occupancy,
+      line: this.tracks[this.state.line].blocks[this.state.currBlock - 1].line,
+      block_id:
+        this.tracks[this.state.line].blocks[
+          this.state.currBlock - 1
+        ].id.toString(),
+      value:
+        this.tracks[this.state.line].blocks[this.state.currBlock - 1].occupancy,
     });
 
-    console.log(this.state.currBlock.occupancy);
+    console.log(
+      this.tracks[this.state.line].blocks[this.state.currBlock - 1].occupancy
+    );
   }
 
   handleFileChange(e) {
@@ -951,12 +978,12 @@ class TrackController extends React.Component {
 
   handleChange(event) {
     this.setState({
-      currBlock: this.tracks[this.state.line].blocks[event.target.value - 1],
+      currBlock: event.target.value,
     });
-    console.log(this.tracks[this.state.line]);
+    // console.log(this.tracks[this.state.line]);
 
-    console.log(this.tracks[this.state.line].blocks[event.target.value - 1]);
-    console.log(this.state.currBlock);
+    // console.log(this.tracks[this.state.line].blocks[event.target.value - 1]);
+    // console.log(this.tracks[this.state.line].blocks[this.state.currBlock -1]);
   }
 
   handleChangeController(event) {
@@ -998,7 +1025,11 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-Block"
                       id="select-Block"
-                      value={this.state.currBlock.id}
+                      value={
+                        this.tracks[this.state.line].blocks[
+                          this.state.currBlock - 1
+                        ].id
+                      }
                       label="Blocks"
                       onChange={this.handleChange}
                     >
@@ -1042,22 +1073,14 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="centered">
-                  {this.state.currBlock.switch != undefined &&
-                  this.state.maintenanceMode ? (
+                  {this.tracks[this.state.line].blocks[this.state.currBlock - 1]
+                    .switch != undefined ? (
                     <Chip
-                      onClick={this.setSwitch}
                       label={`Switch Position: ${
                         this.tracks[this.state.line].blocks[
-                          this.controllers[this.state.currController].swBlock -
-                            1
+                          this.state.currBlock - 1
                         ].switch.position
                       }`}
-                      color={'success'}
-                      variant="outlined"
-                    />
-                  ) : this.state.currBlock.switch != undefined ? (
-                    <Chip
-                      label={`Switch Position: ${this.state.currBlock.switch.position}`}
                       color={'success'}
                       variant="outlined"
                     />
@@ -1069,7 +1092,9 @@ class TrackController extends React.Component {
               <Grid item xs="auto">
                 <div className="centered">
                   {this.tracks[this.state.line].blocks[
-                    this.state.currBlock.id - 1
+                    this.tracks[this.state.line].blocks[
+                      this.state.currBlock - 1
+                    ].id - 1
                   ].maintenanceMode ? (
                     <Chip
                       onClick={this.mmMode}
@@ -1092,11 +1117,17 @@ class TrackController extends React.Component {
                   <Chip
                     label="Light"
                     color={
-                      this.state.currBlock.transitLight === 'green'
+                      this.tracks[this.state.line].blocks[
+                        this.state.currBlock - 1
+                      ].transitLight === 'green'
                         ? 'success'
-                        : this.state.currBlock.transitLight === 'yellow'
+                        : this.tracks[this.state.line].blocks[
+                            this.state.currBlock - 1
+                          ].transitLight === 'yellow'
                         ? 'warning'
-                        : this.state.currBlock.transitLight === 'red'
+                        : this.tracks[this.state.line].blocks[
+                            this.state.currBlock - 1
+                          ].transitLight === 'red'
                         ? 'error'
                         : 'default'
                     }
@@ -1128,7 +1159,7 @@ class TrackController extends React.Component {
                         <TableCell component="th">Suggested Speed</TableCell>
                         <TableCell align="right">
                           <TextField
-                            value={this.state.currBlock.suggSpeed}
+                            value={this.tracks[this.state.line].blocks[this.state.currBlock -1].suggSpeed}
                             onChange={this.suggSpeed}
                             id="standard-basic"
                             label="Speed"
@@ -1146,11 +1177,11 @@ class TrackController extends React.Component {
                         <TableCell align="right">
                           {' '}
                           <Chip
-                            label={String(this.state.currBlock.authority)}
+                            label={String(this.tracks[this.state.line].blocks[this.state.currBlock -1].authority)}
                             color={
-                              this.state.currBlock.authority === false
+                              this.tracks[this.state.line].blocks[this.state.currBlock -1].authority === false
                                 ? 'error'
-                                : this.state.currBlock.authority === true
+                                : this.tracks[this.state.line].blocks[this.state.currBlock -1].authority === true
                                 ? 'success'
                                 : 'default'
                             }
@@ -1181,16 +1212,24 @@ class TrackController extends React.Component {
                           {' '}
                           <Chip
                             label={
-                              this.state.currBlock.crossing === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].crossing === false
                                 ? 'Not active'
-                                : this.state.currBlock.crossing === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].crossing === true
                                 ? 'Active'
                                 : 'default'
                             }
                             color={
-                              this.state.currBlock.crossing === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].crossing === false
                                 ? 'success'
-                                : this.state.currBlock.crossing === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].crossing === true
                                 ? 'error'
                                 : 'default'
                             }
@@ -1208,16 +1247,24 @@ class TrackController extends React.Component {
                           {' '}
                           <Chip
                             label={
-                              this.state.currBlock.crossing === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].crossing === false
                                 ? 'Not active'
-                                : this.state.currBlock.crossing === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].crossing === true
                                 ? 'Active'
                                 : 'default'
                             }
                             color={
-                              this.state.currBlock.crossing === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].crossing === false
                                 ? 'success'
-                                : this.state.currBlock.crossing === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].crossing === true
                                 ? 'error'
                                 : 'default'
                             }
@@ -1238,16 +1285,24 @@ class TrackController extends React.Component {
                         <TableCell align="right">
                           <Chip
                             label={
-                              this.state.currBlock.occupancy === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].occupancy === false
                                 ? 'Not occupied'
-                                : this.state.currBlock.occupancy === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].occupancy === true
                                 ? 'Occupied'
                                 : ''
                             }
                             color={
-                              this.state.currBlock.occupancy === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].occupancy === false
                                 ? 'success'
-                                : this.state.currBlock.occupancy === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].occupancy === true
                                 ? 'error'
                                 : 'default'
                             }
@@ -1317,7 +1372,11 @@ class TrackController extends React.Component {
                     <Select
                       labelId="select-Block"
                       id="select-Block"
-                      value={this.state.currBlock.id}
+                      value={
+                        this.tracks[this.state.line].blocks[
+                          this.state.currBlock - 1
+                        ].id
+                      }
                       label="Blocks"
                       onChange={this.handleChange}
                     >
@@ -1394,10 +1453,9 @@ class TrackController extends React.Component {
                     this.controllers[this.state.currController].swBlock - 1
                   ].switch == undefined ? (
                     <div></div>
-                  ) : // this.tracks[this.state.line].blocks[
-                  //     this.controllers[this.state.currController].swBlock - 1
-                  //   ].maintenanceMode
-                  this.state.maintenanceMode ? (
+                  ) : this.tracks[this.state.line].blocks[
+                      this.controllers[this.state.currController].swBlock - 1
+                    ].maintenanceMode ? (
                     <Chip
                       onClick={this.setSwitch}
                       label={`Switch Position: ${
@@ -1407,7 +1465,9 @@ class TrackController extends React.Component {
                         ].switch.position
                       }`}
                       color={
-                        this.state.currBlock.switchPosition === 'null'
+                        this.tracks[this.state.line].blocks[
+                          this.state.currBlock - 1
+                        ].switchPosition === 'null'
                           ? 'default'
                           : 'success'
                       }
@@ -1422,7 +1482,9 @@ class TrackController extends React.Component {
                         ].switch.position
                       }`}
                       color={
-                        this.state.currBlock.switchPosition === 'null'
+                        this.tracks[this.state.line].blocks[
+                          this.state.currBlock - 1
+                        ].switchPosition === 'null'
                           ? 'default'
                           : 'success'
                       }
@@ -1433,10 +1495,11 @@ class TrackController extends React.Component {
               </Grid>
               <Grid item xs="auto">
                 <div className="centered">
-                  {/* {this.tracks[this.state.line].blocks[
-                    this.state.currBlock.id - 1
-                  ].maintenanceMode  */}
-                  {this.state.maintenanceMode ? (
+                  {this.tracks[this.state.line].blocks[
+                    this.tracks[this.state.line].blocks[
+                      this.state.currBlock - 1
+                    ].id - 1
+                  ].maintenanceMode ? (
                     <Chip
                       label="Maintenence Mode Activated"
                       color="warning"
@@ -1456,11 +1519,17 @@ class TrackController extends React.Component {
                   <Chip
                     label="Light"
                     color={
-                      this.state.currBlock.transitLight === 'green'
+                      this.tracks[this.state.line].blocks[
+                        this.state.currBlock - 1
+                      ].transitLight === 'green'
                         ? 'success'
-                        : this.state.currBlock.transitLight === 'yellow'
+                        : this.tracks[this.state.line].blocks[
+                            this.state.currBlock - 1
+                          ].transitLight === 'yellow'
                         ? 'warning'
-                        : this.state.currBlock.transitLight === 'red'
+                        : this.tracks[this.state.line].blocks[
+                            this.state.currBlock - 1
+                          ].transitLight === 'red'
                         ? 'error'
                         : 'default'
                     }
@@ -1469,11 +1538,11 @@ class TrackController extends React.Component {
                   {/* <Chip
                     label="Light Backward"
                     color={
-                      this.state.currBlock.transitLight2 === 'green'
+                      this.tracks[this.state.line].blocks[this.state.currBlock -1].transitLight2 === 'green'
                         ? 'success'
-                        : this.state.currBlock.transitLight2 === 'yellow'
+                        : this.tracks[this.state.line].blocks[this.state.currBlock -1].transitLight2 === 'yellow'
                         ? 'warning'
-                        : this.state.currBlock.transitLight2 === 'red'
+                        : this.tracks[this.state.line].blocks[this.state.currBlock -1].transitLight2 === 'red'
                         ? 'error'
                         : 'default'
                     }
@@ -1506,16 +1575,24 @@ class TrackController extends React.Component {
                         <TableCell align="right">
                           <Chip
                             label={
-                              this.state.currBlock.crossing === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].crossing === false
                                 ? 'Not active'
-                                : this.state.currBlock.crossing === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].crossing === true
                                 ? 'Active'
                                 : ''
                             }
                             color={
-                              this.state.currBlock.crossing === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].crossing === false
                                 ? 'success'
-                                : this.state.currBlock.crossing === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].crossing === true
                                 ? 'error'
                                 : 'default'
                             }
@@ -1533,16 +1610,24 @@ class TrackController extends React.Component {
                           {' '}
                           <Chip
                             label={
-                              this.state.currBlock.crossing === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].crossing === false
                                 ? 'Not active'
-                                : this.state.currBlock.crossing === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].crossing === true
                                 ? 'Active'
                                 : ''
                             }
                             color={
-                              this.state.currBlock.crossing === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].crossing === false
                                 ? 'success'
-                                : this.state.currBlock.crossing === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].crossing === true
                                 ? 'error'
                                 : 'default'
                             }
@@ -1559,16 +1644,24 @@ class TrackController extends React.Component {
                         <TableCell align="right">
                           <Chip
                             label={
-                              this.state.currBlock.occupancy === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].occupancy === false
                                 ? 'Not occupied'
-                                : this.state.currBlock.occupancy === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].occupancy === true
                                 ? 'Occupied'
                                 : ''
                             }
                             color={
-                              this.state.currBlock.occupancy === false
+                              this.tracks[this.state.line].blocks[
+                                this.state.currBlock - 1
+                              ].occupancy === false
                                 ? 'success'
-                                : this.state.currBlock.occupancy === true
+                                : this.tracks[this.state.line].blocks[
+                                    this.state.currBlock - 1
+                                  ].occupancy === true
                                 ? 'error'
                                 : 'default'
                             }
