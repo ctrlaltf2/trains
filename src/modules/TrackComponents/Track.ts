@@ -35,9 +35,9 @@ export class Track {
           file[key]['CUMALTIVE ELEVATION(M)'],
           file[key].Infrastructure,
           file[key].Oneway,
-          'no underground data',
+          'false',
           file[key]['Station Side'],
-          'no crossing data',
+          'false',
           file[key].Prev,
           file[key].Next
         )
