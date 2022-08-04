@@ -60,7 +60,6 @@ let greenEVTemp;
 let redEVTemp;
 let greenTHStatus;
 let redTHStatus;
-let crossingArray = [];
 
 // variables for the two tracks failures
 let redTrackSignalPickup; let greenTrackSignalPickup;
@@ -250,6 +249,8 @@ class TrackModel extends React.Component {
     //   load the Track Objects' blocks arrays into the Track Model Class blocks' arrays
     greenBlocks = greenLineObject.blocks;
     redBlocks = redLineObject.blocks;
+
+    console.log('red blocks: ', redBlocks);
 
     //  set the enviornemnt temps for both lines
     const tr = redLineObject.generateTrackModelEVtemp();
@@ -1132,6 +1133,12 @@ class TrackModel extends React.Component {
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">{String(this.state.crossing)}</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">Underground Status</div>
+                </Grid>
+                <Grid item xs={6}>
+                  <div className="label">{this.state.Underground}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Elevation (feet)</div>
