@@ -77,7 +77,28 @@ class TrainControllerSW extends React.Component {
           // Gets all but the last character of the string
           this.stationName = payload.Beacon.slice(0, -1);
 
+          // Call setStationName function
+          this.setStationName();
+
+          // If receiving a beacon and authority = 0,
+          // this is the station the train is supposed to stop at
+          if (this.authority === 0){
+            // Stop the train
+            this.authorityStop();
+
+            // Open the correct doors
+            this.platformSide();
+          }
+
           break;
+        case 'newTrain':
+          this.handleDropdownChange(payload.newTrain);
+          break;
+        case 'Underground':
+          this.under = payload.Underground;
+
+          this.underground();
+
         default:
           console.warn('Unknown payload type received: ', payload.type);
       }
@@ -94,7 +115,6 @@ class TrainControllerSW extends React.Component {
       trainLights: true,
       cabinLights: true,
       under: false, // Variable for if the train is underground
-      announcementsOnOff: false,
       transitLights: '',
 
       // Service Brake, Emergency Brake, and failure toggles
@@ -164,7 +184,6 @@ class TrainControllerSW extends React.Component {
     // Environment funcitons
     this.underground = this.underground.bind(this);
     this.platformSide = this.platformSide.bind(this);
-    this.announcements = this.announcements.bind(this);
     this.authorityStop = this.authorityStop.bind(this);
 
     // Failures
@@ -204,15 +223,34 @@ class TrainControllerSW extends React.Component {
 
 
       // Automatic Mode
-      if(this.state.automaticMode == true){
+      if(this.state.automaticMode === true){
 
+        // Speed should be set to the suggested speed
+        // and updated on the UI in automatic mode
         this.setSpeed = Math.round(this.kilo_to_miles(this.suggestedSpeed));
         this.setState({setSpeedUI: this.setSpeed});
-        // If there's a brake failure, engine failure, or signal pickup failure, decrease the speed and stop
+
+        // Convert from miles per hour to km/h
+        this.setSpeedkilo = this.miles_to_kilo(this.setSpeed);
+
+        // Send desired speed to train model
+        window.electronAPI.sendTrainModelMessage({
+          'type': 'setSpeed',
+          'setSpeed': this.setSpeedkilo,
+        });
+
+        // If there's a brake failure, engine failure,
+        // or signal pickup failure, decrease the speed and stop
         if (this.state.brakeFailureDisplay || this.state.engineFailureDisplay || this.state.signalPickupFailureDisplay){
           this.setState({emergencyButton: true});
           this.setSpeed = 0;
-          this.setState({setSpeedUI: 0});
+          this.setState({setSpeedUI: this.setSpeed});
+
+          // Send desired speed to train model
+          window.electronAPI.sendTrainModelMessage({
+            'type': 'setSpeed',
+            'setSpeed': this.setSpeed,
+          });
         }
         else{
             // Reset the emergency brake
@@ -220,7 +258,7 @@ class TrainControllerSW extends React.Component {
         }
 
         // Stop the train when authority reaches 0
-        if(this.authority == 0){
+        if(this.authority === 0){
           this.authorityStop();
         }
 
@@ -229,23 +267,57 @@ class TrainControllerSW extends React.Component {
       // Manual Mode
       else{
 
-        this.setState({setSpeedUI: this.setSpeed});
-
-        // If the service brake is activated while train is moving,
-        // set the desired speed to 0 and toggle service brake UI
-        if((this.state.brakeStatus == true) && (this.state.currentSpeedUI_MPH != 0)){
-          this.setSpeed = 0;
-          this.setState({setSpeedUI: 0});
+        // Don't allow driver to start train
+        // if authority is 0
+        if (this.authority === 0){
+          this.authorityStop();
         }
+        else{
 
-        // If the emergency brake is activated while train is moving,
-        // set the desired speed to 0 and toggle emergency brake UI
+          if (this.setSpeed >= this.state.commandedSpeedUI_MPH){
+            this.setSpeed = this.state.commandedSpeedUI_MPH;
+          }
+          this.setState({setSpeedUI: this.setSpeed});
 
-        if((this.state.emergencyButton == true) && (this.state.currentSpeedUI_MPH != 0)){
-          this.setSpeed = 0;
-          this.setState({setSpeedUI: 0});
+          // Convert from miles per hour to km/h
+          this.setSpeedkilo = this.miles_to_kilo(this.setSpeed);
+
+          // Send desired speed to train model
+          window.electronAPI.sendTrainModelMessage({
+            'type': 'setSpeed',
+            'setSpeed': this.setSpeedkilo,
+          });
+
+          // If the service brake is activated while train is moving,
+          // set the desired speed to 0 and toggle service brake UI
+          if((this.state.brakeStatus === true) && (this.state.currentSpeedUI_MPH != 0)){
+            this.setSpeed = 0;
+            this.setState({setSpeedUI: this.setSpeed});
+
+            // Send desired speed to train model
+            window.electronAPI.sendTrainModelMessage({
+              'type': 'setSpeed',
+              'setSpeed': this.setSpeed,
+            });
+          }
+
+          // If the emergency brake is activated while train is moving,
+          // set the desired speed to 0 and toggle emergency brake UI
+
+          if((this.state.emergencyButton === true) && (this.state.currentSpeedUI_MPH != 0)){
+            this.setSpeed = 0;
+            this.setState({setSpeedUI: this.setSpeed});
+
+            // Convert from miles per hour to km/h
+            this.setSpeedkilo = this.miles_to_kilo(this.setSpeed);
+
+            // Send desired speed to train model
+            window.electronAPI.sendTrainModelMessage({
+              'type': 'setSpeed',
+              'setSpeed': this.setSpeed,
+            });
+          }
         }
-
       }
     }, 100)
 
@@ -261,7 +333,6 @@ class TrainControllerSW extends React.Component {
     }
     else{
       this.temperature = event.target.value;
-      //this.temperature = this.trainID[this.state.currentTrain].temperature
     }
 
     // Display to the UI
@@ -315,17 +386,13 @@ class TrainControllerSW extends React.Component {
       this.setSpeed = event.target.value;
     }
 
-    // Setting speed for UI display
-    //this.setState({setSpeedUI: this.setSpeed});
-
-
     // Convert from miles per hour to km/h
     this.setSpeedkilo = this.miles_to_kilo(this.setSpeed);
 
-    // Send desired speed  to train model
+    // Send desired speed to train model
     window.electronAPI.sendTrainModelMessage({
       'type': 'setSpeed',
-      'leftDoor': this.setSpeedkilo,
+      'setSpeed': this.setSpeedkilo,
     });
 
   }
@@ -348,7 +415,7 @@ class TrainControllerSW extends React.Component {
     // Update current speed on UI
     this.setState({currentSpeedUI: this.currentSpeed});
 
-    if (this.currentSpeed == 70){
+    if (this.currentSpeed === 70){
       this.setState({currentSpeedUI_MPH: Math.round(this.kilo_to_miles(this.currentSpeed))-1});
     }
     else{
@@ -373,7 +440,7 @@ class TrainControllerSW extends React.Component {
     // Update commanded speed on UI
     this.setState({commandedSpeedUI: this.commandedSpeed});
 
-    if (this.commandedSpeed == 70){
+    if (this.commandedSpeed === 70){
       this.setState({commandedSpeedUI_MPH: Math.round(this.kilo_to_miles(this.commandedSpeed))-1});
     }
     else{
@@ -398,7 +465,7 @@ class TrainControllerSW extends React.Component {
     // Update suggested speed on UI
     this.setState({suggestedSpeedUI: this.suggestedSpeed});
 
-    if (this.suggestedSpeed == 70){
+    if (this.suggestedSpeed === 70){
       this.setState({suggestedSpeedUI_MPH: Math.round(this.kilo_to_miles(this.suggestedSpeed))-1});
     }
     else{
@@ -419,8 +486,8 @@ class TrainControllerSW extends React.Component {
     this.setState({authorityUI: this.authority});
   }
 
-  setStationName(event){ // Sets the station
-    this.stationName = event.target.value;
+  setStationName(){ // Sets the station, displays to UI
+    //this.stationName = event.target.value; <-- only for test UI
 
     // Display to the UI
     this.setState({stationNameUI: this.stationName});
@@ -470,7 +537,7 @@ class TrainControllerSW extends React.Component {
     return (speed * 2.237)
   }
 
-  meters_to_miles
+
   calculatePower() { // Function that calculates the current power of the train
 
 
@@ -502,13 +569,13 @@ class TrainControllerSW extends React.Component {
     }
 
     // Take the mode of the 3 calculations
-    if (this.powerCalc_vitality[0] == this.powerCalc_vitality[1]){
+    if (this.powerCalc_vitality[0] === this.powerCalc_vitality[1]){
       this.bestPower = this.powerCalc_vitality[0];
     }
-    else if (this.powerCalc_vitality[0] == this.powerCalc_vitality[2]){
+    else if (this.powerCalc_vitality[0] === this.powerCalc_vitality[2]){
       this.bestPower = this.powerCalc_vitality[0];
     }
-    else if (this.powerCalc_vitality[1] == this.powerCalc_vitality[2]){
+    else if (this.powerCalc_vitality[1] === this.powerCalc_vitality[2]){
       this.bestPower = this.powerCalc_vitality[1];
     }
 
@@ -537,7 +604,7 @@ class TrainControllerSW extends React.Component {
   // For automatic mode
 
   underground() { // Checks if the train is underground, activates lights accordingly
-    if(this.under && this.automaticMode){
+    if(this.under === true && this.automaticMode === true){
       this.setState({trainLights: true});
     }
     else{
@@ -546,26 +613,40 @@ class TrainControllerSW extends React.Component {
   }
 
   platformSide(){ // Checks which side the station is on and opens the respective doors
-    if(this.automaticMode == true && this.currentSpeed == 0 && this.platformSide == 'r'){
+    if(this.automaticMode === true && this.currentSpeed === 0 && this.platformSide == 'r'){
       // true = closed, false = open
       this.setState({rightDoors: false});
+
+      //turn on cabin lights
+      this.setState({cabinLights: true});
     }
-    else if (this.automaticMode = true && this.currentSpeed == 0 && this.platformSide == 'l'){
+    else if (this.automaticMode === true && this.currentSpeed === 0 && this.platformSide === 'l'){
       this.setState({leftDoors: false});
+
+      //turn on cabin lights
+      this.setState({cabinLights: true});
     }
-    else if (this.automaticMode = true && this.currentSpeed == 0 && this.platformSide == 'b'){
+    else if (this.automaticMode === true && this.currentSpeed === 0 && this.platformSide === 'b'){
       this.setState({rightDoors: false});
       this.setState({leftDoors: false});
+
+      //turn on cabin lights
+      this.setState({cabinLights: true});
     }
   }
 
-  announcements(){
-
-  }
 
   authorityStop(){ // Call this function when authority hits 0
-      this.setState({brakeStatus: true});
-      this.setSpeed = 0;
+    this.setState({brakeStatus: true});
+    this.setSpeed = 0;
+    this.setState({setSpeedUI: this.setSpeed});
+
+
+    // Send desired speed to train model
+    window.electronAPI.sendTrainModelMessage({
+      'type': 'setSpeed',
+      'setSpeed': this.setSpeed,
+    });
   }
 
   toggleAutomatic(){ // Toggles between automatic mode and manual mode
