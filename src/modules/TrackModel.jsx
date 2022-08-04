@@ -245,8 +245,8 @@ class TrackModel extends React.Component {
     this.checkTrackHeaters(redEVTemp, greenEVTemp);
 
     //  make the default block occupancy unoccupied
-    redBlocks.forEach((a) => {a.Occupied = 'Unoccupied'});
-    greenBlocks.forEach((b) => {b.Occupied = 'Unoccupied'});
+    redBlocks.forEach((a) => {a.Occupancy = false});
+    greenBlocks.forEach((b) => {b.Occupancy = false});
 
     //  send the track controller an empty set of arrays (block unoccupied)
     window.electronAPI.sendTrackControllerMessage({
@@ -297,7 +297,7 @@ class TrackModel extends React.Component {
     this.setState({
       elevation: elevationImperial,
     });
-    this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].Occupied;
+    this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].Occupancy;
   };
 
   loadFile = (event) => {
@@ -675,7 +675,7 @@ class TrackModel extends React.Component {
       //  check if the train is moving
       if (IS_TRAIN_MOVING) {
         //  occupy the current block
-        blocks[currBlock].Occupied = true;
+        blocks[currBlock].Occupancy = true;
 
         //  send the track model a message about the blocks being updated
         //  Tracks block occupancy
@@ -783,9 +783,9 @@ class TrackModel extends React.Component {
         //  check if the old block has been vacatted
         if (EXITED_BLOCK) {
           //  loop through blocks, first occupied block becomes unoccupied
-          const searchInd = blocks.Occupied.indexOf.true;
+          const searchInd = blocks.Occupancy.indexOf.true;
           //  set occupancy to false
-          blocks[searchInd].Occupied = false;
+          blocks[searchInd].Occupancy = false;
           //  send the track model a message about the blocks being updated
         //  Tracks block occupancy
           if(trackLine === 'Green' && greenSendingTrackCircuit === "enabled")
