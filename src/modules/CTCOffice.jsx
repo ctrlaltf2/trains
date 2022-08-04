@@ -110,7 +110,8 @@ class CTCOffice extends React.Component {
       },
       switches: { // switches[line][sorted([blocks connected to]).join('-')] = Switch(...)
         'red': {
-          '1-15-16':   new TrackSwitch(undefined, '15', ['1', ' 16']),
+          '1-15-16':   new TrackSwitch(undefined, '15', [ '1', '16']),
+          '0-9-10':    new TrackSwitch(undefined,  '9', [ '0', '10']),
           '27-28-76':  new TrackSwitch(undefined, '27', ['28', '76']),
           '32-33-72':  new TrackSwitch(undefined, '33', ['32', '72']),
           '38-39-71':  new TrackSwitch(undefined, '38', ['39', '71']),
@@ -309,12 +310,12 @@ class CTCOffice extends React.Component {
     this.control_points = {
       'green': {
         '57': {
-          '151': 1 // Going from 57 to 152 requires authority 1 at 57
+          '151': 1 // Going from 57 to 151 requires authority 1 at 57
         }
       },
       'red': {
         '9': {
-          '0': 1 // Going from 9 to 152 requires authority 1 at 9
+          '0': 1 // Going from 9 to 0 requires authority 1 at 9
         }
       }
     };
