@@ -250,8 +250,6 @@ class TrackModel extends React.Component {
     greenBlocks = greenLineObject.blocks;
     redBlocks = redLineObject.blocks;
 
-    console.log('red blocks: ', redBlocks);
-
     //  set the enviornemnt temps for both lines
     const tr = redLineObject.generateTrackModelEVtemp();
     redEVTemp = tr;
@@ -289,9 +287,9 @@ class TrackModel extends React.Component {
     this.state.lineName = trackFile[1].Line;
 
     if(this.state.lineName === 'Red')
-      this.state.blocks = redBlocks;
+      {this.state.blocks = redBlocks;}
     else if(this.state.lineName === 'Green')
-      this.state.blocks = greenBlocks;
+      {this.state.blocks = greenBlocks;}
     //  load the first block by default
     this.setState({blockIndex : 1});
     this.loadBlockInfo();
@@ -302,10 +300,10 @@ class TrackModel extends React.Component {
   //  Load's blocks information from the Track Model File - alpha = blockIndex
   loadBlockInfo = () => {
     const interval = setInterval(() => {
-    const alpha = this.state.blockIndex;
+    // const alpha = this.state.blockIndex;
     //  convert to imperials for display only
     // eslint-disable-next-line react/no-access-state-in-setstate
-    const curBlock = this.state.blocks[alpha]; //  get the block selected
+    const curBlock = this.state.blocks[this.state.blockIndex]; //  get the block selected
     const blockLengthImperial = (curBlock.length * 0.000621371).toFixed(3);
     const speedLimitImperial = (curBlock.spdLimit * 0.621371).toFixed(3);
     const elevationImperial = (curBlock.elevation * 3.28084).toFixed(3);
@@ -320,7 +318,7 @@ class TrackModel extends React.Component {
     this.setState({
       elevation: elevationImperial,
     });
-    this.state.blockOccupancy = this.state.blocks[this.state.blockIndex].occupancy;
+    this.state.blockOccupancy = curBlock.occupancy;
 
     //  check the status of the line name
     if(curBlock.line === "Green")
@@ -359,7 +357,7 @@ class TrackModel extends React.Component {
     }
   };
 
-  failTrackPower = (event) => {
+  failTrackPower = (event) => {    
     //  check the state of track power and change it
     if (this.state.trackPower === 'functional') {
       this.setState({ trackPower: 'broken' });
@@ -1108,9 +1106,7 @@ class TrackModel extends React.Component {
                   <div className="label">Block Occupancy</div>
                 </Grid>
                 <Grid item xs={6}>
-                  <div className="label" defaultValue="false">
-                    {this.state.blockOccupancy}
-                  </div>
+                  <div className="label">{this.state.blockOccupancy}</div>
                 </Grid>
                 <Grid item xs={6}>
                   <div className="label">Track Heater Status</div>
