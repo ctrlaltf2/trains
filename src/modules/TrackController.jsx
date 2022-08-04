@@ -101,7 +101,7 @@ class TrackController extends React.Component {
         case 'GreenBlockOccupancy':
           for (let i = 1; i < this.tracks[0].blocks.length + 1; i++) {
             if (
-              payload.GreenBlocks[i].occupancy != this.tracks[0].blocks[i - 1]
+              payload.GreenBlocks[i].occupancy != this.tracks[0].blocks[i - 1].occupancy
             ) {
               this.tracks[0].blocks[i - 1].occupancy =
                 payload.GreenBlocks[i].occupancy;
@@ -795,9 +795,9 @@ class TrackController extends React.Component {
               line: this.tracks[line].blocks[
                 parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
               ].line,
-              id: this.tracks[line].blocks[
+              id: parseInt(this.tracks[line].blocks[
                 parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
-              ].id,
+              ].id),
               status:
                 this.tracks[line].blocks[
                   parseInt(controller.plc.crossingLogic[j].crossNumber) - 1
