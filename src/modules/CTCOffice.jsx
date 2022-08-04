@@ -82,8 +82,21 @@ class CTCOffice extends React.Component {
     });
 
     window.electronAPI.subscribeFileMessage( (_event, payload) => {
-      // console.log(payload);
+      console.log(payload);
+
+      if(payload.status !== 'success')
+        return;
+
+      switch(payload.tag) {
+        case 'schedule':
+          this.parseSchedule(payload.payload);
+          break;
+        default:
+          console.warn(`Unknown file tag sent '${payload.tag}'`);
+          break;
+      };
     });
+
 
     window.electronAPI.subscribeTimerMessage( (_event, payload) => {
       this.now = payload.timestamp;
@@ -323,6 +336,26 @@ class CTCOffice extends React.Component {
     this.initCy();
   }
 
+  parseSchedule(data) {
+    // Ayo, pipe-and-filter???
+    data
+      .replace('\r', '')  // Remove stupid carriage returns (thanks microsoft)
+      .split('\n')        // Split by newline
+      .map( (line) => {   // Split by comma
+        return line.split(',');
+      })
+      .filter( (line_array, index) => { // Filter empty lines and header
+        return (index !== 0) && line_array.length === 3;
+      })
+      .forEach( (row) => { // Parse out each row
+        const [line, station, eta_str] = row;
+        console.log('Scheduling dispatch for ', line.toLowerCase(), station, eta_str);
+        this.manualDispatch(line.toLowerCase(), station, eta_str);
+      });
+
+    console.log('Pending dispatches present after loading schedule: ', this.pendingDispatches);
+  }
+
   // tested
   checkShouldDispatch() {
     const deleted = [];
@@ -334,9 +367,10 @@ class CTCOffice extends React.Component {
         this.sendDispatchMessage(train);
 
         // This should be a queue but you're hilarious if you think we're going to be dispatching multiple trains
+        // Better yet, trackmodel sends a confirmation message on train deployment, confirmation has the ID that got deployed, things get initialized there.
         // Give train inference algo some initial values
         const occupancy = _.cloneDeep(this.state.occupancy);
-        occupancy[line][0] = true;
+        occupancy[train.line][0] = true;
 
         // Initialize position
         this.trainPositions[train.line][0] = train.id;
@@ -1245,16 +1279,13 @@ class CTCOffice extends React.Component {
           <div id="bottomRightButtonGroup" className="floating">
             <label htmlFor="systemScheduleButton">
               <label htmlFor="systemScheduleButton">
-                <Input
-                  accept="text/csv"
-                  id="systemScheduleButton"
-                  multiple
-                  type="file"
-                  onChange={(ev) => {
-                    return;
+                <Button
+                  variant="contained"
+                  component="span"
+                  onClick={() => {
+                    window.electronAPI.openFileDialog('schedule');
                   }}
-                />
-                <Button variant="contained" component="span">
+                >
                   Upload Schedule
                 </Button>
               </label>
