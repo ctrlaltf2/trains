@@ -598,12 +598,12 @@ class CTCOffice extends React.Component {
       if(auth_stop.type === 'control') {
         auth_table.push({
           authority: auth_stop.auth_there,
-          wait_next_authority: 0
+          wait_next_authority: 1000
         });
 
         auth_table.push({
           authority: auth_next_stop.block_route_i - auth_stop.block_route_i + 1,
-          wait_next_authority: (auth_next_stop.type === 'stop') ? auth_next_stop.wait_next_authority : 0
+          wait_next_authority: (auth_next_stop.type === 'stop') ? auth_next_stop.wait_next_authority : 1000
         });
       }
     }
@@ -853,8 +853,17 @@ class CTCOffice extends React.Component {
       // Decrement authority on train object
       this.trains[train_id].authority--;
 
-      if(this.trains[train_id].authority == 0) {
+      if(this.trains[train_id].authority === 0) {
         const next_auth = this.trains[train_id].auth_table[0];
+        // Send (block_id, authority) to TC
+        // Workaround until TrainModel relays its authority down to nearby waysides
+        window.electronAPI.sendTrackControllerMessage({
+          type: 'authority',
+          line: line,
+          block_id: block_id,
+          authority: 0,
+        });
+
         if(next_auth)
           scheduleAuthoritySend(train_id, next_auth.authority, this.now + next_auth.wait_next_authority);
       }
