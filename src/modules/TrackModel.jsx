@@ -193,6 +193,13 @@ class TrackModel extends React.Component {
           }
         break;
 
+        case 'suggestedSpeed':
+          //  block_id, suggestedSpeed, 
+          window.electronAPI.sendTrainModelMessage({
+            payload,
+          });
+          break;
+
         case 'crossing':
           //  line, id, and status
           if(payload.line === "Green")
@@ -551,6 +558,7 @@ class TrackModel extends React.Component {
     } else if (!(g < 32)) {
       greenTHStatus = 'disabled';
     }
+    // return ({redTHStatus, greenTHStatus});
   };
 
   //  handle the select change
@@ -933,6 +941,32 @@ class TrackModel extends React.Component {
   getTrackModelArrays = () => {
     return ({'redBlocks': redBlocks, 'greenBlocks': greenBlocks});
   };
+
+  //  Function to get the variables from the system
+  getSystemVars = () => 
+  {
+    return({
+     greenEVTemp,
+     redEVTemp,
+      greenTHStatus,
+      redTHStatus,
+      redTrackSignalPickup, 
+      greenTrackSignalPickup,
+      redRailStatus,
+      greenRailStatus,
+      redTrackPowerStatus,
+      greenTrackPowerStatus,
+      trainDispatchArr,
+      isTrainMoving,
+      enteredBlock,
+      exitedBlock,
+      lineName,
+      greenSendingTrackCircuit,
+      redSendingTrackCircuit,
+      redCurrBlock,
+      greenCurrBlock,
+    });
+  }
 
   toggle() {
     this.setState((prevState) => ({
