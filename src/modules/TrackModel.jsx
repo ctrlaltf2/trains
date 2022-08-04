@@ -326,10 +326,12 @@ class TrackModel extends React.Component {
     if(curBlock.line === "Green")
     {
       this.setState({enviornmentTemp : greenEVTemp});
+      this.setState({trackHeaterStatus : greenTHStatus});
     }
     else if (curBlock.line === "Red")
     {
       this.setState({enviornmentTemp : redEVTemp});
+      this.setState({trackHeaterStatus : redTHStatus});
     }
     this.setState({
       crossing: curBlock.crossing,
