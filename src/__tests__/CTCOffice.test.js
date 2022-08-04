@@ -497,7 +497,9 @@ test('CTCOffice:checkShouldDispatch', () => {
     CTC.sendDispatchMessage = jest.fn( train => {} );
 
     // Add a dummy dispatch
-    CTC.pendingDispatches[time] = {};
+    CTC.pendingDispatches[time] = {
+      'line': 'green';
+    };
 
     // Check previous times
     CTC.now = 0;
