@@ -344,10 +344,10 @@ class TrackController extends React.Component {
   // WHen the drop down line changes
   handleLineChange(event) {
     if (this.currTrack.line === 'green') {
-      this.tracks[0].blocks = this.tracks[this.state.line].blocks;
+      this.state.currController = 0;
       console.log('red');
     } else if (this.currTrack.line === 'red') {
-      this.tracks[1].blocks = this.tracks[this.state.line].blocks;
+      this.state.currController = 6;
       console.log('green');
     }
     this.state.line = event.target.value - 1;
@@ -1046,20 +1046,7 @@ class TrackController extends React.Component {
             <Grid container spacing={12}>
               <Grid item xs={4}>
                 <div className="centered">
-                  {this.tracks[this.state.line].blocks[this.state.currBlock -1].switch != undefined &&
-                  this.state.maintenanceMode ? (
-                    <Chip
-                      onClick={this.setSwitch}
-                      label={`Switch Position: ${
-                        this.tracks[this.state.line].blocks[
-                          this.controllers[this.state.currController].swBlock -
-                            1
-                        ].switch.position
-                      }`}
-                      color={'success'}
-                      variant="outlined"
-                    />
-                  ) : this.tracks[this.state.line].blocks[this.state.currBlock -1].switch != undefined ? (
+                  { this.tracks[this.state.line].blocks[this.state.currBlock -1].switch != undefined ? (
                     <Chip
                       label={`Switch Position: ${this.tracks[this.state.line].blocks[this.state.currBlock -1].switch.position}`}
                       color={'success'}
